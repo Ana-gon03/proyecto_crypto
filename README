@@ -1,0 +1,230 @@
+# Comandos Utilizados
+
+Backend (Node + Express + Sequelize)
+
+# Crear y entrar a la carpeta del backend
+mkdir backend
+cd backend
+
+# Inicializar proyecto
+npm init -y
+
+# Instalar dependencias principales
+npm install express sequelize mysql2 dotenv cors bcryptjs jsonwebtoken nodemailer multer axios cheerio form-data @getbrevo/brevo
+npm install sharp
+npm install bcrypt
+npm install pdfkit
+
+# Instalar dependencias de desarrollo
+npm install -D nodemon
+
+# Crear estructura de carpetas
+mkdir src
+cd src
+mkdir config models routes controllers middlewares services
+cd ..
+
+
+
+Frontend (React + Vite)
+
+# Crear y entrar a la carpeta del frontend
+cd ..
+mkdir frontend
+cd frontend
+
+# Crear proyecto con Vite
+npm create vite@latest . -- --template react
+
+# Instalar dependencias
+npm install axios react-router-dom
+
+# Crear estructura de carpetas
+cd src
+mkdir components pages services styles
+cd components
+mkdir common registro ui
+cd ../pages
+mkdir publicas admin arrendador arrendatario
+cd ../..
+
+
+🔧 BACKEND
+Archivo	Descripción
+package.json	Dependencias y scripts
+.env	Variables de entorno
+server.js	Servidor Express principal
+Config	
+src/config/database.js	Conexión MySQL con Sequelize
+src/config/email.js	Envío de correos con Brevo
+Middleware	
+src/middlewares/upload.js	Subida de PDFs con Multer
+src/middlewares/uploadFotos.js	Subida y compresión de fotos
+Servicios	
+src/services/pdfco.service.js	Lectura de QR desde PDFs
+Rutas	
+src/routes/auth.routes.js	Registro, login, verificación de usuarios
+src/routes/admin.routes.js	CRUD de estudiantes, arrendadores, propiedades
+src/routes/arrendamiento.routes.js	Contratos y PDFs
+src/routes/propiedad.routes.js	Propiedades, servicios, fotos
+src/routes/catalogos.routes.js	Escuelas y carreras del IPN
+src/routes/cp.routes.js	Búsqueda de códigos postales
+src/routes/usuario.routes.js	Búsqueda de arrendatarios
+src/routes/contacto.routes.js	Formulario de contacto
+Modelos	
+src/models/usuario.model.js	Usuarios
+src/models/arrendatario.model.js	Estudiantes
+src/models/arrendador.model.js	Arrendadores
+src/models/propiedad.model.js	Propiedades
+src/models/arrendamiento.model.js	Contratos
+src/models/direccion.model.js	Direcciones
+src/models/cp.model.js	Códigos Postales
+src/models/carrera.model.js	Carreras
+src/models/unidadAcademica.model.js	Escuelas IPN
+src/models/fotos.model.js	Fotos de propiedades
+src/models/resena.model.js	Reseñas
+src/models/servicio.model.js	Servicios
+src/models/servicioHasPropiedad.model.js	Relación servicios-propiedades
+src/models/administrador.model.js	Administradores
+src/models/associations.js	Relaciones entre todos los modelos
+
+🎨 FRONTEND
+Archivo	Descripción
+package.json	Dependencias y scripts
+vite.config.js	Configuración de Vite
+src/main.jsx	Punto de entrada React
+src/App.jsx	Rutas principales
+src/styles/global.css	Estilos globales
+Servicios	
+src/services/api.js	Cliente Axios
+src/services/authService.js	Autenticación y registro
+src/services/adminService.js	CRUD de administración
+src/services/propiedadService.js	Propiedades y servicios
+src/services/arrendamientoService.js	Arrendamientos
+src/services/catalogosService.js	Escuelas y carreras
+src/services/cpService.js	Códigos postales
+src/services/legalContent.js	Aviso de privacidad y términos
+Componentes Common	
+src/components/common/NavbarInicio.jsx	Navegación pública
+src/components/common/NavbarRegistro.jsx	Navegación registro
+src/components/common/NavbarAdmin.jsx	Navegación admin
+src/components/common/NavbarArrendador.jsx	Navegación arrendador
+src/components/common/NavbarArrendatario.jsx	Navegación estudiante
+src/components/common/FooterInicio.jsx	Pie público
+src/components/common/FooterRegistro.jsx	Pie registro
+src/components/common/FooterAdmin.jsx	Pie admin
+src/components/common/ProtectedAdminRoute.jsx	Ruta protegida admin
+src/components/common/ProtectedArrendadorRoute.jsx	Ruta protegida arrendador
+src/components/common/ProtectedArrendatarioRoute.jsx	Ruta protegida estudiante
+src/components/common/ModalConfirmacion.jsx	Modal de confirmación
+src/components/common/ModalContacto.jsx	Modal de contacto
+Componentes Registro	
+src/components/registro/RegistroEstudiante.jsx	Formulario registro estudiante
+src/components/registro/RegistroArrendador.jsx	Formulario registro arrendador
+Componentes UI	
+src/components/ui/SubirDocumento.jsx	Componente subida PDF
+src/components/ui/LegalModal.jsx	Modal aviso/terminos
+Componentes Admin	
+src/components/admin/FormEstudiante.jsx	Editar estudiante
+src/components/admin/FormArrendador.jsx	Editar arrendador
+src/components/admin/FormPropiedad.jsx	Editar propiedad
+src/components/admin/FormRegistroEstudiante.jsx	Registrar estudiante
+src/components/admin/FormRegistroArrendador.jsx	Registrar arrendador
+Componentes Arrendador	
+src/components/arrendador/ModalDetalleArrendamiento.jsx	Detalle de arrendamiento
+src/components/arrendador/ModalDetalleVivienda.jsx	Detalle/edición de vivienda
+Páginas Públicas	
+src/pages/publicas/HomePage.jsx	Página principal
+src/pages/publicas/RegistroUsuarioPage.jsx	Selección tipo usuario
+src/pages/publicas/UsuariosInicioSesionPage.jsx	Login usuarios
+src/pages/publicas/VerificarCorreoPage.jsx	Verificar correo post-registro
+src/pages/publicas/VerificarCorreoLogin.jsx	Verificar correo post-login
+src/pages/publicas/VerificarExpiracion.jsx	Verificar expiración cuenta
+src/pages/publicas/Bienvenidapage.jsx	Bienvenida post-registro
+src/pages/publicas/FaqPage.jsx	Preguntas frecuentes
+src/pages/publicas/AvisoPrivacidadPage.jsx	Aviso de privacidad
+src/pages/publicas/TerminosUsoPage.jsx	Términos de uso
+Páginas Admin	
+src/pages/admin/AdminInicioSesionPage.jsx	Login admin
+src/pages/admin/AdminArrendatariosPage.jsx	Gestión estudiantes
+src/pages/admin/AdminArrendadoresPage.jsx	Gestión arrendadores
+src/pages/admin/AdminPropiedadesPage.jsx	Gestión propiedades
+Páginas Arrendador	
+src/pages/arrendador/CrearVivienda.jsx	Crear vivienda
+src/pages/arrendador/CrearArrendamiento.jsx	Crear arrendamiento
+src/pages/arrendador/MisViviendas.jsx	Mis viviendas
+src/pages/arrendador/MisArrendamientosArrendador.jsx	Mis arrendamientos
+src/pages/arrendador/PerfilArrendador.jsx	Perfil arrendador
+Páginas Arrendatario	
+src/pages/arrendatario/buscarVivienda.jsx	Buscar vivienda
+
+
+
+🔑 APIs y Servicios Externos
+API	Uso	Variable en .env
+Brevo (Sendinblue)	Envío de correos	BREVO_SMTP_USER, BREVO_SMTP_PASS, BREVO_EMAIL_SENDER
+PDF.co	Lectura de QR	PDFCO_API_KEY
+
+
+
+🚀 Cómo Ejecutar el Proyecto
+
+# Backend
+cd backend
+npm run dev
+
+# Frontend (en otra terminal)
+cd frontend
+npm run dev
+
+
+
+
+
+
+## 🔐 Funcionalidades Principales
+
+- **Registro de estudiantes** con verificación por constancia de estudios (QR)
+- **Registro de arrendadores** con verificación por documento CURP (QR)
+- **Verificación de correo** con código de 8 dígitos
+- **Panel de administración** completo (CRUD de estudiantes, arrendadores, propiedades)
+- **Página de preguntas frecuentes** con formulario de contacto
+- **Catálogo de escuelas y carreras** del IPN
+- **Búsqueda y autocompletado de códigos postales** (Sepomex)
+
+
+
+## 🛠️ Instalación
+
+### Requisitos previos
+- Node.js
+- MySQL
+- Cuenta en Brevo (para correos)
+- Cuenta en PDF.co (para lectura de QR)
+
+
+
+
+# ============ SERVIDOR ============
+PORT=5000                                    # Puerto donde corre el servidor backend
+
+# ============ BASE DE DATOS ============
+DB_HOST=localhost                            # Host de la base de datos MySQL
+DB_USER=root                                 # Usuario de MySQL
+DB_PASSWORD=tu_password                      # Contraseña del usuario de MySQL
+DB_NAME=dbBurroomies                         # Nombre de la base de datos
+DB_PORT=3306                                 # Puerto de MySQL (default: 3306)
+
+# ============ JWT (Autenticación) ============
+JWT_SECRET=mi_super_secreto_123              # Clave secreta para firmar tokens JWT
+
+# ============ BREVO (Envío de correos) ============
+BREVO_SMTP_USER=a99dc7001@smtp-brevo.com    # Usuario SMTP de Brevo (lo obtienes de la configuración SMTP)
+BREVO_SMTP_PASS=IGSZKaxLncX8F2gB            # Contraseña SMTP de Brevo (la generas en el panel de Brevo)
+BREVO_EMAIL_SENDER=correo@dominio.com       # Correo remitente que verificaste en Brevo
+
+# ============ PDF.co (Lectura de QR) ============
+PDFCO_API_KEY=tu_api_key_pdfco               # API Key de PDF.co (la obtienes en el dashboard)
+
+# ============ CONTACTO (Correo del administrador) ============
+ADMIN_EMAIL=admin@burroomies.com             # Correo donde recibirás los mensajes del formulario de contacto

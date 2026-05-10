@@ -1,0 +1,31 @@
+SET FOREIGN_KEY_CHECKS=0;
+
+TRUNCATE TABLE `dbBurroomies`.`favoritos`;
+
+TRUNCATE TABLE `dbBurroomies`.`resena`;
+
+TRUNCATE TABLE `dbBurroomies`.`arrendamiento`;
+
+TRUNCATE TABLE `dbBurroomies`.`fotos`;
+
+TRUNCATE TABLE `dbBurroomies`.`servicio_has_propiedad`;
+
+TRUNCATE TABLE `dbBurroomies`.`propiedad`;
+
+TRUNCATE TABLE `dbBurroomies`.`arrendatario`;
+
+TRUNCATE TABLE `dbBurroomies`.`arrendador`;
+
+TRUNCATE TABLE `dbBurroomies`.`direccion`;
+
+TRUNCATE TABLE `dbBurroomies`.`carrera`;
+
+TRUNCATE TABLE `dbBurroomies`.`unidad_academica`;
+
+TRUNCATE TABLE `dbBurroomies`.`servicio`;
+
+TRUNCATE TABLE `dbBurroomies`.`usuario`;
+
+TRUNCATE TABLE `dbBurroomies`.`administrador`;
+
+SET FOREIGN_KEY_CHECKS=1;
