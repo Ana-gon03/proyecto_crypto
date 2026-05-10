@@ -1,52 +1,34 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import NavbarInicio from '../../components/common/NavbarInicio';
-import FooterInicio from '../../components/common/FooterInicio';
-import { loginUsuario, reenviarCodigo } from '../../services/authService';
-import { generarParClaves } from '../../services/cryptoService';
-import { registrarClavePublica } from '../../services/contratoService';
+import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import NavbarInicio from '../../components/common/NavbarInicio'
+import FooterInicio from '../../components/common/FooterInicio'
+import { loginUsuario, reenviarCodigo } from '../../services/authService'
 
 const UsuariosInicioSesionPage = () => {
-  const navigate = useNavigate();
-  const [correo, setCorreo] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [cargando, setCargando] = useState(false);
-  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const navigate = useNavigate()
+  const [correo, setCorreo] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [cargando, setCargando] = useState(false)
+  const [mostrarPassword, setMostrarPassword] = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setCargando(true);
-    setError('');
+    e.preventDefault()
+    setCargando(true)
+    setError('')
 
     try {
-      const data = await loginUsuario(correo, password);
-      const userId = data.userId;
-
-      // Función auxiliar para generar claves si no existen
-      const asegurarClaves = async (id) => {
-        const existingKey = sessionStorage.getItem(`privKey_${id}`);
-        if (!existingKey) {
-          try {
-            const { publicKeyPem } = await generarParClaves();
-            await registrarClavePublica(publicKeyPem);
-            console.log('Claves generadas y registradas correctamente');
-          } catch (err) {
-            console.error('Error generando claves:', err);
-          }
-        }
-      };
+      const data = await loginUsuario(correo, password)
 
       // ── ARRENDADOR ──────────────────────────────────────────────
       if (data.rol === 'arrendador') {
-        localStorage.setItem('userId', data.userId);
-        localStorage.setItem('rol', data.rol);
-        localStorage.setItem('correo', data.correo);
-        localStorage.setItem('arrendadorId', data.arrendadorId);
-        await asegurarClaves(userId);
+        localStorage.setItem('userId', data.userId)
+        localStorage.setItem('rol', data.rol)
+        localStorage.setItem('correo', data.correo)
+        localStorage.setItem('arrendadorId', data.arrendadorId)
 
         if (!data.correoVerificado) {
-          await reenviarCodigo(data.correo);
+          await reenviarCodigo(data.correo)
           navigate('/verificar-correo-login', {
             state: {
               correo: data.correo,
@@ -54,26 +36,25 @@ const UsuariosInicioSesionPage = () => {
               rol: 'arrendador',
               arrendadorId: data.arrendadorId
             }
-          });
-          return;
+          })
+          return
         }
-        localStorage.setItem('correoVerificado', '1');
-        navigate('/arrendador/mis-arrendamientos');
-        return;
+        localStorage.setItem('correoVerificado', '1')
+        navigate('/arrendador/mis-arrendamientos')
+        return
       }
 
       // ── ARRENDATARIO ─────────────────────────────────────────────
       if (data.rol === 'arrendatario') {
-        localStorage.setItem('userId', data.userId);
-        localStorage.setItem('rol', data.rol);
-        localStorage.setItem('correo', data.correo);
-        localStorage.setItem('arrendatarioId', data.arrendatarioId);
-        localStorage.setItem('fechaRegistro', data.fechaRegistro);
-        localStorage.setItem('arrendatarioVerificado', data.arrendatarioVerificado);
-        await asegurarClaves(userId);
+        localStorage.setItem('userId', data.userId)
+        localStorage.setItem('rol', data.rol)
+        localStorage.setItem('correo', data.correo)
+        localStorage.setItem('arrendatarioId', data.arrendatarioId)
+        localStorage.setItem('fechaRegistro', data.fechaRegistro)
+        localStorage.setItem('arrendatarioVerificado', data.arrendatarioVerificado)
 
         if (!data.correoVerificado) {
-          await reenviarCodigo(data.correo);
+          await reenviarCodigo(data.correo)
           navigate('/verificar-correo-login', {
             state: {
               correo: data.correo,
@@ -83,23 +64,30 @@ const UsuariosInicioSesionPage = () => {
               fechaRegistro: data.fechaRegistro,
               arrendatarioVerificado: data.arrendatarioVerificado
             }
-          });
-          return;
+          })
+          return
         }
 
-        localStorage.setItem('correoVerificado', '1');
-        if (data.arrendatarioVerificado) {
-          navigate('/arrendatario/buscar-vivienda');
-          return;
-        }
-        navigate('/verificar-expiracion', { state: { userId: data.userId } });
+        localStorage.setItem('correoVerificado', '1')
+
+        // ✅ NUEVO CÓDIGO - Siempre verificar expiración si no está verificada la identidad
+          if (data.arrendatarioVerificado) {
+            navigate('/arrendatario/buscar-vivienda')
+            return
+          }
+
+        // Si no está verificada la identidad, siempre ir a VerificarExpiracion
+          navigate('/verificar-expiracion', {
+            state: { userId: data.userId }
+          })
       }
+
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar sesión. Intenta de nuevo.');
+      setError(err.response?.data?.error || 'Error al iniciar sesión. Intenta de nuevo.')
     } finally {
-      setCargando(false);
+      setCargando(false)
     }
-  };
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -107,6 +95,7 @@ const UsuariosInicioSesionPage = () => {
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div style={{ width: '100%', maxWidth: '400px' }}>
           <h2 style={{ marginBottom: '1.5rem' }}>Iniciar Sesión</h2>
+
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
               <label>Correo electrónico</label><br />
@@ -119,6 +108,7 @@ const UsuariosInicioSesionPage = () => {
                 required
               />
             </div>
+
             <div style={{ marginBottom: '1rem' }}>
               <label>Contraseña</label><br />
               <div style={{ position: 'relative', marginTop: '0.25rem' }}>
@@ -141,18 +131,22 @@ const UsuariosInicioSesionPage = () => {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    fontSize: '1.2rem'
+                    fontSize: '1.2rem',
+                    padding: '5px'
                   }}
+                  title={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {mostrarPassword ? '🙈' : '👁️'}
                 </button>
               </div>
             </div>
+
             {error && (
               <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', border: '1px solid red', borderRadius: '4px' }}>
                 {error}
               </div>
             )}
+
             <button
               type="submit"
               disabled={cargando}
@@ -161,6 +155,7 @@ const UsuariosInicioSesionPage = () => {
               {cargando ? 'Ingresando...' : 'Iniciar Sesión'}
             </button>
           </form>
+
           <p style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
             ¿No tienes cuenta? <Link to="/registro">Regístrate aquí</Link>
           </p>
@@ -168,7 +163,7 @@ const UsuariosInicioSesionPage = () => {
       </main>
       <FooterInicio />
     </div>
-  );
-};
+  )
+}
 
-export default UsuariosInicioSesionPage;
+export default UsuariosInicioSesionPage

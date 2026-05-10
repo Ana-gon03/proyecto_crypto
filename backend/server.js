@@ -31,8 +31,6 @@ const contactoRoutes = require('./src/routes/contacto.routes');
 const arrendamientoRoutes = require('./src/routes/arrendamiento.routes');
 const usuarioRoutes = require('./src/routes/usuario.routes');
 const propiedadRoutes = require('./src/routes/propiedad.routes');
-const contratoRoutes = require('./src/routes/contrato.routes');
-
 
 
 dotenv.config();
@@ -43,7 +41,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
 // Usar rutas
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/cp', cpRoutes);
@@ -53,8 +50,6 @@ app.use('/api', contactoRoutes);
 app.use('/api/arrendamientos', arrendamientoRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/propiedades', propiedadRoutes);
-app.use('/api', contratoRoutes);
-
 
 // Servir archivos estáticos (para las fotos)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
 import api from '../../services/api'
-import { generarParClaves } from '../../services/cryptoService'
-import { registrarClavePublica } from '../../services/contratoService'
 
 const PerfilArrendatario = () => {
   const navigate = useNavigate()
@@ -194,19 +192,6 @@ const PerfilArrendatario = () => {
     }
   }
 
-  // 🔐 Regenerar claves criptográficas
-  const handleRegenerarClaves = async () => {
-    try {
-      const { publicKeyPem } = await generarParClaves()
-      await registrarClavePublica(publicKeyPem)
-      alert('✅ Claves criptográficas regeneradas correctamente')
-      setMensajeExito('Claves regeneradas correctamente')
-      setTimeout(() => setMensajeExito(''), 3000)
-    } catch (err) {
-      alert('❌ Error al regenerar claves: ' + err.message)
-    }
-  }
-
   const usuario = perfil?.usuario || {}
   const carrera = perfil?.carrera || {}
 
@@ -307,40 +292,23 @@ const PerfilArrendatario = () => {
                   <InfoRow label="Verificado" value={perfil.arrendatarioVerificado ? '✅ Sí' : '❌ No'} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <button 
-                    onClick={() => setEditando(true)}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: '#1a237e',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '15px',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    ✏️ Editar Perfil
-                  </button>
-                  <button
-                    onClick={handleRegenerarClaves}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: '#ff9800',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '15px',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    🔐 Regenerar claves
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setEditando(true)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#1a237e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: 'bold',
+                    marginTop: '20px'
+                  }}
+                >
+                  ✏️ Editar Perfil
+                </button>
 
                 {/* ✅ BOTÓN ELIMINAR CUENTA */}
                 <div style={{ marginTop: '15px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>

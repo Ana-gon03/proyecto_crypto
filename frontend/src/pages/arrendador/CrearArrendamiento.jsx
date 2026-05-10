@@ -1,19 +1,16 @@
-// src/pages/arrendador/CrearArrendamiento.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavbarArrendador from '../../components/common/NavbarArrendador';
-import FooterInicio from '../../components/common/FooterInicio';
-import { getPropiedadesDisponibles } from '../../services/propiedadService';
-import { buscarArrendatario, crearArrendamiento, buscarArrendatarioPorId } from '../../services/arrendamientoService';
-import { getPrivateKey, derivarClaveAES, cifrarAES, firmarECDSA, hashSHA256 } from '../../services/cryptoService';
-import { obtenerClavePublicaUsuario, crearContrato } from '../../services/contratoService';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import NavbarArrendador from '../../components/common/NavbarArrendador'
+import FooterInicio from '../../components/common/FooterInicio'
+import { getPropiedadesDisponibles } from '../../services/propiedadService'
+import { buscarArrendatario, crearArrendamiento } from '../../services/arrendamientoService'
 
 const CrearArrendamiento = () => {
-  const navigate = useNavigate();
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [errors, setErrors] = useState({});
+  const navigate = useNavigate()
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
+  const [mensaje, setMensaje] = useState('')
+  const [errors, setErrors] = useState({})
 
   // Formulario
   const [formData, setFormData] = useState({
@@ -22,208 +19,169 @@ const CrearArrendamiento = () => {
     arrendamientoDescrip: '',
     arrendatario_idArrendatario: '',
     propiedad_idPropiedad: ''
-  });
+  })
 
   // Búsqueda de arrendatario
-  const [terminoBusqueda, setTerminoBusqueda] = useState('');
-  const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
-  const [buscando, setBuscando] = useState(false);
-  const [arrendatarioSeleccionado, setArrendatarioSeleccionado] = useState(null);
+  const [terminoBusqueda, setTerminoBusqueda] = useState('')
+  const [resultadosBusqueda, setResultadosBusqueda] = useState([])
+  const [buscando, setBuscando] = useState(false)
+  const [arrendatarioSeleccionado, setArrendatarioSeleccionado] = useState(null)
 
   // Propiedades disponibles
-  const [propiedades, setPropiedades] = useState([]);
-  const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null);
-
-  // Texto del contrato
-  const [contratoTexto, setContratoTexto] = useState('');
+  const [propiedades, setPropiedades] = useState([])
+  const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null)
 
   useEffect(() => {
-    cargarPropiedades();
-  }, []);
+    cargarPropiedades()
+  }, [])
 
   const cargarPropiedades = async () => {
     try {
-      const idArrendador = localStorage.getItem('arrendadorId');
+      const idArrendador = localStorage.getItem('arrendadorId')
       if (!idArrendador) {
-        navigate('/usuarios/inicio-sesion');
-        return;
+        navigate('/usuarios/inicio-sesion')
+        return
       }
-      const data = await getPropiedadesDisponibles(idArrendador);
-      setPropiedades(data);
+      const data = await getPropiedadesDisponibles(idArrendador)
+      setPropiedades(data)
     } catch (err) {
-      setError('Error al cargar propiedades');
+      setError('Error al cargar propiedades')
     }
-  };
+  }
 
   const handleBuscarArrendatario = async () => {
     if (terminoBusqueda.length < 3) {
-      setError('Ingresa al menos 3 caracteres para buscar');
-      return;
+      setError('Ingresa al menos 3 caracteres para buscar')
+      return
     }
 
-    setBuscando(true);
-    setError('');
-    setResultadosBusqueda([]);
+    setBuscando(true)
+    setError('')
+    setResultadosBusqueda([])
 
     try {
-      const data = await buscarArrendatario(terminoBusqueda);
+      const data = await buscarArrendatario(terminoBusqueda)
       if (data.length === 0) {
-        setError('No se encontraron arrendatarios con ese username o correo');
+        setError('No se encontraron arrendatarios con ese username o correo')
       } else {
-        setResultadosBusqueda(data);
+        setResultadosBusqueda(data)
       }
     } catch (err) {
-      setError('Error al buscar arrendatario');
+      setError('Error al buscar arrendatario')
     } finally {
-      setBuscando(false);
+      setBuscando(false)
     }
-  };
+  }
 
   const handleSeleccionarArrendatario = (arrendatario) => {
+    // ✅ VERIFICACIÓN 1: El arrendatario debe estar verificado
     if (arrendatario.arrendatarioVerificado !== 1) {
-      setError('❌ Este arrendatario NO ha verificado su identidad. No se puede crear un arrendamiento.');
-      return;
+      setError('❌ Este arrendatario NO ha verificado su identidad. No se puede crear un arrendamiento.')
+      return
     }
 
-    setArrendatarioSeleccionado(arrendatario);
-    setFormData({ ...formData, arrendatario_idArrendatario: arrendatario.idArrendatario });
-    setResultadosBusqueda([]);
-    setTerminoBusqueda('');
-    setError('');
-  };
+    setArrendatarioSeleccionado(arrendatario)
+    setFormData({ ...formData, arrendatario_idArrendatario: arrendatario.idArrendatario })
+    setResultadosBusqueda([])
+    setTerminoBusqueda('')
+    setError('')
+  }
 
   const handleSeleccionarPropiedad = (e) => {
-    const idPropiedad = e.target.value;
-    setFormData({ ...formData, propiedad_idPropiedad: idPropiedad });
-    const prop = propiedades.find(p => p.idPropiedad == idPropiedad);
-    setPropiedadSeleccionada(prop || null);
+    const idPropiedad = e.target.value
+    setFormData({ ...formData, propiedad_idPropiedad: idPropiedad })
+    
+    const prop = propiedades.find(p => p.idPropiedad == idPropiedad)
+    setPropiedadSeleccionada(prop || null)
+    
+    // Autocompletar precio
     if (prop) {
-      setFormData(prev => ({
-        ...prev,
+      setFormData(prev => ({ 
+        ...prev, 
         arrendamientoRenta: prop.propiedadPrecio,
         propiedad_idPropiedad: idPropiedad
-      }));
+      }))
     }
-    if (errors.propiedad_idPropiedad) setErrors({ ...errors, propiedad_idPropiedad: null });
-  };
+    if (errors.propiedad_idPropiedad) setErrors({ ...errors, propiedad_idPropiedad: null })
+  }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    if (errors[name]) setErrors({ ...errors, [name]: null });
-  };
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+    if (errors[name]) setErrors({ ...errors, [name]: null })
+  }
 
+  // ✅ VALIDACIONES
   const validarFormulario = () => {
-    const errs = {};
+    const errs = {}
 
     if (!arrendatarioSeleccionado) {
-      errs.arrendatario_idArrendatario = 'Debes seleccionar un arrendatario verificado';
+      errs.arrendatario_idArrendatario = 'Debes seleccionar un arrendatario verificado'
     }
 
     if (!formData.propiedad_idPropiedad) {
-      errs.propiedad_idPropiedad = 'Debes seleccionar una vivienda';
+      errs.propiedad_idPropiedad = 'Debes seleccionar una vivienda'
     }
 
     if (!formData.arrendamientoFechaInicio) {
-      errs.arrendamientoFechaInicio = 'La fecha de inicio es obligatoria';
+      errs.arrendamientoFechaInicio = 'La fecha de inicio es obligatoria'
     }
 
     if (!formData.arrendamientoRenta) {
-      errs.arrendamientoRenta = 'La renta es obligatoria';
+      errs.arrendamientoRenta = 'La renta es obligatoria'
     } else if (isNaN(formData.arrendamientoRenta) || parseFloat(formData.arrendamientoRenta) <= 0) {
-      errs.arrendamientoRenta = 'La renta debe ser un número mayor a 0';
+      errs.arrendamientoRenta = 'La renta debe ser un número mayor a 0'
     }
 
     if (!formData.arrendamientoDescrip || formData.arrendamientoDescrip.trim().length < 10) {
-      errs.arrendamientoDescrip = 'La descripción es obligatoria (mínimo 10 caracteres)';
+      errs.arrendamientoDescrip = 'La descripción es obligatoria (mínimo 10 caracteres)'
     }
 
-    if (!contratoTexto.trim()) {
-      errs.contratoTexto = 'El texto del contrato es obligatorio';
-    } else if (contratoTexto.trim().length < 20) {
-      errs.contratoTexto = 'El contrato debe tener al menos 20 caracteres';
-    }
-
-    return errs;
-  };
+    return errs
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    const erroresValidacion = validarFormulario();
+    // Validar formulario
+    const erroresValidacion = validarFormulario()
     if (Object.keys(erroresValidacion).length > 0) {
-      setErrors(erroresValidacion);
-      setError('Por favor corrige los errores en el formulario');
-      return;
+      setErrors(erroresValidacion)
+      setError('Por favor corrige los errores en el formulario')
+      return
     }
 
-    setCargando(true);
-    setError('');
-    setMensaje('');
-    setErrors({});
+    setCargando(true)
+    setError('')
+    setMensaje('')
+    setErrors({})
 
     try {
-      // 1. Crear arrendamiento
-      const arrendamientoResp = await crearArrendamiento({
-        arrendamientoFechaInicio: formData.arrendamientoFechaInicio,
-        arrendamientoRenta: formData.arrendamientoRenta,
-        arrendamientoDescrip: formData.arrendamientoDescrip,
-        arrendatario_idArrendatario: formData.arrendatario_idArrendatario,
-        propiedad_idPropiedad: formData.propiedad_idPropiedad
-      });
-      const idArrendamiento = arrendamientoResp.idArrendamiento;
-
-      // 2. Obtener clave pública del arrendatario
-      const arrendatarioId = formData.arrendatario_idArrendatario;
-      const arrendatarioData = await buscarArrendatarioPorId(arrendatarioId);
-      const publicKeyArrendatario = arrendatarioData.clavePublica;
-
-      // 3. Obtener clave privada del arrendador (desde sessionStorage)
-      const privateKey = await getPrivateKey();
-
-      // 4. Derivar clave AES a partir de ECDH
-      const aesKey = await derivarClaveAES(privateKey, publicKeyArrendatario);
-
-      // 5. Cifrar el contrato con AES-256-GCM
-      const { iv, authTag, contenido } = await cifrarAES(contratoTexto, aesKey);
-      const hashPlano = await hashSHA256(contratoTexto);
-
-      // 6. Firmar el contrato (arrendador)
-      const firmaArrendador = await firmarECDSA(contratoTexto, privateKey);
-
-      // 7. Enviar el contrato al servidor
-      await crearContrato({
-        idArrendamiento,
-        contratoCifrado: contenido,
-        iv,
-        authTag,
-        hashPlano,
-        firmaArrendador
-      });
-
-      setMensaje('✅ Arrendamiento y contrato creados exitosamente');
+      await crearArrendamiento(formData)
+      setMensaje('✅ Arrendamiento creado exitosamente')
+      
       setTimeout(() => {
-        navigate('/arrendador/mis-arrendamientos');
-      }, 2000);
+        navigate('/arrendador/mis-arrendamientos')
+      }, 1500)
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Error al crear arrendamiento/contrato');
+      setError(err.response?.data?.error || 'Error al crear arrendamiento')
     } finally {
-      setCargando(false);
+      setCargando(false)
     }
-  };
+  }
 
   const formatearDireccion = (prop) => {
-    if (!prop?.direccion) return 'Dirección no disponible';
-    const dir = prop.direccion;
-    let direccion = `${dir.direccionCalle} #${dir.direccionNumExt}`;
-    if (dir.direccionNumInt) direccion += ` Int. ${dir.direccionNumInt}`;
+    if (!prop?.direccion) return 'Dirección no disponible'
+    const dir = prop.direccion
+    let direccion = `${dir.direccionCalle} #${dir.direccionNumExt}`
+    if (dir.direccionNumInt) direccion += ` Int. ${dir.direccionNumInt}`
     if (dir.cp) {
-      direccion += `, Col. ${dir.cp.d_asenta}, ${dir.cp.D_mnpio}, ${dir.cp.d_estado}, CP ${dir.cp.d_codigo}`;
+      direccion += `, Col. ${dir.cp.d_asenta}, ${dir.cp.D_mnpio}, ${dir.cp.d_estado}, CP ${dir.cp.d_codigo}`
     }
-    return direccion;
-  };
+    return direccion
+  }
 
+  // Estilos para los campos con error
   const inputStyle = (fieldName) => ({
     width: '100%',
     padding: '0.5rem',
@@ -231,13 +189,13 @@ const CrearArrendamiento = () => {
     border: errors[fieldName] ? '2px solid #dc2626' : '1px solid #d1d5db',
     borderRadius: '4px',
     boxSizing: 'border-box'
-  });
+  })
 
   const errorStyle = {
     color: '#dc2626',
     fontSize: '0.8rem',
     marginTop: '0.25rem'
-  };
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -246,7 +204,7 @@ const CrearArrendamiento = () => {
         <h2>Crear Nuevo Arrendamiento</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* 1. Seleccionar Arrendatario */}
+          {/* Buscar Arrendatario */}
           <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px' }}>
             <h3>1. Seleccionar Arrendatario *</h3>
             <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
@@ -270,8 +228,8 @@ const CrearArrendamiento = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setArrendatarioSeleccionado(null);
-                      setFormData({ ...formData, arrendatario_idArrendatario: '' });
+                      setArrendatarioSeleccionado(null)
+                      setFormData({ ...formData, arrendatario_idArrendatario: '' })
                     }}
                     style={{ padding: '0.5rem 1rem', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                   >
@@ -313,6 +271,17 @@ const CrearArrendamiento = () => {
                           borderBottom: '1px solid #eee',
                           backgroundColor: arrendatario.arrendatarioVerificado === 1 ? 'white' : '#fef2f2',
                           opacity: arrendatario.arrendatarioVerificado === 1 ? 1 : 0.7,
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (arrendatario.arrendatarioVerificado === 1) {
+                            e.currentTarget.style.backgroundColor = '#f5f5f5'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (arrendatario.arrendatarioVerificado === 1) {
+                            e.currentTarget.style.backgroundColor = 'white'
+                          }
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -343,9 +312,10 @@ const CrearArrendamiento = () => {
             )}
           </div>
 
-          {/* 2. Seleccionar Vivienda */}
+          {/* Seleccionar Vivienda */}
           <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px' }}>
             <h3>2. Seleccionar Vivienda *</h3>
+
             <select
               name="propiedad_idPropiedad"
               value={formData.propiedad_idPropiedad}
@@ -375,7 +345,7 @@ const CrearArrendamiento = () => {
             )}
           </div>
 
-          {/* 3. Datos del Arrendamiento */}
+          {/* Datos del Arrendamiento */}
           <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px' }}>
             <h3>3. Datos del Arrendamiento</h3>
 
@@ -421,23 +391,6 @@ const CrearArrendamiento = () => {
             </div>
           </div>
 
-          {/* 4. Contrato */}
-          <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <h3>4. Texto del Contrato *</h3>
-            <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
-              Redacta aquí los términos y condiciones que regirán el arrendamiento.
-            </p>
-            <textarea
-              value={contratoTexto}
-              onChange={(e) => setContratoTexto(e.target.value)}
-              rows="10"
-              placeholder="Ejemplo: El presente contrato de arrendamiento se celebra entre ..."
-              style={inputStyle('contratoTexto')}
-              required
-            />
-            {errors.contratoTexto && <div style={errorStyle}>{errors.contratoTexto}</div>}
-          </div>
-
           {error && (
             <div style={{ color: '#dc2626', marginBottom: '1rem', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '4px', border: '1px solid #dc2626' }}>
               {error}
@@ -470,7 +423,7 @@ const CrearArrendamiento = () => {
       </main>
       <FooterInicio />
     </div>
-  );
-};
+  )
+}
 
-export default CrearArrendamiento;
+export default CrearArrendamiento

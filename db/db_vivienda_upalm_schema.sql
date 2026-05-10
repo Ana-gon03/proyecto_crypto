@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS `vivienda_upalm`.`propiedad` (
   `propiedadTipo` VARCHAR(45) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' NOT NULL,
   `propiedadLugares` INT NOT NULL,
   `propiedadPrecio` DECIMAL(10,2) NOT NULL,
+  `propiedadPrecioPor` ENUM('Propiedad', 'Persona', 'Habitación') CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' NOT NULL DEFAULT 'Persona',
   `propiedadEstatus` ENUM('Disponible', 'Sin Disponibilidad', 'Desactivada') CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_unicode_ci' NULL DEFAULT 'Disponible',
   `propiedadFechaRegis` DATETIME NOT NULL,
   `direccion_idDireccion` INT NOT NULL,
@@ -191,7 +192,6 @@ CREATE TABLE IF NOT EXISTS `vivienda_upalm`.`propiedad` (
     ON DELETE RESTRICT
     ON UPDATE NO ACTION
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 
 -- -----------------------------------------------------
 -- Table `vivienda_upalm`.`administrador`

@@ -12,10 +12,6 @@ const Resena = require('./resena.model');
 const Servicio = require('./servicio.model');
 const ServicioHasPropiedad = require('./servicioHasPropiedad.model');
 const Administrador = require('./administrador.model');
-const LlavePublica = require('./llave_publica.model');
-const Contrato = require('./contrato.model');
-const ContratoHistorial = require('./contrato_historial.model');
-const ContratoVerificacion = require('./contrato_verificacion.model');
 
 // Relaciones de Direccion
 Direccion.belongsTo(CP, { foreignKey: 'CP_idCP', as: 'cp' });
@@ -62,19 +58,6 @@ Arrendatario.hasMany(Resena, { foreignKey: 'arrendatario_idArrendatario', as: 'r
 // Relaciones de ServicioHasPropiedad (muchos a muchos)
 Servicio.belongsToMany(Propiedad, { through: ServicioHasPropiedad, foreignKey: 'servicio_idServicio', otherKey: 'propiedad_idPropiedad', as: 'propiedades' });
 Propiedad.belongsToMany(Servicio, { through: ServicioHasPropiedad, foreignKey: 'propiedad_idPropiedad', otherKey: 'servicio_idServicio', as: 'servicios' });
-
-// Asociaciones de llave_publica
-Usuario.hasMany(LlavePublica, { foreignKey: 'usuario_idUsuario', as: 'llavesPublicas' });
-LlavePublica.belongsTo(Usuario, { foreignKey: 'usuario_idUsuario', as: 'usuario' });
-
-// Asociaciones de contrato
-Contrato.belongsTo(Arrendamiento, { foreignKey: 'arrendamiento_idArrendamiento', as: 'arrendamiento' });
-Contrato.belongsTo(LlavePublica, { foreignKey: 'llavePub_idArrendador', as: 'llaveArrendador' });
-Contrato.belongsTo(LlavePublica, { foreignKey: 'llavePub_idArrendatario', as: 'llaveArrendatario' });
-
-// Historial y verificaciones
-ContratoHistorial.belongsTo(Contrato, { foreignKey: 'contrato_idContrato', as: 'contrato' });
-ContratoVerificacion.belongsTo(Contrato, { foreignKey: 'contrato_idContrato', as: 'contrato' });
 
 module.exports = {
   CP,

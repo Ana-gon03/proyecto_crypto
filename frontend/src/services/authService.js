@@ -1,8 +1,6 @@
-// src/services/authService.js
 import api from './api';
-import { limpiarClavesPrivadas } from './cryptoService';
 
-// Validar campo (correo, username, boleta, curp)
+// Validar campo (correo, teléfono, CURP, RFC)
 export const validarCampo = async (campo, valor) => {
   const response = await api.post('/auth/validar-campo', { campo, valor });
   return response.data;
@@ -72,11 +70,4 @@ export const getPerfilArrendador = async (idUsuario) => {
 export const actualizarPerfilArrendador = async (idUsuario, datos) => {
   const response = await api.put(`/auth/perfil-arrendador/${idUsuario}`, datos);
   return response.data;
-};
-
-// ========== LOGOUT con limpieza de claves criptográficas ==========
-export const logout = () => {
-  limpiarClavesPrivadas();  // elimina la clave privada de sessionStorage
-  localStorage.clear();
-  sessionStorage.clear();   // por si quedó algo extra
 };

@@ -1,34 +1,20 @@
-// src/pages/bienvenida/BienvenidaPage.jsx
-import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import NavbarRegistro from '../../components/common/NavbarRegistro';
-import FooterRegistro from '../../components/common/FooterRegistro';
-import { generarParClaves } from '../../services/cryptoService';
-import { registrarClavePublica } from '../../services/contratoService';
+import React from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import NavbarRegistro from '../../components/common/NavbarRegistro'
+import FooterRegistro from '../../components/common/FooterRegistro'
 
 const BienvenidaPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const rol = location.state?.rol;
-  const verificadoConDocumento = location.state?.verificadoConDocumento;
-  const pendiente = rol === 'estudiante' && verificadoConDocumento === false;
-
-  // Generar y registrar claves criptográficas al llegar a la bienvenida
-  useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      const existingKey = sessionStorage.getItem(`privKey_${userId}`);
-      if (!existingKey) {
-        generarParClaves()
-          .then(async ({ publicKeyPem }) => {
-            await registrarClavePublica(publicKeyPem);
-            console.log('Claves generadas y registradas correctamente');
-          })
-          .catch(err => console.error('Error generando claves:', err));
-      }
-    }
-  }, []);
+  const rol = location.state?.rol
+  // Muestra aviso de pendiente ÚNICAMENTE cuando:
+  //   1. El rol es 'estudiante', Y
+  //   2. verificadoConDocumento es explícitamente false (no undefined, no null)
+  // Arrendadores siempre tienen verificadoConDocumento: true → nunca caen aquí.
+  // Si falta el state (acceso directo a la URL), se trata como verificado por seguridad.
+  const verificadoConDocumento = location.state?.verificadoConDocumento
+  const pendiente = rol === 'estudiante' && verificadoConDocumento === false
 
   // ── Estudiante con verificación pendiente ──────────────────────────────────
   if (pendiente) {
@@ -176,7 +162,7 @@ const BienvenidaPage = () => {
       </main>
       <FooterRegistro />
     </div>
-  );
-};
+  )
+}
 
-export default BienvenidaPage;
+export default BienvenidaPage
