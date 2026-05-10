@@ -1,12 +1,10 @@
 import React, { useState } from 'react'
 import {
-  cargarClavePrivadaECDH,
   importarClavePublicaECDH,
   derivarSecretoCompartido,
   derivarClaveAESDeSecreto,
   cifrarAESGCM,
   calcularSHA256,
-  tieneClavesLocales,
 } from '../../utils/cryptoUtils'
 
 /**
@@ -16,6 +14,7 @@ import {
  * Props:
  *   pdfBuffer          ArrayBuffer   — bytes del PDF original
  *   ecdhPublicKeyB64   string        — clave pública ECDH del destinatario (base64)
+ *   ecdhPrivKey        CryptoKey     — clave privada ECDH del firmante (ya cargada)
  *   onCifrado          function      — recibe { cifradoB64, hashHex }
  *   labelBoton?        string
  *   disabled?          boolean
@@ -23,6 +22,7 @@ import {
 const AESEncryptor = ({
   pdfBuffer,
   ecdhPublicKeyB64,
+  ecdhPrivKey = null,
   onCifrado,
   labelBoton = 'Cifrar y preparar contrato',
   disabled = false,
@@ -40,8 +40,8 @@ const AESEncryptor = ({
       setError('No se tiene la clave pública del destinatario')
       return
     }
-    if (!tieneClavesLocales()) {
-      setError('No tienes claves de seguridad. Ve a tu perfil y genéralas primero.')
+    if (!ecdhPrivKey) {
+      setError('Carga tu archivo de claves privadas antes de cifrar.')
       return
     }
 
@@ -49,20 +49,13 @@ const AESEncryptor = ({
       setCifrando(true)
       setError('')
 
-      // Calcula el hash SHA-256 del PDF ORIGINAL antes de cifrar
-      const hashHex = await calcularSHA256(pdfBuffer)
+      const hashHex    = await calcularSHA256(pdfBuffer)
+      const suClavePub = await importarClavePublicaECDH(ecdhPublicKeyB64)
+      const sharedBits = await derivarSecretoCompartido(ecdhPrivKey, suClavePub)
+      const aesKey     = await derivarClaveAESDeSecreto(sharedBits)
 
-      // Deriva el shared_secret: ECDH(mi_priv_ECDH, destinatario_pub_ECDH)
-      const miClavePrivECDH    = await cargarClavePrivadaECDH()
-      const suClavePubECDH     = await importarClavePublicaECDH(ecdhPublicKeyB64)
-      const sharedBits         = await derivarSecretoCompartido(miClavePrivECDH, suClavePubECDH)
-      const aesKey             = await derivarClaveAESDeSecreto(sharedBits)
-
-      // Cifra el PDF
       const cifradoBytes = await cifrarAESGCM(aesKey, pdfBuffer)
-
-      // Convierte a base64 para enviar por JSON
-      const cifradoB64 = btoa(String.fromCharCode(...cifradoBytes))
+      const cifradoB64   = btoa(String.fromCharCode(...cifradoBytes))
 
       setCifrado(true)
       onCifrado({ cifradoB64, hashHex })
@@ -73,24 +66,20 @@ const AESEncryptor = ({
     }
   }
 
+  const noReady = disabled || cifrando || cifrado || !pdfBuffer || !ecdhPublicKeyB64 || !ecdhPrivKey
+
   return (
     <div>
       <button
         onClick={handleCifrar}
-        disabled={disabled || cifrando || cifrado || !pdfBuffer || !ecdhPublicKeyB64}
+        disabled={noReady}
         style={{
           padding: '10px 20px',
-          backgroundColor: cifrado
-            ? '#28a745'
-            : disabled || cifrando || !pdfBuffer || !ecdhPublicKeyB64
-            ? '#ccc'
-            : '#1a237e',
+          backgroundColor: cifrado ? '#28a745' : noReady ? '#ccc' : '#1a237e',
           color: 'white',
           border: 'none',
           borderRadius: '5px',
-          cursor: disabled || cifrando || cifrado || !pdfBuffer || !ecdhPublicKeyB64
-            ? 'not-allowed'
-            : 'pointer',
+          cursor: noReady ? 'not-allowed' : 'pointer',
           fontSize: '14px',
           fontWeight: 'bold',
         }}

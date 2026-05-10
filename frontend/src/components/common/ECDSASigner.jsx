@@ -1,20 +1,17 @@
 import React, { useState } from 'react'
-import {
-  cargarClavePrivadaECDSA,
-  firmarECDSA,
-  tieneClavesLocales,
-} from '../../utils/cryptoUtils'
+import { firmarECDSA } from '../../utils/cryptoUtils'
 
 /**
  * Firma el hash SHA-256 de un PDF con la clave privada ECDSA del usuario.
  *
  * Props:
- *   hashHex         string    — SHA-256 hex del PDF (64 chars)
- *   onFirma         function  — recibe la firma base64 cuando se completa
- *   labelBoton?     string    — texto del botón (default: "Firmar documento")
+ *   hashHex         string      — SHA-256 hex del PDF (64 chars)
+ *   onFirma         function    — recibe la firma base64 cuando se completa
+ *   privKey?        CryptoKey   — clave privada ECDSA ya cargada (si no se pasa, error)
+ *   labelBoton?     string      — texto del botón (default: "Firmar documento")
  *   disabled?       boolean
  */
-const ECDSASigner = ({ hashHex, onFirma, labelBoton = 'Firmar documento', disabled = false }) => {
+const ECDSASigner = ({ hashHex, onFirma, privKey = null, labelBoton = 'Firmar documento', disabled = false }) => {
   const [firmando, setFirmando] = useState(false)
   const [firmado, setFirmado]   = useState(false)
   const [error, setError]       = useState('')
@@ -24,16 +21,15 @@ const ECDSASigner = ({ hashHex, onFirma, labelBoton = 'Firmar documento', disabl
       setError('No hay hash para firmar')
       return
     }
-    if (!tieneClavesLocales()) {
-      setError('No tienes claves de seguridad. Ve a tu perfil y genéralas primero.')
+    if (!privKey) {
+      setError('Carga tu archivo de claves privadas antes de firmar.')
       return
     }
 
     try {
       setFirmando(true)
       setError('')
-      const ecdsaPrivKey = await cargarClavePrivadaECDSA()
-      const firma = await firmarECDSA(ecdsaPrivKey, hashHex)
+      const firma = await firmarECDSA(privKey, hashHex)
       setFirmado(true)
       onFirma(firma)
     } catch (err) {
@@ -47,14 +43,14 @@ const ECDSASigner = ({ hashHex, onFirma, labelBoton = 'Firmar documento', disabl
     <div>
       <button
         onClick={handleFirmar}
-        disabled={disabled || firmando || firmado || !hashHex}
+        disabled={disabled || firmando || firmado || !hashHex || !privKey}
         style={{
           padding: '10px 20px',
-          backgroundColor: firmado ? '#28a745' : (disabled || firmando || !hashHex) ? '#ccc' : '#1a237e',
+          backgroundColor: firmado ? '#28a745' : (disabled || firmando || !hashHex || !privKey) ? '#ccc' : '#1a237e',
           color: 'white',
           border: 'none',
           borderRadius: '5px',
-          cursor: (disabled || firmando || firmado || !hashHex) ? 'not-allowed' : 'pointer',
+          cursor: (disabled || firmando || firmado || !hashHex || !privKey) ? 'not-allowed' : 'pointer',
           fontSize: '14px',
           fontWeight: 'bold',
         }}

@@ -5,11 +5,9 @@
 
 const subtle = window.crypto.subtle;
 
-// ─── Constantes de localStorage ───────────────────────────────────────────────
-export const LS_ECDH_PRIV  = 'burroomies_ecdh_priv';
-export const LS_ECDH_PUB   = 'burroomies_ecdh_pub';
-export const LS_ECDSA_PRIV = 'burroomies_ecdsa_priv';
-export const LS_ECDSA_PUB  = 'burroomies_ecdsa_pub';
+// ─── Constantes de localStorage (solo claves PÚBLICAS) ───────────────────────
+export const LS_ECDH_PUB  = 'burroomies_ecdh_pub';
+export const LS_ECDSA_PUB = 'burroomies_ecdsa_pub';
 
 // ─── Generación de pares de claves ────────────────────────────────────────────
 
@@ -225,22 +223,67 @@ export const verificarECDSA = async (publicKeyB64, signatureB64, hashHex) => {
   }
 };
 
-// ─── Helpers de localStorage ──────────────────────────────────────────────────
+// ─── Archivo de claves privadas ───────────────────────────────────────────────
 
-/** Devuelve true si el usuario ya generó sus claves en este dispositivo. */
-export const tieneClavesLocales = () =>
-  !!localStorage.getItem(LS_ECDH_PRIV) && !!localStorage.getItem(LS_ECDSA_PRIV);
+/**
+ * Descarga las claves privadas ECDH y ECDSA como archivo JSON en el dispositivo.
+ * El usuario debe guardar este archivo en un lugar seguro.
+ * @param {CryptoKey} ecdhPrivKey
+ * @param {CryptoKey} ecdsaPrivKey
+ * @param {string|number} userId
+ */
+export const descargarClavePrivada = async (ecdhPrivKey, ecdsaPrivKey, userId) => {
+  const [ecdhJWK, ecdsaJWK] = await Promise.all([
+    exportarClavePrivadaJWK(ecdhPrivKey),
+    exportarClavePrivadaJWK(ecdsaPrivKey),
+  ]);
 
-/** Carga y devuelve la clave privada ECDH desde localStorage. */
-export const cargarClavePrivadaECDH = () => {
-  const jwk = localStorage.getItem(LS_ECDH_PRIV);
-  if (!jwk) throw new Error('No hay clave ECDH privada en localStorage');
-  return importarClavePrivadaECDHJWK(jwk);
+  const contenido = JSON.stringify({
+    v: 1,
+    app: 'burroomies',
+    usuario: userId,
+    ecdhPriv:  ecdhJWK,
+    ecdsaPriv: ecdsaJWK,
+  }, null, 2);
+
+  const blob = new Blob([contenido], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `burroomies_claves_${userId}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
-/** Carga y devuelve la clave privada ECDSA desde localStorage. */
-export const cargarClavePrivadaECDSA = () => {
-  const jwk = localStorage.getItem(LS_ECDSA_PRIV);
-  if (!jwk) throw new Error('No hay clave ECDSA privada en localStorage');
-  return importarClavePrivadaECDSAJWK(jwk);
-};
+/**
+ * Lee un archivo de claves e importa las CryptoKey correspondientes.
+ * @param {File} archivo
+ * @returns {Promise<{ ecdhPrivKey: CryptoKey, ecdsaPrivKey: CryptoKey }>}
+ */
+export const cargarClavePrivadaDesdeArchivo = (archivo) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const datos = JSON.parse(e.target.result);
+        if (datos.v !== 1 || datos.app !== 'burroomies') {
+          throw new Error('El archivo no es un archivo de claves Burroomies válido');
+        }
+        const [ecdhPrivKey, ecdsaPrivKey] = await Promise.all([
+          importarClavePrivadaECDHJWK(datos.ecdhPriv),
+          importarClavePrivadaECDSAJWK(datos.ecdsaPriv),
+        ]);
+        resolve({ ecdhPrivKey, ecdsaPrivKey, usuario: datos.usuario });
+      } catch (err) {
+        reject(new Error('Archivo de claves inválido: ' + err.message));
+      }
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    reader.readAsText(archivo);
+  });
+
+// ─── Helper de localStorage ───────────────────────────────────────────────────
+
+/** Devuelve true si el usuario ya generó sus claves (las públicas están en localStorage). */
+export const tieneClavesGeneradas = () =>
+  !!localStorage.getItem(LS_ECDH_PUB) && !!localStorage.getItem(LS_ECDSA_PUB);

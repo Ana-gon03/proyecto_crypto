@@ -6,16 +6,13 @@ import FooterInicio from '../../components/common/FooterInicio'
 import AESEncryptor from '../../components/common/AESEncryptor'
 import ECDSASigner from '../../components/common/ECDSASigner'
 import {
-  tieneClavesLocales,
-  cargarClavePrivadaECDH,
+  cargarClavePrivadaDesdeArchivo,
   importarClavePublicaECDH,
   derivarSecretoCompartido,
   derivarClaveAESDeSecreto,
   descifrarAESGCM,
   verificarECDSA,
   calcularSHA256,
-  firmarECDSA,
-  cargarClavePrivadaECDSA,
 } from '../../utils/cryptoUtils'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,17 +59,51 @@ const UIContratos = () => {
   const [firmaArrendatario, setFirmaArrendatario] = useState('')
   const [aceptando,      setAceptando]      = useState(false)
 
+  // Claves públicas de ambas partes (se cargan aparte del arrendamiento)
+  const [clavesArrendatario, setClavesArrendatario] = useState(null)
+  const [clavesArrendador,   setClavesArrendador]   = useState(null)
+
+  // Claves privadas del usuario actual (cargadas desde localStorage o archivo)
+  const [clavesPrivadas, setClavesPrivadas] = useState(null)
+  const [cargandoClaves, setCargandoClaves] = useState(false)
+  const inputClaveRef = useRef()
+
   // ── Carga inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
     cargarDatos()
   }, [idArrendamiento])
+
+  const handleCargarArchivoClaves = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      setCargandoClaves(true)
+      setError('')
+      const resultado = await cargarClavePrivadaDesdeArchivo(file)
+      setClavesPrivadas({ ecdhPrivKey: resultado.ecdhPrivKey, ecdsaPrivKey: resultado.ecdsaPrivKey })
+      setMensaje('Claves cargadas correctamente desde archivo')
+    } catch (err) {
+      setError('Error al cargar el archivo de claves: ' + err.message)
+    } finally {
+      setCargandoClaves(false)
+      e.target.value = ''
+    }
+  }
+
+  const obtenerClavesPublicas = async (idUsuario) => {
+    try {
+      const resp = await fetch(`http://localhost:5000/api/usuarios/${idUsuario}/claves-publicas`)
+      if (resp.ok) return await resp.json()
+    } catch { /* silencioso */ }
+    return null
+  }
 
   const cargarDatos = async () => {
     try {
       setCargando(true)
       setError('')
 
-      // Carga el arrendamiento para obtener los IDs de arrendador y arrendatario
+      // 1. Carga el arrendamiento para obtener los IDs de arrendador y arrendatario
       const respArr = await fetch(`http://localhost:5000/api/arrendamientos/${idArrendamiento}`, {
         headers: { 'x-user-id': userId },
       })
@@ -80,7 +111,26 @@ const UIContratos = () => {
       const arrData = await respArr.json()
       setArrendamiento(arrData)
 
-      // Intenta cargar el contrato existente (puede no existir aún)
+      // 2. Obtiene claves públicas del arrendatario directamente desde /usuarios/:id/claves-publicas
+      const idUsuarioArrendatario = arrData.arrendatario?.usuario?.idUsuario
+      if (idUsuarioArrendatario) {
+        const claves = await obtenerClavesPublicas(idUsuarioArrendatario)
+        setClavesArrendatario(claves)
+      }
+
+      // 3. Obtiene claves públicas del arrendador (necesarias para que el arrendatario descifre)
+      // El arrendador está en propiedad → arrendador → usuario_idUsuario
+      // Lo pedimos a través del contrato completo si existe, o buscamos por arrendadorId del localStorage
+      const idUsuarioArrendador = localStorage.getItem('rol') === 'arrendatario'
+        ? null // se obtiene del contrato más abajo
+        : parseInt(userId)
+
+      if (idUsuarioArrendador) {
+        const clavesArr = await obtenerClavesPublicas(idUsuarioArrendador)
+        setClavesArrendador(clavesArr)
+      }
+
+      // 4. Intenta cargar el contrato existente (puede no existir aún)
       const respCon = await fetch(
         `http://localhost:5000/api/contratos/arrendamiento/${idArrendamiento}`,
         { headers: { 'x-user-id': userId } }
@@ -89,12 +139,22 @@ const UIContratos = () => {
         setContrato(null)
       } else if (respCon.ok) {
         const conData = await respCon.json()
-        // Carga el contrato completo (con claves públicas)
+        // Carga el contrato completo (incluye ecdhPublicKey del arrendador vía ContratosCtrl)
         const respFull = await fetch(
           `http://localhost:5000/api/contratos/${conData.idContrato}`,
           { headers: { 'x-user-id': userId } }
         )
-        if (respFull.ok) setContrato(await respFull.json())
+        if (respFull.ok) {
+          const contratoCompleto = await respFull.json()
+          setContrato(contratoCompleto)
+          // Si el arrendatario está viendo, obtiene claves del arrendador desde el contrato completo
+          if (contratoCompleto.arrendador?.ecdhPublicKey) {
+            setClavesArrendador({
+              ecdhPublicKey:  contratoCompleto.arrendador.ecdhPublicKey,
+              ecdsaPublicKey: contratoCompleto.arrendador.ecdsaPublicKey,
+            })
+          }
+        }
       }
     } catch (err) {
       setError(err.message)
@@ -165,15 +225,20 @@ const UIContratos = () => {
 
   // ── Descifrar y verificar contrato (arrendatario) ────────────────────────
   const handleDescifrar = async () => {
-    if (!contrato?.contratoCifradoB64 || !contrato?.arrendador?.ecdhPublicKey) {
-      setError('No se puede descifrar: faltan datos del contrato')
+    const ecdhPubArrendador = clavesArrendador?.ecdhPublicKey || contrato?.arrendador?.ecdhPublicKey
+    if (!contrato?.contratoCifradoB64 || !ecdhPubArrendador) {
+      setError('No se puede descifrar: falta la clave pública ECDH del arrendador')
+      return
+    }
+    if (!clavesPrivadas?.ecdhPrivKey) {
+      setError('Carga tu archivo de claves privadas antes de descifrar.')
       return
     }
     try {
       setError('')
       // Deriva shared_secret: ECDH(arrendatario_priv, arrendador_pub)
-      const miPriv       = await cargarClavePrivadaECDH()
-      const suPub        = await importarClavePublicaECDH(contrato.arrendador.ecdhPublicKey)
+      const miPriv       = clavesPrivadas.ecdhPrivKey
+      const suPub        = await importarClavePublicaECDH(ecdhPubArrendador)
       const sharedBits   = await derivarSecretoCompartido(miPriv, suPub)
       const aesKey       = await derivarClaveAESDeSecreto(sharedBits)
 
@@ -189,9 +254,10 @@ const UIContratos = () => {
       setPdfDescifrado(blobURL)
 
       // Verifica la firma ECDSA del arrendador
-      if (contrato.contratoFirmaArrendador && contrato.arrendador.ecdsaPublicKey) {
+      const ecdsaPubArrendador = clavesArrendador?.ecdsaPublicKey || contrato?.arrendador?.ecdsaPublicKey
+      if (contrato.contratoFirmaArrendador && ecdsaPubArrendador) {
         const valida = await verificarECDSA(
-          contrato.arrendador.ecdsaPublicKey,
+          ecdsaPubArrendador,
           contrato.contratoFirmaArrendador,
           contrato.contratoHashDocumento
         )
@@ -202,17 +268,9 @@ const UIContratos = () => {
     }
   }
 
-  // Callback de ECDSASigner para el arrendatario
-  const handleFirmaArrendatario = (firma) => {
+  // Callback de ECDSASigner: firma y envía al backend en un solo paso
+  const handleFirmaYAceptar = async (firma) => {
     setFirmaArrendatario(firma)
-  }
-
-  // ── Aceptar y enviar firma del arrendatario ───────────────────────────────
-  const handleAceptar = async () => {
-    if (!firmaArrendatario) {
-      setError('Debes firmar el contrato antes de aceptarlo')
-      return
-    }
     try {
       setAceptando(true)
       setError('')
@@ -224,13 +282,13 @@ const UIContratos = () => {
           'x-arrendatario-id': arrendatarioId,
         },
         body: JSON.stringify({
-          idContrato:              contrato.idContrato,
-          contratoFirmaArrendatario: firmaArrendatario,
+          idContrato:                contrato.idContrato,
+          contratoFirmaArrendatario: firma,
         }),
       })
       const data = await resp.json()
       if (!resp.ok) throw new Error(data.error || 'Error al aceptar contrato')
-      setMensaje('Contrato aceptado exitosamente')
+      setMensaje('Contrato aceptado y firmado exitosamente')
       await cargarDatos()
     } catch (err) {
       setError(err.message)
@@ -248,39 +306,6 @@ const UIContratos = () => {
       <Navbar />
       <div style={{ flex: 1, textAlign: 'center', padding: '60px' }}>
         <p style={{ color: '#666' }}>Cargando información del contrato...</p>
-      </div>
-      <FooterInicio />
-    </div>
-  )
-
-  // Bloqueo si el usuario no tiene claves
-  if (!tieneClavesLocales()) return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar />
-      <div style={{ flex: 1, maxWidth: '600px', margin: '40px auto', padding: '20px', textAlign: 'center' }}>
-        <div style={{
-          border: '2px solid #ffc107', borderRadius: '8px', padding: '30px',
-          backgroundColor: '#fffbf0',
-        }}>
-          <p style={{ fontSize: '48px', marginBottom: '10px' }}>🔑</p>
-          <h2 style={{ color: '#856404', marginBottom: '15px' }}>
-            Necesitas claves de seguridad
-          </h2>
-          <p style={{ color: '#666', marginBottom: '20px' }}>
-            Para acceder al módulo de contratos cifrados debes generar primero tus
-            claves criptográficas desde tu perfil.
-          </p>
-          <Link
-            to={linkPerfil}
-            style={{
-              display: 'inline-block', padding: '12px 24px',
-              backgroundColor: '#1a237e', color: 'white',
-              borderRadius: '5px', textDecoration: 'none', fontWeight: 'bold',
-            }}
-          >
-            Ir a mi perfil y generar claves
-          </Link>
-        </div>
       </div>
       <FooterInicio />
     </div>
@@ -308,6 +333,67 @@ const UIContratos = () => {
           <div style={{ padding: '12px', backgroundColor: '#f8d7da', color: '#721c24',
             borderRadius: '5px', marginBottom: '16px' }}>
             ❌ {error}
+          </div>
+        )}
+
+        {/* Panel de claves privadas */}
+        {!clavesPrivadas ? (
+          <div style={{
+            border: '2px solid #ffc107', borderRadius: '8px', padding: '18px',
+            backgroundColor: '#fffbf0', marginBottom: '20px',
+          }}>
+            <p style={{ fontWeight: 'bold', color: '#856404', marginBottom: '8px' }}>
+              🔑 Carga tu archivo de claves privadas para continuar
+            </p>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+              Selecciona el archivo <code>burroomies_claves_*.json</code> que descargaste
+              cuando generaste tus claves. Sin él no podrás cifrar, firmar ni descifrar contratos.
+            </p>
+            <input
+              ref={inputClaveRef}
+              type="file"
+              accept=".json"
+              onChange={handleCargarArchivoClaves}
+              style={{ display: 'none' }}
+            />
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => inputClaveRef.current.click()}
+                disabled={cargandoClaves}
+                style={{
+                  padding: '9px 18px', backgroundColor: '#1a237e', color: 'white',
+                  border: 'none', borderRadius: '5px', cursor: cargandoClaves ? 'not-allowed' : 'pointer',
+                  fontSize: '14px', fontWeight: 'bold',
+                }}
+              >
+                {cargandoClaves ? 'Cargando...' : '📂 Seleccionar archivo de claves'}
+              </button>
+              <Link
+                to={linkPerfil}
+                style={{ fontSize: '13px', color: '#1a237e' }}
+              >
+                ¿No tienes el archivo? Genera tus claves desde tu perfil
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            border: '1px solid #28a745', borderRadius: '8px', padding: '10px 16px',
+            backgroundColor: '#f0fff4', marginBottom: '16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ color: '#155724', fontSize: '13px', fontWeight: 'bold' }}>
+              ✅ Claves privadas cargadas — puedes cifrar, firmar y descifrar
+            </span>
+            <button
+              onClick={() => { setClavesPrivadas(null); setMensaje('') }}
+              style={{
+                background: 'none', border: 'none', color: '#6c757d',
+                cursor: 'pointer', fontSize: '12px',
+              }}
+            >
+              Cambiar archivo
+            </button>
           </div>
         )}
 
@@ -373,12 +459,13 @@ const UIContratos = () => {
                     <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>
                       Cifrar con la clave pública ECDH del arrendatario
                     </p>
-                    {arrendamiento?.arrendatario?.usuario?.ecdhPublicKey ? (
+                    {clavesArrendatario?.ecdhPublicKey ? (
                       <AESEncryptor
                         pdfBuffer={pdfBuffer}
-                        ecdhPublicKeyB64={arrendamiento.arrendatario.usuario.ecdhPublicKey}
+                        ecdhPublicKeyB64={clavesArrendatario.ecdhPublicKey}
+                        ecdhPrivKey={clavesPrivadas?.ecdhPrivKey || null}
                         onCifrado={handleCifrado}
-                        disabled={!pdfBuffer}
+                        disabled={!pdfBuffer || !clavesPrivadas}
                       />
                     ) : (
                       <p style={{ color: '#856404', fontSize: '13px' }}>
@@ -399,6 +486,7 @@ const UIContratos = () => {
                     <ECDSASigner
                       hashHex={hashHex}
                       onFirma={setFirmaArrendador}
+                      privKey={clavesPrivadas?.ecdsaPrivKey || null}
                       labelBoton="Firmar contrato"
                       disabled={!cifradoB64}
                     />
@@ -486,31 +574,21 @@ const UIContratos = () => {
                   </div>
                 )}
 
-                {/* Firmar y aceptar */}
-                {contrato.contratoEstado === 'firmado' && pdfDescifrado && firmaValida && (
+                {/* Firmar y aceptar — un solo clic: firma + envío al backend */}
+                {contrato.contratoEstado === 'firmado' && pdfDescifrado && firmaValida && !firmaArrendatario && (
                   <div style={{ marginTop: '20px', borderTop: '1px solid #e0e0e0', paddingTop: '20px' }}>
                     <p style={{ fontSize: '14px', color: '#333', marginBottom: '12px' }}>
-                      Si estás de acuerdo con el contrato, fírmalo digitalmente y acéptalo:
+                      Si estás de acuerdo con el contrato, fírmalo digitalmente para aceptarlo:
                     </p>
-                    <ECDSASigner
-                      hashHex={contrato.contratoHashDocumento}
-                      onFirma={handleFirmaArrendatario}
-                      labelBoton="Firmar y aceptar contrato"
-                    />
-                    {firmaArrendatario && (
-                      <div style={{ marginTop: '12px' }}>
-                        <button
-                          onClick={handleAceptar}
-                          disabled={aceptando}
-                          style={{
-                            ...btnPrincipal,
-                            backgroundColor: aceptando ? '#ccc' : '#28a745',
-                            cursor: aceptando ? 'not-allowed' : 'pointer',
-                          }}
-                        >
-                          {aceptando ? 'Enviando...' : '✅ Confirmar aceptación del contrato'}
-                        </button>
-                      </div>
+                    {aceptando ? (
+                      <p style={{ color: '#666', fontSize: '14px' }}>Enviando firma al servidor...</p>
+                    ) : (
+                      <ECDSASigner
+                        hashHex={contrato.contratoHashDocumento}
+                        onFirma={handleFirmaYAceptar}
+                        privKey={clavesPrivadas?.ecdsaPrivKey || null}
+                        labelBoton="Firmar y aceptar contrato"
+                      />
                     )}
                   </div>
                 )}

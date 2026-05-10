@@ -351,6 +351,32 @@ router.delete('/eliminar-cuenta-arrendador', async (req, res) => {
 });
 
 // =====================================================
+// OBTENER CLAVES PÚBLICAS DE UN USUARIO
+// GET /usuarios/:id/claves-publicas
+// Solo devuelve claves públicas — información no sensible.
+// =====================================================
+router.get('/:id/claves-publicas', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = await Usuario.findByPk(parseInt(id), {
+      attributes: ['idUsuario', 'ecdhPublicKey', 'ecdsaPublicKey', 'clavesGeneradas']
+    });
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    res.json({
+      idUsuario:       usuario.idUsuario,
+      ecdhPublicKey:   usuario.ecdhPublicKey,
+      ecdsaPublicKey:  usuario.ecdsaPublicKey,
+      clavesGeneradas: usuario.clavesGeneradas,
+    });
+  } catch (error) {
+    console.error('Error al obtener claves públicas:', error);
+    res.status(500).json({ error: 'Error al obtener claves públicas' });
+  }
+});
+
+// =====================================================
 // GUARDAR CLAVES PÚBLICAS ECDH / ECDSA DEL USUARIO
 // PATCH /usuarios/:id/claves
 // Solo recibe claves PÚBLICAS — las privadas nunca salen del cliente.

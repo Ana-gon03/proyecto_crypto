@@ -5,7 +5,12 @@ const NavbarArrendador = () => {
   const navigate = useNavigate()
 
   const handleCerrarSesion = () => {
+    // Preserva las claves públicas (no son sensibles y sirven para saber si el usuario ya generó claves)
+    const ecdhPub  = localStorage.getItem('burroomies_ecdh_pub')
+    const ecdsaPub = localStorage.getItem('burroomies_ecdsa_pub')
     localStorage.clear()
+    if (ecdhPub)  localStorage.setItem('burroomies_ecdh_pub',  ecdhPub)
+    if (ecdsaPub) localStorage.setItem('burroomies_ecdsa_pub', ecdsaPub)
     navigate('/')
   }
 

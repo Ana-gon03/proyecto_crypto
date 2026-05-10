@@ -3,29 +3,28 @@ import {
   generarParECDH,
   generarParECDSA,
   exportarClavePublicaBase64,
-  exportarClavePrivadaJWK,
-  tieneClavesLocales,
-  LS_ECDH_PRIV,
+  descargarClavePrivada,
+  tieneClavesGeneradas,
   LS_ECDH_PUB,
-  LS_ECDSA_PRIV,
   LS_ECDSA_PUB,
 } from '../../utils/cryptoUtils'
 
 /**
- * Muestra el estado de las claves criptográficas del usuario y permite generarlas.
- * Las claves privadas quedan SOLO en localStorage; las públicas van al backend.
+ * Muestra el estado de las claves criptográficas y permite generarlas.
+ * Las claves privadas SE DESCARGAN como archivo JSON — nunca se guardan en localStorage.
+ * Solo las claves públicas quedan en localStorage (son información no sensible).
  *
  * Props:
- *   onClavesListas?: () => void  — se llama cuando las claves están disponibles
+ *   onClavesListas?: () => void
  */
 const ECDHKeyManager = ({ onClavesListas }) => {
-  const [tienClaves, setTienClaves]   = useState(false)
-  const [generando, setGenerando]     = useState(false)
-  const [mensaje, setMensaje]         = useState('')
-  const [error, setError]             = useState('')
+  const [tienClaves, setTienClaves] = useState(false)
+  const [generando,  setGenerando]  = useState(false)
+  const [mensaje,    setMensaje]    = useState('')
+  const [error,      setError]      = useState('')
 
   const verificar = useCallback(() => {
-    const ok = tieneClavesLocales()
+    const ok = tieneClavesGeneradas()
     setTienClaves(ok)
     if (ok && onClavesListas) onClavesListas()
   }, [onClavesListas])
@@ -36,7 +35,7 @@ const ECDHKeyManager = ({ onClavesListas }) => {
     if (confirmar && tienClaves) {
       const ok = window.confirm(
         '⚠️ Ya tienes claves de seguridad generadas.\n\n' +
-        'Si las regeneras, los contratos cifrados anteriormente NO podrán descifrarse en este dispositivo.\n\n' +
+        'Si las regeneras, los contratos cifrados anteriormente NO podrán descifrarse con el nuevo archivo.\n\n' +
         '¿Deseas continuar?'
       )
       if (!ok) return
@@ -52,34 +51,32 @@ const ECDHKeyManager = ({ onClavesListas }) => {
         generarParECDSA(),
       ])
 
-      const [ecdhPubB64, ecdhPrivJWK, ecdsaPubB64, ecdsaPrivJWK] = await Promise.all([
+      const [ecdhPubB64, ecdsaPubB64] = await Promise.all([
         exportarClavePublicaBase64(parECDH.publicKey),
-        exportarClavePrivadaJWK(parECDH.privateKey),
         exportarClavePublicaBase64(parECDSA.publicKey),
-        exportarClavePrivadaJWK(parECDSA.privateKey),
       ])
 
-      // Guarda claves privadas SOLO en localStorage
-      localStorage.setItem(LS_ECDH_PUB,   ecdhPubB64)
-      localStorage.setItem(LS_ECDH_PRIV,  JSON.stringify(ecdhPrivJWK))
-      localStorage.setItem(LS_ECDSA_PUB,  ecdsaPubB64)
-      localStorage.setItem(LS_ECDSA_PRIV, JSON.stringify(ecdsaPrivJWK))
+      // Guarda SOLO las claves públicas en localStorage
+      localStorage.setItem(LS_ECDH_PUB,  ecdhPubB64)
+      localStorage.setItem(LS_ECDSA_PUB, ecdsaPubB64)
 
-      // Envía SOLO claves públicas al servidor
+      // Envía claves públicas al servidor
       const userId = localStorage.getItem('userId')
       const resp = await fetch(`http://localhost:5000/api/usuarios/${userId}/claves`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ecdhPublicKey: ecdhPubB64, ecdsaPublicKey: ecdsaPubB64 }),
       })
-
       if (!resp.ok) {
         const data = await resp.json()
         throw new Error(data.error || 'Error al guardar claves en el servidor')
       }
 
+      // Descarga el archivo con las claves privadas
+      await descargarClavePrivada(parECDH.privateKey, parECDSA.privateKey, userId)
+
       setTienClaves(true)
-      setMensaje('Claves generadas y guardadas correctamente')
+      setMensaje('¡Claves generadas! Se descargó el archivo — guárdalo en un lugar seguro.')
       if (onClavesListas) onClavesListas()
     } catch (err) {
       setError('Error al generar claves: ' + err.message)
@@ -102,35 +99,36 @@ const ECDHKeyManager = ({ onClavesListas }) => {
 
       {tienClaves ? (
         <div>
-          <p style={{ color: '#155724', fontWeight: 'bold', marginBottom: '10px' }}>
-            ✅ Claves de seguridad generadas en este dispositivo
+          <p style={{ color: '#155724', fontWeight: 'bold', marginBottom: '8px' }}>
+            ✅ Claves de seguridad generadas
           </p>
-          <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
-            Tus claves privadas están protegidas localmente. Puedes cifrar y firmar contratos.
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
+            Tus claves públicas están registradas. Para firmar o descifrar contratos necesitarás
+            el archivo <code>burroomies_claves_*.json</code> que se descargó al generarlas.
+          </p>
+          <p style={{ fontSize: '12px', color: '#999', marginBottom: '12px' }}>
+            ⚠️ Si perdiste el archivo, deberás regenerar tus claves (los contratos anteriores no podrán descifrarse).
           </p>
           <button
             onClick={() => handleGenerar(true)}
             disabled={generando}
             style={{
-              padding: '8px 16px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: generando ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
+              padding: '8px 16px', backgroundColor: '#6c757d', color: 'white',
+              border: 'none', borderRadius: '5px',
+              cursor: generando ? 'not-allowed' : 'pointer', fontSize: '13px',
             }}
           >
-            {generando ? 'Regenerando...' : '🔄 Regenerar claves'}
+            {generando ? 'Regenerando...' : '🔄 Regenerar claves (nuevo archivo)'}
           </button>
         </div>
       ) : (
         <div>
-          <p style={{ color: '#856404', fontWeight: 'bold', marginBottom: '10px' }}>
-            ⚠️ Aún no tienes claves de seguridad en este dispositivo
+          <p style={{ color: '#856404', fontWeight: 'bold', marginBottom: '8px' }}>
+            ⚠️ Aún no tienes claves de seguridad
           </p>
           <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
-            Necesitas generar tus claves para poder crear, firmar y descifrar contratos.
+            Genera tus claves para poder crear, firmar y descifrar contratos.
+            Se descargará un archivo JSON que debes guardar en un lugar seguro.
           </p>
           <button
             onClick={() => handleGenerar(false)}
@@ -138,12 +136,9 @@ const ECDHKeyManager = ({ onClavesListas }) => {
             style={{
               padding: '10px 20px',
               backgroundColor: generando ? '#ccc' : '#1a237e',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
+              color: 'white', border: 'none', borderRadius: '5px',
               cursor: generando ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold',
+              fontSize: '14px', fontWeight: 'bold',
             }}
           >
             {generando ? 'Generando...' : '🔑 Generar mis claves de seguridad'}
