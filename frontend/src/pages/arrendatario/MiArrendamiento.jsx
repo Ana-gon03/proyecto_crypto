@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
+import { tieneClavesLocales } from '../../utils/cryptoUtils'
 
 const MiArrendamiento = () => {
   const navigate = useNavigate()
@@ -235,24 +236,43 @@ const MiArrendamiento = () => {
                   </p>
                 </div>
 
-                {/* Botón descargar contrato */}
-                <button 
-                  onClick={handleDescargarContrato}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#1a237e',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    marginBottom: '20px'
-                  }}
-                >
-                  📄 Descargar Contrato
-                </button>
+                {/* Botones de contrato */}
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  <button
+                    onClick={handleDescargarContrato}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    📄 Ver PDF
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/arrendatario/contratos/${arrendamiento.idArrendamiento}`)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      backgroundColor: tieneClavesLocales() ? '#1a237e' : '#856404',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                    }}
+                    title={tieneClavesLocales() ? 'Ver y firmar contrato cifrado' : 'Ve a tu perfil y genera tus claves primero'}
+                  >
+                    🔐 {tieneClavesLocales() ? 'Ver Contrato Cifrado' : 'Requiere claves'}
+                  </button>
+                </div>
 
                 <hr style={{ margin: '0 0 20px 0' }} />
 

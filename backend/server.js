@@ -20,6 +20,8 @@ const {
   Servicio,
   ServicioHasPropiedad,
   Administrador,
+  Contrato,
+  SesionECDH,
 } = require('./src/models/associations');
 
 // Importar rutas
@@ -31,6 +33,7 @@ const contactoRoutes = require('./src/routes/contacto.routes');
 const arrendamientoRoutes = require('./src/routes/arrendamiento.routes');
 const usuarioRoutes = require('./src/routes/usuario.routes');
 const propiedadRoutes = require('./src/routes/propiedad.routes');
+const contratosRoutes = require('./src/routes/contratos.routes');
 
 
 dotenv.config();
@@ -50,6 +53,7 @@ app.use('/api', contactoRoutes);
 app.use('/api/arrendamientos', arrendamientoRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/propiedades', propiedadRoutes);
+app.use('/api/contratos', contratosRoutes);
 
 // Servir archivos estáticos (para las fotos)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -5,6 +5,7 @@ import FooterInicio from '../../components/common/FooterInicio'
 import ModalDetalleArrendamiento from '../../components/arrendador/ModalDetalleArrendamiento'
 import ModalConfirmacion from '../../components/common/ModalConfirmacion'
 import { getArrendamientosArrendador, finalizarArrendamiento, descargarContratoPDF } from '../../services/arrendamientoService'
+import { tieneClavesLocales } from '../../utils/cryptoUtils'
 
 const MisArrendamientosArrendador = () => {
   const navigate = useNavigate()
@@ -151,6 +152,22 @@ const MisArrendamientosArrendador = () => {
                       style={{ padding: '0.5rem 1rem', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                     >
                       📄 Ver PDF
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/contratos/${arrendamiento.idArrendamiento}`)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: tieneClavesLocales() ? '#1a237e' : '#856404',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                      }}
+                      title={tieneClavesLocales() ? 'Gestionar contrato cifrado' : 'Genera tus claves en tu perfil primero'}
+                    >
+                      🔐 Contrato Cifrado
                     </button>
                     
                     {arrendamiento.arrendamientoValArrendador === 0 && (

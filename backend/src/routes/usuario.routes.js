@@ -350,4 +350,36 @@ router.delete('/eliminar-cuenta-arrendador', async (req, res) => {
   }
 });
 
+// =====================================================
+// GUARDAR CLAVES PÚBLICAS ECDH / ECDSA DEL USUARIO
+// PATCH /usuarios/:id/claves
+// Solo recibe claves PÚBLICAS — las privadas nunca salen del cliente.
+// =====================================================
+router.patch('/:id/claves', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ecdhPublicKey, ecdsaPublicKey } = req.body;
+
+    if (!ecdhPublicKey || !ecdsaPublicKey) {
+      return res.status(400).json({ error: 'Se requieren ecdhPublicKey y ecdsaPublicKey' });
+    }
+
+    const usuario = await Usuario.findByPk(parseInt(id));
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await usuario.update({
+      ecdhPublicKey,
+      ecdsaPublicKey,
+      clavesGeneradas: 1,
+    });
+
+    res.json({ message: 'Claves públicas guardadas correctamente', clavesGeneradas: 1 });
+  } catch (error) {
+    console.error('Error al guardar claves:', error);
+    res.status(500).json({ error: 'Error al guardar claves', details: error.message });
+  }
+});
+
 module.exports = router;

@@ -20,6 +20,7 @@ import CrearVivienda from './pages/arrendador/CrearVivienda'
 import CrearArrendamiento from './pages/arrendador/CrearArrendamiento'
 import ProtectedArrendadorRoute from './components/common/ProtectedArrendadorRoute'
 import PerfilArrendador from './pages/arrendador/PerfilArrendador'
+import UIContratos from './pages/arrendador/UIContratos'
 
 // Páginas de admin
 import AdminInicioSesionPage from './pages/admin/AdminInicioSesionPage'
@@ -70,6 +71,14 @@ function App() {
         } />
         <Route path="/arrendador/perfil" element={
           <ProtectedArrendadorRoute><PerfilArrendador /></ProtectedArrendadorRoute>
+        } />
+
+        {/* Rutas de contratos cifrados — accesibles por arrendador y arrendatario */}
+        <Route path="/contratos/:idArrendamiento" element={
+          <ProtectedArrendadorRoute><UIContratos /></ProtectedArrendadorRoute>
+        } />
+        <Route path="/arrendatario/contratos/:idArrendamiento" element={
+          <ProtectedArrendatarioRoute><UIContratos /></ProtectedArrendatarioRoute>
         } />
 
         {/* Rutas de arrendatario */}

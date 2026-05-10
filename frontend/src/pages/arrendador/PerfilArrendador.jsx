@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NavbarArrendador from '../../components/common/NavbarArrendador'
 import FooterInicio from '../../components/common/FooterInicio'
 import { getPerfilArrendador, actualizarPerfilArrendador } from '../../services/authService'
+import ECDHKeyManager from '../../components/common/ECDHKeyManager'
 
 const PerfilArrendador = () => {
   const navigate = useNavigate()
@@ -307,6 +308,11 @@ const PerfilArrendador = () => {
               >
                 ✏️ Editar Perfil
               </button>
+
+              {/* Módulo de claves criptográficas */}
+              <div style={{ marginTop: '25px' }}>
+                <ECDHKeyManager />
+              </div>
 
               {/* Botón Eliminar Cuenta */}
               <div style={{ marginTop: '15px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
