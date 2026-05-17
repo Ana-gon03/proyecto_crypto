@@ -12,8 +12,6 @@ const Resena = require('./resena.model');
 const Servicio = require('./servicio.model');
 const ServicioHasPropiedad = require('./servicioHasPropiedad.model');
 const Administrador = require('./administrador.model');
-const Contrato = require('./contrato.model');
-const SesionECDH = require('./sesionECDH.model');
 
 // Relaciones de Direccion
 Direccion.belongsTo(CP, { foreignKey: 'CP_idCP', as: 'cp' });
@@ -61,14 +59,6 @@ Arrendatario.hasMany(Resena, { foreignKey: 'arrendatario_idArrendatario', as: 'r
 Servicio.belongsToMany(Propiedad, { through: ServicioHasPropiedad, foreignKey: 'servicio_idServicio', otherKey: 'propiedad_idPropiedad', as: 'propiedades' });
 Propiedad.belongsToMany(Servicio, { through: ServicioHasPropiedad, foreignKey: 'propiedad_idPropiedad', otherKey: 'servicio_idServicio', as: 'servicios' });
 
-// Relaciones de Contrato
-Contrato.belongsTo(Arrendamiento, { foreignKey: 'arrendamiento_idArrendamiento', as: 'arrendamiento' });
-Arrendamiento.hasOne(Contrato, { foreignKey: 'arrendamiento_idArrendamiento', as: 'contrato' });
-
-// Relaciones de SesionECDH
-SesionECDH.belongsTo(Usuario, { foreignKey: 'usuario_idUsuario', as: 'usuario' });
-Usuario.hasMany(SesionECDH, { foreignKey: 'usuario_idUsuario', as: 'sesionesECDH' });
-
 module.exports = {
   CP,
   Direccion,
@@ -84,6 +74,4 @@ module.exports = {
   Servicio,
   ServicioHasPropiedad,
   Administrador,
-  Contrato,
-  SesionECDH,
 };

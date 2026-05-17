@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { getUnidadesAcademicas, getCarrerasByUnidad } from '../../services/catalogosService'
 import { validarCampo, registrarEstudiante } from '../../services/authService'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import SubirDocumento from '../ui/SubirDocumento'
 import LegalModal from '../ui/LegalModal'
+import burroLogo from '../../assets/burro.png'
+import '../../styles/Registro.css'
+
 
 // ─── Estilos del toggle "postergar" ─────────────────────────────────────────
 
@@ -437,230 +440,364 @@ const RegistroEstudiante = ({ volver }) => {
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      {/* Modal legal (renderiza encima de todo) */}
+    <>
+      {/* Modal legal — renderiza encima de todo, lógica intacta */}
       {modalLegal && (
         <LegalModal tipo={modalLegal} onCerrar={() => setModalLegal(null)} />
       )}
 
-      <button onClick={volver} style={{ marginBottom: '1rem' }}>← Volver</button>
-      <h2>Registro de Estudiante IPN</h2>
+      <div className="registro-layout">
 
-      <form onSubmit={handleSubmit}>
-        <h3>Datos Generales</h3>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Username (nombre de usuario):</label><br />
-          <input type="text" name="username" value={formData.username} onChange={handleChange}
-            placeholder="Ej: juan_perez" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>Solo letras, números y guión bajo. Máximo 20 caracteres</small>
-          {errors.username && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.username}</div>}
-          <IndicadorUnicidad campo="username" />
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Nombres:</label><br />
-          <input type="text" name="nombres" value={formData.nombres} onChange={handleChange}
-            placeholder="Ej: Juan Carlos" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>Solo letras y espacios</small>
-          {errors.nombres && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.nombres}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Apellido Paterno:</label><br />
-          <input type="text" name="apellidoPaterno" value={formData.apellidoPaterno} onChange={handleChange}
-            placeholder="Ej: Hernández" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>Solo letras y espacios</small>
-          {errors.apellidoPaterno && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.apellidoPaterno}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Apellido Materno:</label><br />
-          <input type="text" name="apellidoMaterno" value={formData.apellidoMaterno} onChange={handleChange}
-            placeholder="Ej: López" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>(Opcional) Solo letras y espacios</small>
-          {errors.apellidoMaterno && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.apellidoMaterno}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Correo Electrónico:</label><br />
-          <input type="email" name="correo" value={formData.correo} onChange={handleChange}
-            placeholder="Ej: juan@ejemplo.com" style={{ width: '100%', padding: '0.5rem' }} />
-          {errors.correo && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.correo}</div>}
-          <IndicadorUnicidad campo="correo" />
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Teléfono:</label><br />
-          <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange}
-            placeholder="Ej: 5512345678" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>10 dígitos, solo números</small>
-          {errors.telefono && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.telefono}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>CURP:</label><br />
-          <input type="text" name="curp" value={formData.curp} onChange={handleChange}
-            placeholder="Ej: HERS850101MDFRRN09" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>18 caracteres: 4 letras, 6 números, 6 letras, 2 alfanuméricos</small>
-          {errors.curp && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.curp}</div>}
-          <IndicadorUnicidad campo="curp" />
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Fecha de Nacimiento:</label><br />
-          <input type="date" name="fechaNacimiento" value={formData.fechaNacimiento} onChange={handleChange}
-            style={{ width: '100%', padding: '0.5rem' }} />
-          <small>Debes ser mayor de 17 años</small>
-          {errors.fechaNacimiento && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.fechaNacimiento}</div>}
-        </div>
-
-        <h3>Datos Académicos</h3>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Escuela (Unidad Académica):</label><br />
-          <select name="escuela" value={formData.escuela} onChange={handleChange}
-            style={{ width: '100%', padding: '0.5rem' }}>
-            <option value="">Selecciona tu escuela</option>
-            {unidades.map(u => (
-              <option key={u.idUnidadAcademica} value={u.idUnidadAcademica}>
-                {u.unidadAcademicaNombre} ({u.unidadAcademicaClave})
-              </option>
-            ))}
-          </select>
-          {errors.escuela && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.escuela}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Carrera:</label><br />
-          <select name="carreraId" value={formData.carreraId} onChange={handleChange}
-            disabled={!formData.escuela || loading} style={{ width: '100%', padding: '0.5rem' }}>
-            <option value="">Selecciona tu carrera</option>
-            {carreras.map(c => (
-              <option key={c.idCarrera} value={c.idCarrera}>
-                {c.carreraNombre} ({c.carreraClave})
-              </option>
-            ))}
-          </select>
-          {loading && <small>Cargando carreras...</small>}
-          {errors.carreraId && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.carreraId}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Boleta:</label><br />
-          <input type="text" name="boleta" value={formData.boleta} onChange={handleChange}
-            placeholder="Ej: 2024030001" style={{ width: '100%', padding: '0.5rem' }} />
-          <small>10 dígitos, solo números</small>
-          {errors.boleta && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.boleta}</div>}
-          <IndicadorUnicidad campo="boleta" />
-        </div>
-
-        <h3>Contraseña</h3>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Contraseña:</label><br />
-          <div style={{ position: 'relative' }}>
-            <input type={mostrarPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange}
-              style={{ width: '100%', padding: '0.5rem', paddingRight: '2.5rem', boxSizing: 'border-box' }} />
-            <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}
-              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#6b7280' }}>
-              {mostrarPassword ? '🙈' : '👁️'}
+        {/* ════ SIDEBAR ════ */}
+        
+        <aside className="registro-sidebar">
+          {/* Botón Regresar - ARRIBA del logo */}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', marginBottom: '0.5rem' }}>
+            <button 
+              type="button" 
+              className="btn-regresar-sidebar"
+              onClick={() => window.location.href = '/registro'}
+            >
+              ← Regresar
             </button>
           </div>
-          <small>Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo (@$!%*?&)</small>
-          {errors.password && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.password}</div>}
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Confirmar Contraseña:</label><br />
-          <div style={{ position: 'relative' }}>
-            <input type={mostrarPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
-              style={{ width: '100%', padding: '0.5rem', paddingRight: '2.5rem', boxSizing: 'border-box' }} />
-            <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}
-              style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#6b7280' }}>
-              {mostrarPassword ? '🙈' : '👁️'}
-            </button>
+          
+          <img src={burroLogo} alt="Mascota" className="sidebar-mascot" />
+          <div className="sidebar-welcome">
+            <h3>¡Cool listo!</h3>
+            <p>Completa tu registro para encontrar tu hogar 🏠</p>
           </div>
-          {errors.confirmPassword && <div style={{ color: 'red', fontSize: '0.8rem' }}>{errors.confirmPassword}</div>}
-        </div>
-
-        {/* ── Verificación de identidad ─────────────────────────────────── */}
-        <h3>Verificación de Identidad</h3>
-
-        {/* Toggle siempre visible — al activarlo oculta el campo de subir */}
-        <PostergarToggle
-          activo={postergarSeleccionado}
-          onChange={(valor) => {
-            setPostergarSeleccionado(valor)
-            // Si activa postergar, limpiar constancia si la había subido
-            if (valor) {
-              setConstanciaFile(null)
-            }
-          }}
-          deshabilitado={false}
-        />
-
-        {/* Campo de subir constancia — solo visible si NO está postergando */}
-        {!postergarSeleccionado && (
-          <>
-            <SubirDocumento
-              tipo="constancia"
-              onFileSelect={handleConstanciaSelect}
-              file={constanciaFile}
-              setFile={setConstanciaFile}
-              required={false}
-              label="Constancia de Estudios (PDF) - Opcional"
-            />
-            {constanciaFile && (
-              <div style={{
-                fontSize: '0.8rem', color: '#15803d', backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0', borderRadius: '8px',
-                padding: '0.6rem 0.9rem', marginBottom: '1rem'
-              }}>
-                ✓ Tu identidad se verificará automáticamente con la constancia subida.
+          <div className="sidebar-perks">
+            {[
+              { title: 'Busca viviendas',       desc: 'Cercanas a tu unidad académica' },
+              { title: 'Filtra a tu medida',    desc: 'Por precio, servicios y tipo' },
+              { title: 'Valida tu estatus',      desc: 'Con tu constancia de estudios IPN' },
+              { title: 'Lee reseñas reales',     desc: 'De otros estudiantes del IPN' },
+              { title: 'Plantilla de contrato', desc: 'Accede a plantilla de arrendamiento' },
+            ].map(p => (
+              <div className="sidebar-perk" key={p.title}>
+                <div className="sidebar-perk-icon">{p.icon}</div>
+                <div className="sidebar-perk-text">
+                  <strong>{p.title}</strong>
+                  {p.desc}
+                </div>
               </div>
-            )}
-          </>
-        )}
-
-        {/* ── Aviso legal y términos ────────────────────────────────────── */}
-        <div style={{ marginBottom: '1.25rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
-          <div style={terminosStyles.fila}>
-            <input
-              type="checkbox"
-              id="aceptaTerminos"
-              checked={formData.aceptaTerminos}
-              onChange={handleCheckbox}
-              style={terminosStyles.checkbox}
-            />
-            <label htmlFor="aceptaTerminos" style={{ ...terminosStyles.texto, cursor: 'pointer' }}>
-              He leído y acepto el{' '}
-              <button type="button" style={terminosStyles.enlace}
-                onClick={() => setModalLegal('privacidad')}>
-                Aviso de Privacidad
-              </button>
-              {' '}y los{' '}
-              <button type="button" style={terminosStyles.enlace}
-                onClick={() => setModalLegal('terminos')}>
-                Términos y Condiciones de Uso
-              </button>
-              .
-            </label>
+            ))}
           </div>
-          {errors.aceptaTerminos && (
-            <div style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-              {errors.aceptaTerminos}
-            </div>
-          )}
-        </div>
+        </aside>
 
-        <button type="submit" disabled={enviando}
-          style={{ padding: '0.75rem 1.5rem', marginTop: '0.5rem' }}>
-          {enviando ? 'Registrando...' : 'Registrarme'}
-        </button>
-      </form>
-    </div>
+        {/* ════ FORMULARIO ════ */}
+        <main className="registro-main">
+        
+        <div className="tipo-tabs">
+            <span className="tipo-tab active">Estudiante</span>
+          </div>
+          
+          {/* Cabecera */}
+          <div className="form-header">
+            <div className="form-header-icon">🎓</div>
+            <div className="form-header-text">
+              <h2>Encuentra tu hogar estudiantil</h2>
+              <p>Registra tu cuenta para buscar vivienda cercana y validar tu unidad académica.</p>
+            </div>
+          </div>
+
+         
+
+          <form onSubmit={handleSubmit}>
+
+            {/* ══ DATOS GENERALES ══ */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <div className="form-section-icon">👤</div>
+                <div>
+                  <h3>Datos Generales</h3>
+                  <p>Información del titular de la cuenta</p>
+                </div>
+              </div>
+
+              <div className="form-grid" style={{ marginBottom: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Username (nombre de usuario) <span>*</span></label>
+                  <div className="form-input-icon">
+                    <span className="icon">@</span>
+                    <input className="form-input" type="text" name="username"
+                      value={formData.username} onChange={handleChange}
+                      placeholder="Ej: juan_perez" />
+                  </div>
+                  <span className="form-hint">Solo letras, números y guión bajo. Máximo 20 caracteres</span>
+                  {errors.username && <div className="form-error">{errors.username}</div>}
+                  <IndicadorUnicidad campo="username" />
+                </div>
+              </div>
+
+              <div className="form-grid form-grid-3">
+                <div className="form-group">
+                  <label className="form-label">Nombres <span>*</span></label>
+                  <input className="form-input" type="text" name="nombres"
+                    value={formData.nombres} onChange={handleChange}
+                    placeholder="Ej: Juan Carlos" />
+                  <span className="form-hint">Solo letras y espacios</span>
+                  {errors.nombres && <div className="form-error">{errors.nombres}</div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Apellido paterno <span>*</span></label>
+                  <input className="form-input" type="text" name="apellidoPaterno"
+                    value={formData.apellidoPaterno} onChange={handleChange}
+                    placeholder="Ej: Hernández" />
+                  <span className="form-hint">Solo letras y espacios</span>
+                  {errors.apellidoPaterno && <div className="form-error">{errors.apellidoPaterno}</div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Apellido materno</label>
+                  <input className="form-input" type="text" name="apellidoMaterno"
+                    value={formData.apellidoMaterno} onChange={handleChange}
+                    placeholder="Ej: López" />
+                  <span className="form-hint">(Opcional) Solo letras y espacios</span>
+                  {errors.apellidoMaterno && <div className="form-error">{errors.apellidoMaterno}</div>}
+                </div>
+              </div>
+
+              <div className="form-grid form-grid-2" style={{ marginTop: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Correo electrónico <span>*</span></label>
+                  <div className="form-input-icon">
+                    <span className="icon">✉️</span>
+                    <input className="form-input" type="email" name="correo"
+                      value={formData.correo} onChange={handleChange}
+                      placeholder="Ej: juan@ejemplo.com" />
+                  </div>
+                  {errors.correo && <div className="form-error">{errors.correo}</div>}
+                  <IndicadorUnicidad campo="correo" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Teléfono <span>*</span></label>
+                  <div className="form-input-icon">
+                    <span className="icon">📱</span>
+                    <input className="form-input" type="tel" name="telefono"
+                      value={formData.telefono} onChange={handleChange}
+                      placeholder="Ej: 5512345678" />
+                  </div>
+                  <span className="form-hint">10 dígitos, solo números</span>
+                  {errors.telefono && <div className="form-error">{errors.telefono}</div>}
+                </div>
+              </div>
+
+              <div className="form-grid form-grid-2" style={{ marginTop: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">CURP <span>*</span></label>
+                  <input className="form-input" type="text" name="curp"
+                    value={formData.curp} onChange={handleChange}
+                    placeholder="Ej: HERS850101MDFRRN09" />
+                  <span className="form-hint">18 caracteres: 4 letras, 6 números, 6 letras, 2 alfanuméricos</span>
+                  {errors.curp && <div className="form-error">{errors.curp}</div>}
+                  <IndicadorUnicidad campo="curp" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Fecha de nacimiento <span>*</span></label>
+                  <input className="form-input" type="date" name="fechaNacimiento"
+                    value={formData.fechaNacimiento} onChange={handleChange} />
+                  <span className="form-hint">Debes ser mayor de 17 años</span>
+                  {errors.fechaNacimiento && <div className="form-error">{errors.fechaNacimiento}</div>}
+                </div>
+              </div>
+            </div>
+
+            <hr className="form-divider" />
+
+            {/* ══ DATOS ACADÉMICOS ══ */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <div className="form-section-icon">🎓</div>
+                <div>
+                  <h3>Datos Académicos</h3>
+                  <p>Información de tu inscripción en el IPN — necesaria para validar tu unidad y adscripción</p>
+                </div>
+              </div>
+
+              <div className="form-grid form-grid-2">
+                <div className="form-group">
+                  <label className="form-label">Escuela (Unidad Académica) <span>*</span></label>
+                  <select className="form-input form-select" name="escuela"
+                    value={formData.escuela} onChange={handleChange}>
+                    <option value="">Selecciona tu escuela</option>
+                    {unidades.map(u => (
+                      <option key={u.idUnidadAcademica} value={u.idUnidadAcademica}>
+                        {u.unidadAcademicaNombre} ({u.unidadAcademicaClave})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.escuela && <div className="form-error">{errors.escuela}</div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Carrera <span>*</span></label>
+                  <select className="form-input form-select" name="carreraId"
+                    value={formData.carreraId} onChange={handleChange}
+                    disabled={!formData.escuela || loading}>
+                    <option value="">Selecciona tu carrera</option>
+                    {carreras.map(c => (
+                      <option key={c.idCarrera} value={c.idCarrera}>
+                        {c.carreraNombre} ({c.carreraClave})
+                      </option>
+                    ))}
+                  </select>
+                  {loading && <span className="form-hint">Cargando carreras...</span>}
+                  {errors.carreraId && <div className="form-error">{errors.carreraId}</div>}
+                </div>
+              </div>
+
+              <div className="form-grid" style={{ marginTop: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Boleta <span>*</span></label>
+                  <input className="form-input" type="text" name="boleta"
+                    value={formData.boleta} onChange={handleChange}
+                    placeholder="Ej: 2024030001" />
+                  <span className="form-hint">10 dígitos, solo números</span>
+                  {errors.boleta && <div className="form-error">{errors.boleta}</div>}
+                  <IndicadorUnicidad campo="boleta" />
+                </div>
+              </div>
+            </div>
+
+            <hr className="form-divider" />
+
+            {/* ══ CONTRASEÑA ══ */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <div className="form-section-icon">🔒</div>
+                <div>
+                  <h3>Contraseña</h3>
+                  <p>Crea una contraseña segura para tu cuenta</p>
+                </div>
+              </div>
+
+              <div className="form-grid form-grid-2">
+                <div className="form-group">
+                  <label className="form-label">Contraseña <span>*</span></label>
+                  <div style={{ position: 'relative' }}>
+                    <input className="form-input" type={mostrarPassword ? 'text' : 'password'}
+                      name="password" value={formData.password} onChange={handleChange}
+                      style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}
+                      style={{ position: 'absolute', right: '0.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#6b7280' }}>
+                      {mostrarPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                  <span className="form-hint">Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo (@$!%*?&)</span>
+                  {errors.password && <div className="form-error">{errors.password}</div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Confirmar contraseña <span>*</span></label>
+                  <div style={{ position: 'relative' }}>
+                    <input className="form-input" type={mostrarPassword ? 'text' : 'password'}
+                      name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
+                      style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}
+                      style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#6b7280' }}>
+                      {mostrarPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <div className="form-error">{errors.confirmPassword}</div>}
+                </div>
+              </div>
+            </div>
+
+            <hr className="form-divider" />
+
+            {/* ══ VERIFICACIÓN DE IDENTIDAD ══ */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <div className="form-section-icon">📄</div>
+                <div>
+                  <h3>Verificación de Identidad</h3>
+                  <p>Sube tu constancia vigente en PDF para validar tu estatus académico automáticamente.</p>
+                </div>
+              </div>
+
+              {/* Toggle de postergar — lógica intacta */}
+              <PostergarToggle
+                activo={postergarSeleccionado}
+                onChange={(valor) => {
+                  setPostergarSeleccionado(valor)
+                  if (valor) setConstanciaFile(null)
+                }}
+                deshabilitado={false}
+              />
+
+              {/* Campo de subir — solo visible si NO está postergando */}
+              {!postergarSeleccionado && (
+                <>
+                  <SubirDocumento
+                    tipo="constancia"
+                    onFileSelect={handleConstanciaSelect}
+                    file={constanciaFile}
+                    setFile={setConstanciaFile}
+                    required={false}
+                    label="Constancia de Estudios (PDF) - Opcional"
+                  />
+                  {constanciaFile && (
+                    <div style={{
+                      fontSize: '0.8rem', color: '#15803d', backgroundColor: '#f0fdf4',
+                      border: '1px solid #bbf7d0', borderRadius: '8px',
+                      padding: '0.6rem 0.9rem', marginBottom: '1rem'
+                    }}>
+                      ✓ Tu identidad se verificará automáticamente con la constancia subida.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <hr className="form-divider" />
+
+            {/* ══ TÉRMINOS Y CONDICIONES ══ */}
+            <div className="form-section" style={{ marginBottom: '0' }}>
+              <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: '1rem' }}>
+                <div style={terminosStyles.fila}>
+                  <input
+                    type="checkbox"
+                    id="aceptaTerminos"
+                    checked={formData.aceptaTerminos}
+                    onChange={handleCheckbox}
+                    style={terminosStyles.checkbox}
+                  />
+                  <label htmlFor="aceptaTerminos" style={{ ...terminosStyles.texto, cursor: 'pointer' }}>
+                    He leído y acepto el{' '}
+                    <button type="button" style={terminosStyles.enlace}
+                      onClick={() => setModalLegal('privacidad')}>
+                      Aviso de Privacidad
+                    </button>
+                    {' '}y los{' '}
+                    <button type="button" style={terminosStyles.enlace}
+                      onClick={() => setModalLegal('terminos')}>
+                      Términos y Condiciones de Uso
+                    </button>
+                    .
+                  </label>
+                </div>
+                {errors.aceptaTerminos && (
+                  <div className="form-error">{errors.aceptaTerminos}</div>
+                )}
+              </div>
+            </div>
+
+            {/* ══ SUBMIT ══ */}
+            <div className="form-submit-row">
+              <span className="form-login-link">
+                ¿Ya tienes cuenta? <Link to="/usuarios/inicio-sesion">Inicia sesión</Link>
+              </span>
+              <button type="submit" className="btn btn-primary" disabled={enviando}>
+                {enviando ? 'Registrando...' : 'Crear cuenta'}
+              </button>
+            </div>
+
+          </form>
+        </main>
+      </div>
+    </>
   )
 }
 

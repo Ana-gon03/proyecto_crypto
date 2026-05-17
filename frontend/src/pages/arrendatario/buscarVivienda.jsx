@@ -1,326 +1,428 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buscarPropiedades, obtenerServicios } from '../../services/propiedadService'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
+import '../../styles/Arrendatario.css'
 
 const BuscarVivienda = () => {
   const navigate = useNavigate()
-  
   const [propiedades, setPropiedades] = useState([])
   const [servicios, setServicios] = useState({ Basicos: [], Entretenimiento: [], Adicionales: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
+  const [totalPaginas, setTotalPaginas] = useState(1)
+  const [totalPropiedades, setTotalPropiedades] = useState(0)
+  const [precioMinGlobal, setPrecioMinGlobal] = useState(0)
+  const [precioMaxGlobal, setPrecioMaxGlobal] = useState(10000)
+  const [serviciosAbiertos, setServiciosAbiertos] = useState({ Basicos: false, Entretenimiento: false, Adicionales: false })
+  const [mensajeRelajado, setMensajeRelajado] = useState(null)
+  const busquedaTimer = useRef(null)
+
   const [filtros, setFiltros] = useState({
+    busqueda: '',
+    ordenarPor: 'reciente',
+    precioMin: '',
+    precioMax: '',
+    tipo: '',
+    precioPor: '',
+    lugaresMin: 1,
     serviciosBasicos: [],
     serviciosEntretenimiento: [],
     serviciosAdicionales: [],
-    precioMin: '',
-    precioMax: '',
-    ordenarPor: 'reciente', // Por defecto: más reciente
     pagina: 1
   })
-  
-  const [totalPaginas, setTotalPaginas] = useState(1)
-  const [totalPropiedades, setTotalPropiedades] = useState(0)
-  const [serviciosAbiertos, setServiciosAbiertos] = useState({ Basicos: false, Entretenimiento: false, Adicionales: false })
 
-  useEffect(() => {
-    cargarServicios()
-  }, [])
-
-  useEffect(() => {
-    cargarPropiedades()
-  }, [filtros])
+  useEffect(() => { cargarServicios() }, [])
+  useEffect(() => { cargarPropiedades() }, [filtros])
 
   const cargarServicios = async () => {
     try {
       const response = await obtenerServicios()
-      if (response.success) {
-        setServicios(response.data)
-      }
-    } catch (error) {
-      console.error('Error al cargar servicios:', error)
-    }
+      if (response.success) setServicios(response.data)
+    } catch (e) { console.error(e) }
   }
 
   const cargarPropiedades = async () => {
     try {
       setLoading(true)
       setError(null)
-      
+      setMensajeRelajado(null)
+
       const params = {
         ...filtros,
         serviciosBasicos: filtros.serviciosBasicos.join(','),
         serviciosEntretenimiento: filtros.serviciosEntretenimiento.join(','),
         serviciosAdicionales: filtros.serviciosAdicionales.join(',')
       }
-      
-      console.log('Enviando filtros:', params) // Para debug
-      
+
       const response = await buscarPropiedades(params)
-      
+
       if (response.success) {
         setPropiedades(response.data.propiedades)
         setTotalPaginas(response.data.totalPaginas)
         setTotalPropiedades(response.data.total)
+        setPrecioMinGlobal(response.data.precioMinGlobal || 0)
+        setPrecioMaxGlobal(response.data.precioMaxGlobal || 10000)
+
+        if (response.data.filtrosRelajados && response.data.mensajeRelajado) {
+          setMensajeRelajado(response.data.mensajeRelajado)
+        }
       }
-    } catch (error) {
+    } catch (e) {
       setError('Error al cargar propiedades')
-      console.error('Error:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const setFiltro = (campo, valor) => setFiltros(prev => ({ ...prev, [campo]: valor, pagina: 1 }))
+
+  const handleBusqueda = (valor) => {
+    if (busquedaTimer.current) clearTimeout(busquedaTimer.current)
+    busquedaTimer.current = setTimeout(() => setFiltro('busqueda', valor), 400)
+  }
+
+  const handleOrden = (valor) => setFiltro('ordenarPor', valor)
+
   const handleServicioChange = (categoria, servicioId) => {
+    const campo = `servicios${categoria}`
     setFiltros(prev => {
-      const campo = `servicios${categoria}`
       const current = prev[campo] || []
       const updated = current.includes(servicioId)
         ? current.filter(id => id !== servicioId)
         : [...current, servicioId]
-      
       return { ...prev, [campo]: updated, pagina: 1 }
     })
   }
 
-  const handlePrecioChange = (tipo, valor) => {
-    setFiltros(prev => ({
-      ...prev,
-      [tipo]: valor,
-      pagina: 1
-    }))
-  }
-
-  const handleOrdenChange = (orden) => {
-    console.log('Cambiando orden a:', orden) // Para debug
-    setFiltros(prev => ({
-      ...prev,
-      ordenarPor: orden,
-      pagina: 1
-    }))
-  }
-
   const limpiarFiltros = () => {
     setFiltros({
-      serviciosBasicos: [],
-      serviciosEntretenimiento: [],
-      serviciosAdicionales: [],
-      precioMin: '',
-      precioMax: '',
-      ordenarPor: 'reciente',
-      pagina: 1
+      busqueda: '', ordenarPor: 'reciente', precioMin: '', precioMax: '',
+      tipo: '', precioPor: '', lugaresMin: 1,
+      serviciosBasicos: [], serviciosEntretenimiento: [], serviciosAdicionales: [], pagina: 1
     })
+    setMensajeRelajado(null)
   }
 
-  const cambiarPagina = (nuevaPagina) => {
-    setFiltros(prev => ({ ...prev, pagina: nuevaPagina }))
+  const cambiarPagina = (p) => {
+    setFiltros(prev => ({ ...prev, pagina: p }))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const filtrosActivos = filtros.serviciosBasicos.length > 0 || 
-    filtros.serviciosEntretenimiento.length > 0 || 
-    filtros.serviciosAdicionales.length > 0 ||
-    filtros.precioMin || filtros.precioMax
+  const hayFiltrosActivos = filtros.busqueda || filtros.tipo || filtros.precioPor ||
+    filtros.precioMin || filtros.precioMax || filtros.lugaresMin > 1 ||
+    filtros.serviciosBasicos.length > 0 || filtros.serviciosEntretenimiento.length > 0 ||
+    filtros.serviciosAdicionales.length > 0
+
+  const sortBtn = (val) => `atr-sort-btn ${filtros.ordenarPor === val ? 'atr-sort-btn-active' : 'atr-sort-btn-inactive'}`
+  const chipBtn = (active) => `atr-chip-btn ${active ? 'atr-chip-btn-active' : 'atr-chip-btn-inactive'}`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <NavbarArrendatario />
 
-      <div style={{ flex: 1, display: 'flex', maxWidth: '1400px', margin: '0 auto', width: '100%', padding: '20px', gap: '30px' }}>
-        
-        {/* ============ SIDEBAR DE FILTROS (IZQUIERDA) ============ */}
-        <div style={{ width: '280px', minWidth: '280px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', height: 'fit-content', position: 'sticky', top: '20px' }}>
-          <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#333' }}>🔎 Filtros</h2>
+      <div className="atr-search-layout">
 
-          {/* ORDENAR POR */}
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Ordenar por</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '20px' }}>
-            {[
-              ['reciente', 'Más reciente'],
-              ['antiguo', 'Más antiguo'],
-              ['precio_asc', 'Precio ascendente'],
-              ['precio_desc', 'Precio descendente'],
-              ['calificacion', 'Mejor calificación'],
-            ].map(([val, label]) => (
-              <label key={val} style={labelStyle}>
-                <input type="radio" name="orden" checked={filtros.ordenarPor === val} onChange={() => handleOrdenChange(val)} />
-                {label}
-              </label>
+        {/* ============ SIDEBAR DE FILTROS ============ */}
+        <div className="atr-search-sidebar">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h2 className="atr-sidebar-title" style={{ margin: 0 }}>🔎 Filtros</h2>
+            {hayFiltrosActivos && (
+              <button
+                onClick={limpiarFiltros}
+                style={{ fontSize: '12px', color: '#fca5a5', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+              >
+                Limpiar todo
+              </button>
+            )}
+          </div>
+
+          {/* ORDENAR — Fecha */}
+          <p className="atr-sidebar-label">Fecha</p>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            <button className={sortBtn('reciente')} onClick={() => handleOrden('reciente')}>Más reciente</button>
+            <button className={sortBtn('antiguo')} onClick={() => handleOrden('antiguo')}>Más antiguo</button>
+          </div>
+
+          {/* ORDENAR — Precio */}
+          <p className="atr-sidebar-label">Precio</p>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            <button className={sortBtn('precio_asc')} onClick={() => handleOrden('precio_asc')}>↑ Menor</button>
+            <button className={sortBtn('precio_desc')} onClick={() => handleOrden('precio_desc')}>↓ Mayor</button>
+          </div>
+
+          {/* ORDENAR — Valoración */}
+          <p className="atr-sidebar-label">Valoración</p>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            <button className={sortBtn('calificacion')} onClick={() => handleOrden('calificacion')}>⭐ Mejores</button>
+            <button className={sortBtn('calificacion_asc')} onClick={() => handleOrden('calificacion_asc')}>👎 Peores</button>
+          </div>
+
+          <hr className="atr-sidebar-hr" />
+
+          {/* RANGO DE PRECIO */}
+          <p className="atr-sidebar-label">Rango de precio (MXN)</p>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginBottom: '10px', marginTop: 0 }}>
+            ${precioMinGlobal.toLocaleString('es-MX')} – ${precioMaxGlobal.toLocaleString('es-MX')}
+          </p>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', display: 'block', marginBottom: '4px' }}>Mínimo</label>
+              <input
+                type="number"
+                placeholder={`$${precioMinGlobal.toLocaleString('es-MX')}`}
+                value={filtros.precioMin}
+                onChange={(e) => setFiltro('precioMin', e.target.value)}
+                className="atr-sidebar-input"
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', display: 'block', marginBottom: '4px' }}>Máximo</label>
+              <input
+                type="number"
+                placeholder={`$${precioMaxGlobal.toLocaleString('es-MX')}`}
+                value={filtros.precioMax}
+                onChange={(e) => setFiltro('precioMax', e.target.value)}
+                className="atr-sidebar-input"
+              />
+            </div>
+          </div>
+
+          <hr className="atr-sidebar-hr" />
+
+          {/* TIPO DE VIVIENDA */}
+          <p className="atr-sidebar-label">Tipo de vivienda</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+            {['Departamento', 'Casa', 'Habitación', 'Loft', 'Estudio'].map(t => (
+              <button
+                key={t}
+                onClick={() => setFiltro('tipo', filtros.tipo === t ? '' : t)}
+                className={chipBtn(filtros.tipo === t)}
+              >
+                {t}
+              </button>
             ))}
           </div>
 
-          <div style={{ borderTop: '1px solid #ddd', marginBottom: '20px' }} />
+          <hr className="atr-sidebar-hr" />
 
-          {/* PRECIO */}
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Precio (MXN)</p>
-          <input type="number" placeholder="Mínimo" value={filtros.precioMin} onChange={(e) => handlePrecioChange('precioMin', e.target.value)} style={inputStyle} />
-          <input type="number" placeholder="Máximo" value={filtros.precioMax} onChange={(e) => handlePrecioChange('precioMax', e.target.value)} style={inputStyle} />
+          {/* PRECIO POR */}
+          <p className="atr-sidebar-label">Precio por</p>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '14px' }}>
+            {['Propiedad', 'Persona', 'Habitación'].map(pp => (
+              <button
+                key={pp}
+                onClick={() => setFiltro('precioPor', filtros.precioPor === pp ? '' : pp)}
+                className={chipBtn(filtros.precioPor === pp)}
+              >
+                {pp}
+              </button>
+            ))}
+          </div>
 
-          <div style={{ borderTop: '1px solid #ddd', marginBottom: '20px', marginTop: '5px' }} />
+          <hr className="atr-sidebar-hr" />
 
-          {/* SERVICIOS CON PESTAÑA */}
-          <p style={{ fontSize: '13px', fontWeight: '700', color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Servicios</p>
+          {/* LUGARES DISPONIBLES */}
+          <p className="atr-sidebar-label">Lugares disponibles (mín.)</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <button className="atr-counter-btn" onClick={() => setFiltro('lugaresMin', Math.max(1, (filtros.lugaresMin || 1) - 1))}>−</button>
+            <span className="atr-counter-value">{filtros.lugaresMin || 1}</span>
+            <button className="atr-counter-btn" onClick={() => setFiltro('lugaresMin', (filtros.lugaresMin || 1) + 1)}>+</button>
+          </div>
+
+          <hr className="atr-sidebar-hr" />
+
+          {/* SERVICIOS */}
+          <p className="atr-sidebar-label">Servicios</p>
           {[
             ['Basicos', 'Servicios Básicos', 'serviciosBasicos'],
             ['Entretenimiento', 'Entretenimiento', 'serviciosEntretenimiento'],
             ['Adicionales', 'Servicios Adicionales', 'serviciosAdicionales'],
           ].map(([cat, label, campo]) => (
-            <div key={cat} style={{ marginBottom: '10px', border: '1px solid #ddd', borderRadius: '6px', overflow: 'hidden' }}>
+            <div key={cat} className="atr-service-accordion">
               <button
                 onClick={() => setServiciosAbiertos(prev => ({ ...prev, [cat]: !prev[cat] }))}
-                style={{ width: '100%', padding: '10px 12px', background: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '600', color: '#333' }}
+                className="atr-service-accordion-btn"
               >
                 <span>
                   {label}
                   {filtros[campo].length > 0 && (
-                    <span style={{ backgroundColor: '#1a237e', color: 'white', borderRadius: '10px', padding: '1px 7px', fontSize: '11px', marginLeft: '6px' }}>
-                      {filtros[campo].length}
-                    </span>
+                    <span className="atr-service-count-badge">{filtros[campo].length}</span>
                   )}
                 </span>
                 <span>{serviciosAbiertos[cat] ? '▲' : '▼'}</span>
               </button>
               {serviciosAbiertos[cat] && (
-                <div style={{ padding: '10px 12px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {servicios[cat].length === 0
-                    ? <p style={{ color: '#999', fontSize: '13px', margin: 0 }}>No disponibles</p>
-                    : servicios[cat].map(servicio => (
-                      <label key={servicio.idServicio} style={labelStyle}>
-                        <input type="checkbox" checked={filtros[campo].includes(servicio.idServicio)} onChange={() => handleServicioChange(cat, servicio.idServicio)} />
+                <div className="atr-service-accordion-body">
+                  {servicios[cat].length === 0 ? (
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', margin: 0 }}>No disponibles</p>
+                  ) : (
+                    servicios[cat].map(servicio => (
+                      <label key={servicio.idServicio} className="atr-service-check-label">
+                        <input
+                          type="checkbox"
+                          checked={filtros[campo].includes(servicio.idServicio)}
+                          onChange={() => handleServicioChange(cat, servicio.idServicio)}
+                          style={{ accentColor: '#059669' }}
+                        />
                         {servicio.servicioNombre}
                       </label>
                     ))
-                  }
+                  )}
                 </div>
               )}
             </div>
           ))}
-
-          {filtrosActivos && (
-            <button onClick={limpiarFiltros} style={{ ...btnLimpiarStyle, marginTop: '15px' }}>
-              Limpiar todos los filtros
-            </button>
-          )}
         </div>
 
-        {/* ============ RESULTADOS (DERECHA) ============ */}
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '24px', marginBottom: '5px' }}>Buscar Vivienda</h1>
-          
+        {/* ============ RESULTADOS ============ */}
+        <div className="atr-search-results">
+          <div className="atr-results-header">
+            <h1 className="atr-results-title">Buscar Vivienda</h1>
+            <p className="atr-results-count">
+              {totalPropiedades} {totalPropiedades === 1 ? 'vivienda encontrada' : 'viviendas encontradas'}
+            </p>
+          </div>
+
+          {/* Mensaje de filtros relajados */}
+          {mensajeRelajado && (
+            <div className="atr-relaxed-alert">
+              <span style={{ fontSize: '18px' }}>💡</span>
+              <p>{mensajeRelajado}</p>
+            </div>
+          )}
+
+          {/* Buscador */}
+          <div className="atr-search-bar">
+            <span className="atr-search-bar-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar por título, descripción o código postal..."
+              defaultValue={filtros.busqueda}
+              onChange={(e) => handleBusqueda(e.target.value)}
+              className="atr-search-input"
+            />
+          </div>
+
           {loading ? (
             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <p style={{ color: '#666' }}>Cargando propiedades...</p>
+              <p style={{ color: '#6b7280' }}>Cargando propiedades...</p>
             </div>
           ) : error ? (
-            <div style={{ color: 'red', padding: '20px', backgroundColor: '#ffe6e6', borderRadius: '5px' }}>
+            <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '15px', borderRadius: '12px' }}>
               {error}
+            </div>
+          ) : propiedades.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ fontSize: '40px', marginBottom: '10px' }}>🔍</p>
+              <p style={{ fontSize: '18px', color: '#111827', fontWeight: 700 }}>No se encontraron viviendas</p>
+              <p style={{ color: '#6b7280' }}>Intenta ajustar los filtros de búsqueda</p>
             </div>
           ) : (
             <>
-              <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
-                {totalPropiedades} {totalPropiedades === 1 ? 'vivienda encontrada' : 'viviendas encontradas'}
-              </p>
-              
-              {propiedades.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                  <p style={{ fontSize: '40px', marginBottom: '10px' }}>🔍</p>
-                  <p style={{ fontSize: '18px', color: '#333' }}>No se encontraron viviendas</p>
-                  <p style={{ color: '#666' }}>Intenta ajustar los filtros de búsqueda</p>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {propiedades.map(propiedad => (
-                      <div 
-                        key={propiedad.id} 
-                        onClick={() => navigate(`/arrendatario/propiedad/${propiedad.id}`)}
-                        style={cardStyle}
-                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'}
-                      >
-                        {/* Imagen */}
-                        <div style={imgContainerStyle}>
-                          {propiedad.fotoPrincipal ? (
-                            <img src={`http://localhost:5000${propiedad.fotoPrincipal}`} alt={propiedad.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <span style={{ fontSize: '50px', color: '#999' }}>🏠</span>
-                          )}
-                          <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '5px' }}>
-                            <span style={{ ...badgeStyle, backgroundColor: propiedad.estatus === 'Disponible' ? '#28a745' : propiedad.estatus === 'Sin Disponibilidad' ? '#ffc107' : '#dc3545' }}>
-                              {propiedad.estatus}
-                            </span>
-                            {propiedad.totalResenas === 0 && (
-                              <span style={{ ...badgeStyle, backgroundColor: '#17a2b8' }}>✨ Nuevo</span>
-                            )}
-                          </div>
-                        </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {propiedades.map(propiedad => (
+                  <div
+                    key={propiedad.id}
+                    onClick={() => navigate(`/arrendatario/propiedad/${propiedad.id}`)}
+                    className="atr-property-card"
+                  >
+                    {/* Imagen */}
+                    <div className="atr-property-img">
+                      {propiedad.fotoPrincipal ? (
+                        <img src={`http://localhost:5000${propiedad.fotoPrincipal}`} alt={propiedad.titulo} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>🏠</div>
+                      )}
+                      <div className="atr-status-badge">
+                        <span
+                          className="atr-badge-pill"
+                          style={{ backgroundColor: propiedad.estatus === 'Disponible' ? '#16A34A' : '#F59E0B' }}
+                        >
+                          {propiedad.estatus}
+                        </span>
+                        {propiedad.totalResenas === 0 && (
+                          <span className="atr-badge-pill" style={{ backgroundColor: '#06B6D4' }}>
+                            ✨ Nuevo
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                        {/* Info */}
-                        <div style={{ padding: '20px', flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', color: '#333' }}>{propiedad.titulo}</h3>
-                            <div style={{ textAlign: 'right' }}>
-                              <span style={{ fontWeight: 'bold', fontSize: '20px', color: '#1a237e' }}>
-                                ${propiedad.precio.toLocaleString('es-MX')}
-                              </span>
-                              <span style={{ fontSize: '13px', color: '#999', display: 'block' }}>/mes</span>
-                            </div>
-                          </div>
-                          
-                          <p style={{ color: '#666', margin: '0 0 10px 0', fontSize: '14px' }}>{propiedad.tipo}</p>
-                          
-                          {propiedad.calificacionGeneral ? (
-                            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                              <span style={{ color: '#ffc107', fontSize: '16px' }}>⭐</span>
-                              <span style={{ fontWeight: 'bold', fontSize: '15px' }}>{propiedad.calificacionGeneral}</span>
-                              <span style={{ color: '#999', fontSize: '13px' }}>({propiedad.totalResenas} {propiedad.totalResenas === 1 ? 'reseña' : 'reseñas'})</span>
-                            </div>
-                          ) : (
-                            <p style={{ color: '#999', fontSize: '13px', fontStyle: 'italic', margin: '0 0 10px 0' }}>Sin reseñas aún</p>
-                          )}
-
-                          <div style={{ display: 'flex', gap: '20px', color: '#666', fontSize: '14px' }}>
-                            <span>👥 {propiedad.lugares} {propiedad.lugares === 1 ? 'lugar' : 'lugares'}</span>
-                            <span>💵 por {propiedad.precioPor.toLowerCase()}</span>
-                          </div>
-
-                          {propiedad.servicios && propiedad.servicios.length > 0 && (
-                            <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                              {propiedad.servicios.slice(0, 4).map(serv => (
-                                <span key={serv.idServicio} style={{ padding: '3px 8px', backgroundColor: '#f0f0f0', borderRadius: '12px', fontSize: '12px', color: '#555' }}>
-                                  {serv.servicioNombre}
-                                </span>
-                              ))}
-                              {propiedad.servicios.length > 4 && (
-                                <span style={{ fontSize: '12px', color: '#999' }}>+{propiedad.servicios.length - 4} más</span>
-                              )}
-                            </div>
-                          )}
+                    {/* Info */}
+                    <div className="atr-property-info">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                        <h3 className="atr-property-title">{propiedad.titulo}</h3>
+                        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
+                          <span className="atr-property-price">${propiedad.precio.toLocaleString('es-MX')}</span>
+                          <span className="atr-property-price-label">por {propiedad.precioPor?.toLowerCase() || 'mes'}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Paginación */}
-                  {totalPaginas > 1 && (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '30px', marginBottom: '30px' }}>
-                      <button onClick={() => cambiarPagina(filtros.pagina - 1)} disabled={filtros.pagina === 1} style={filtros.pagina === 1 ? { ...paginacionBtn, opacity: 0.5, cursor: 'not-allowed' } : paginacionBtn}>
-                        ← Anterior
-                      </button>
-                      {[...Array(totalPaginas)].map((_, index) => (
-                        <button key={index} onClick={() => cambiarPagina(index + 1)} style={filtros.pagina === index + 1 ? { ...paginacionBtn, backgroundColor: '#1a237e', color: 'white', fontWeight: 'bold' } : paginacionBtn}>
-                          {index + 1}
-                        </button>
-                      ))}
-                      <button onClick={() => cambiarPagina(filtros.pagina + 1)} disabled={filtros.pagina === totalPaginas} style={filtros.pagina === totalPaginas ? { ...paginacionBtn, opacity: 0.5, cursor: 'not-allowed' } : paginacionBtn}>
-                        Siguiente →
-                      </button>
+                      <p className="atr-property-type">{propiedad.tipo}</p>
+
+                      <div className="atr-property-rating">
+                        {propiedad.calificacionGeneral ? (
+                          <>
+                            <span style={{ color: '#F59E0B' }}>⭐</span>
+                            <span style={{ fontWeight: 700, fontSize: '14px' }}>{propiedad.calificacionGeneral}</span>
+                            <span style={{ color: '#9ca3af', fontSize: '12px' }}>({propiedad.totalResenas} {propiedad.totalResenas === 1 ? 'reseña' : 'reseñas'})</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#9ca3af', fontSize: '12px', fontStyle: 'italic' }}>Sin reseñas aún</span>
+                        )}
+                      </div>
+
+                      <div className="atr-property-meta">
+                        <span>👥 {propiedad.lugares} {propiedad.lugares === 1 ? 'lugar' : 'lugares'}</span>
+                        <span>💵 por {propiedad.precioPor?.toLowerCase()}</span>
+                      </div>
+
+                      {propiedad.servicios && propiedad.servicios.length > 0 && (
+                        <div className="atr-property-tags">
+                          {propiedad.servicios.slice(0, 4).map(serv => (
+                            <span key={serv.idServicio} className="atr-property-tag">
+                              {serv.servicioNombre}
+                            </span>
+                          ))}
+                          {propiedad.servicios.length > 4 && (
+                            <span style={{ fontSize: '11px', color: '#9ca3af' }}>+{propiedad.servicios.length - 4} más</span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </>
+                  </div>
+                ))}
+              </div>
+
+              {/* Paginación */}
+              {totalPaginas > 1 && (
+                <div className="atr-pagination">
+                  <button
+                    onClick={() => cambiarPagina(filtros.pagina - 1)}
+                    disabled={filtros.pagina === 1}
+                    className="atr-pagination-btn"
+                  >
+                    Anterior
+                  </button>
+                  {[...Array(totalPaginas)].map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => cambiarPagina(index + 1)}
+                      className={`atr-pagination-btn ${filtros.pagina === index + 1 ? 'active' : ''}`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => cambiarPagina(filtros.pagina + 1)}
+                    disabled={filtros.pagina === totalPaginas}
+                    className="atr-pagination-btn"
+                  >
+                    Siguiente
+                  </button>
+                </div>
               )}
             </>
           )}
@@ -330,78 +432,6 @@ const BuscarVivienda = () => {
       <FooterInicio />
     </div>
   )
-}
-
-// Estilos reutilizables
-const labelStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  marginBottom: '5px',
-  cursor: 'pointer',
-  fontSize: '14px',
-  color: '#444'
-}
-
-const inputStyle = {
-  width: '100%',
-  padding: '8px 10px',
-  marginBottom: '8px',
-  borderRadius: '5px',
-  border: '1px solid #ccc',
-  fontSize: '14px',
-  boxSizing: 'border-box'
-}
-
-const btnLimpiarStyle = {
-  width: '100%',
-  padding: '10px',
-  backgroundColor: '#dc3545',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  fontSize: '14px'
-}
-
-const cardStyle = {
-  display: 'flex',
-  border: '1px solid #e0e0e0',
-  borderRadius: '8px',
-  overflow: 'hidden',
-  cursor: 'pointer',
-  backgroundColor: 'white',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-  transition: 'box-shadow 0.2s'
-}
-
-const imgContainerStyle = {
-  width: '280px',
-  minWidth: '280px',
-  height: '200px',
-  backgroundColor: '#e9ecef',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  position: 'relative'
-}
-
-const badgeStyle = {
-  padding: '4px 8px',
-  color: 'white',
-  borderRadius: '3px',
-  fontSize: '11px',
-  fontWeight: 'bold'
-}
-
-const paginacionBtn = {
-  padding: '8px 15px',
-  border: '1px solid #ddd',
-  backgroundColor: 'white',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontSize: '14px'
 }
 
 export default BuscarVivienda

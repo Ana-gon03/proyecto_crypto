@@ -1,0 +1,748 @@
+/* ════════════════════════════════════════════════
+   Registro.css  —  Blockhoom
+   Compartido por: SeleccionRegistro, RegistroArrendador, RegistroArrendatario
+════════════════════════════════════════════════ */
+
+/* ── Layout base ── */
+.registro-page {
+  min-height: 100vh;
+  background: var(--gray-50);
+  display: block;  /* ← Cambia de flex a block */
+}
+
+/* ── Navbar de registro (simplificada) ── */
+.registro-nav {
+  height: 70px;
+  background: var(--white);
+  border-bottom: 2px solid var(--purple-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5vw;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.registro-nav-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-mid);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.registro-nav-back:hover { color: var(--purple-600); }
+
+.registro-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--purple-600);
+  text-decoration: none;
+}
+
+.registro-nav-brand img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+
+.registro-nav-login {
+  background: transparent;
+  color: var(--purple-600);
+  text-decoration: none;
+  padding: 8px 22px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1.5px solid var(--purple-200);
+  transition: all 0.2s;
+}
+
+.registro-nav-login:hover {
+  background: var(--purple-50);
+  border-color: var(--purple-400);
+  transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════════════
+   FORMULARIOS DE REGISTRO (layout de 2 columnas)
+════════════════════════════════════════════════ */
+.registro-layout {
+  display: flex;
+  width: 100%;
+}
+
+/* ── Panel izquierdo ── */
+/* Botón Regresar dentro del sidebar - justo abajo del logo */
+.registro-sidebar {
+  background: linear-gradient(160deg, var(--purple-400) 0%, var(--purple-600) 100%);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 300px;
+  position: sticky;
+  top: 70px;  /* ← Misma altura que el navbar */
+  height: calc(100vh - 70px);  /* ← Altura completa */
+  overflow-y: auto;  /* ← Scroll interno si es necesario */
+}
+
+
+.btn-regresar-sidebar {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--purple-600);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  padding: 8px 18px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-regresar-sidebar:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--purple-400);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.registro-sidebar {
+  background: linear-gradient(160deg, var(--purple-400) 0%, var(--purple-600) 100%);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  top: 60px;
+  height: auto;  /* ← Cambia de calc(100vh - 60px) a auto */
+  overflow-y: visible;  /* ← Cambia de auto a visible */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.registro-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Estilo para cada característica - CUADROS BLANCOS TRASLÚCIDOS */
+.sidebar-perk {
+  background: rgba(255, 255, 255, 0.15);  /* Blanco traslúcido */
+  backdrop-filter: blur(10px);  /* Efecto de vidrio esmerilado */
+  border: 1px solid rgba(255, 255, 255, 0.2);  /* Borde sutil */
+  border-radius: 12px;  /* Esquinas redondeadas */
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.sidebar-perk:hover {
+  background: rgba(255, 255, 255, 0.25);  /* Más claro al pasar el mouse */
+  transform: translateX(4px);  /* Pequeño movimiento al hover */
+}
+
+.sidebar-perk-icon {
+  font-size: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sidebar-perk-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.4;
+}
+
+.sidebar-perk-text strong {
+  display: block;
+  color: var(--white);
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+}
+
+
+.sidebar-mascot {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.2));
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.sidebar-welcome {
+  text-align: center;
+  color: var(--white);
+}
+
+.sidebar-welcome h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+}
+
+.sidebar-welcome p {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+}
+
+.sidebar-perks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-perk {
+  padding: 6px 10px;  /* más compacto */
+}
+
+.sidebar-perk-icon {
+  font-size: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.sidebar-perk-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+}
+
+.sidebar-perk-text strong {
+  display: block;
+  color: var(--white);
+  font-weight: 700;
+  margin-bottom: 1px;
+}
+
+/* ── Panel derecho (formulario) ── */
+.registro-main {
+  background: var(--white);
+  padding: 2rem 2rem;
+  flex: 1;
+}
+
+/* Cabecera del formulario */
+.form-header {
+  background: linear-gradient(135deg, var(--purple-50) 0%, var(--purple-100) 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.form-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--purple-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.form-header-text h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.form-header-text p {
+  font-size: 0.83rem;
+  color: var(--text-mid);
+}
+
+/* Selector de tipo (pestañas) */
+.tipo-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--gray-100);
+  padding-bottom: 0.75rem;
+}
+
+.tipo-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.tipo-tab.active {
+  background: var(--purple-600);
+  color: var(--white);
+}
+
+.tipo-tab:not(.active):hover {
+  background: var(--purple-50);
+  color: var(--purple-600);
+}
+
+/* Beneficios rápidos debajo de las tabs */
+.quick-perks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-100);
+}
+
+.quick-perk {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  line-height: 1.4;
+}
+
+.quick-perk-ico {
+  font-size: 13px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* Secciones del formulario */
+
+.form-section {
+  margin-bottom: 1.5rem;
+  overflow: visible;  /* ← Agrega esto */
+}
+
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.form-section-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--purple-600);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.form-section-title h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.form-section-title p {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin-top: 1px;
+}
+
+.form-divider {
+  border: none;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--gray-200), var(--gray-200) 8px, transparent 8px, transparent 16px);
+  margin: 1.75rem 0;
+}
+
+/* Grid de campos */
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-grid-2 { grid-template-columns: 1fr 1fr; }
+.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group.full { grid-column: 1 / -1; }
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.form-label span {
+  color: var(--purple-500);
+  margin-left: 2px;
+}
+
+.form-input,
+.form-select {
+  height: 42px;
+  padding: 0 12px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+}
+
+.form-input::placeholder { color: var(--text-light); }
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--purple-400);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.form-input-icon {
+  position: relative;
+}
+
+.form-input-icon .form-input {
+  padding-left: 36px;
+}
+
+.form-input-icon .icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.form-hint {
+  font-size: 0.74rem;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+.form-hint.username {
+  font-size: 0.76rem;
+  color: var(--purple-500);
+  font-weight: 500;
+}
+
+.form-error {
+  font-size: 0.78rem;
+  color: #dc2626;
+  margin-top: 3px;
+}
+
+/* Upload de documento */
+.form-upload {
+  border: 2px dashed var(--purple-200);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--purple-50);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-upload:hover {
+  border-color: var(--purple-500);
+  background: var(--purple-100);
+}
+
+.form-upload input[type="file"] {
+  display: none;
+}
+
+.form-upload-icon { font-size: 28px; margin-bottom: 8px; }
+.form-upload-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--purple-600);
+  margin-bottom: 4px;
+}
+.form-upload-hint {
+  font-size: 0.76rem;
+  color: var(--text-light);
+}
+
+/* Toggle No Exterior */
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.toggle-label {
+  font-size: 0.78rem;
+  color: var(--text-mid);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.toggle-switch input { display: none; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: var(--gray-300);
+  transition: background 0.2s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--purple-500);
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(16px);
+}
+
+/* Botón submit */
+.form-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-100);
+  margin-top: 2rem;
+}
+
+.form-login-link {
+  font-size: 0.85rem;
+  color: var(--text-mid);
+}
+
+.form-login-link a {
+  color: var(--purple-600);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.form-login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+.registro-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: 100vh;  /* ← Mantén esto */
+  align-items: stretch;
+}
+
+  .sidebar-mascot {
+    width: 120px;
+    height: 120px;
+  }
+
+  .registro-main {
+    padding: 1.5rem;
+  }
+
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .seleccion-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-perks {
+    grid-template-columns: 1fr;
+  }
+}
+/* ════════════════════════════════════════════════
+   SELECCIÓN DE TIPO DE USUARIO (NUEVO)
+════════════════════════════════════════════════ */
+
+.seleccion-wrapper {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%);
+  padding: 1.25rem 2rem;
+}
+
+.seleccion-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  padding-top: 2rem;
+}
+
+.seleccion-regresar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.btn-glass-back {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--purple-600);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  padding: 10px 24px;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.btn-glass-back:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--purple-400);
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.seleccion-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.seleccion-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.seleccion-header p {
+  font-size: 1rem;
+  color: var(--text-mid);
+}
+
+.seleccion-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.seleccion-cards > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .seleccion-cards {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .seleccion-wrapper {
+    padding: 1rem;
+    min-height: auto;
+  }
+  
+  .seleccion-container {
+    padding-top: 3rem;
+  }
+  
+  .seleccion-regresar {
+    position: relative;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
+.login-password-toggle {
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.login-password-toggle:hover {
+  color: #059669;
+}
+
+/* ── Móvil pequeño (< 600 px): ocultar sidebar ── */
+@media (max-width: 600px) {
+  .registro-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .registro-sidebar {
+    display: none;
+  }
+  .registro-main {
+    padding: 1.25rem 1rem;
+  }
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+

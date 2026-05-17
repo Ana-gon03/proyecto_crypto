@@ -1,57 +1,91 @@
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import logoImg from '../../assets/burro.png'
+import '../../styles/Arrendador.css'
 
 const NavbarArrendador = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [menuAbierto, setMenuAbierto] = useState(false)
+
+  const isActive = (path) => location.pathname === path
 
   const handleCerrarSesion = () => {
-    // Preserva las claves públicas (no son sensibles y sirven para saber si el usuario ya generó claves)
-    const ecdhPub  = localStorage.getItem('burroomies_ecdh_pub')
-    const ecdsaPub = localStorage.getItem('burroomies_ecdsa_pub')
     localStorage.clear()
-    if (ecdhPub)  localStorage.setItem('burroomies_ecdh_pub',  ecdhPub)
-    if (ecdsaPub) localStorage.setItem('burroomies_ecdsa_pub', ecdsaPub)
     navigate('/')
   }
 
+  const cerrarMenu = () => setMenuAbierto(false)
+
+  const nombre = localStorage.getItem('usuarioNom') || 'Arrendador'
+
   return (
-    <nav style={{
-      backgroundColor: '#333',
-      padding: '0.75rem 1.5rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '1.5rem', fontWeight: 'bold' }}>
-        🏠 Burroomies
-      </Link>
-      
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <Link to="/arrendador/mis-arrendamientos">
-          <button style={{ padding: '0.5rem 1rem', backgroundColor: '#4a90d9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Mis Arrendamientos
-          </button>
+    <nav className="arr-nav">
+      <div className="arr-nav-inner">
+        <Link to="/" className="arr-nav-brand" onClick={cerrarMenu}>
+          <img src={logoImg} alt="Blockhoom" className="arr-nav-logo" />
+          <span className="arr-nav-brand-name">Blockhoom</span>
         </Link>
-        
-        <Link to="/arrendador/mis-viviendas">
-          <button style={{ padding: '0.5rem 1rem', backgroundColor: '#4a90d9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Mis Viviendas
+
+        <div className="arr-nav-links">
+          <Link
+            to="/arrendador/mis-viviendas"
+            className={`arr-nav-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
+          >
+            🏠 Mis Viviendas
+          </Link>
+          <Link
+            to="/arrendador/mis-arrendamientos"
+            className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+          >
+            📋 Mis Arrendamientos
+          </Link>
+        </div>
+
+        <div className="arr-nav-right">
+          <Link to="/arrendador/perfil" className="arr-nav-profile" onClick={cerrarMenu}>
+            <div className="arr-nav-avatar">
+              {nombre.charAt(0).toUpperCase()}
+            </div>
+            <span className="arr-nav-profile-name">Mi Perfil</span>
+          </Link>
+          <button className="arr-nav-logout" onClick={handleCerrarSesion}>
+            Cerrar Sesión
           </button>
-        </Link>
-        
-        <Link to="/arrendador/perfil">
-          <button style={{ padding: '0.5rem', backgroundColor: '#666', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1.2rem' }} title="Editar Perfil">
-            👤
+          <button
+            className="arr-nav-hamburger"
+            onClick={() => setMenuAbierto(!menuAbierto)}
+            aria-label="Menú"
+          >
+            {menuAbierto ? '✕' : '☰'}
           </button>
-        </Link>
-        
-        <button 
-          onClick={handleCerrarSesion}
-          style={{ padding: '0.5rem 1rem', backgroundColor: '#d94a4a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          Cerrar Sesión
-        </button>
+        </div>
       </div>
+
+      {menuAbierto && (
+        <div className="arr-nav-mobile-menu">
+          <Link
+            to="/arrendador/mis-viviendas"
+            className={`arr-nav-mobile-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
+            onClick={cerrarMenu}
+          >
+            🏠 Mis Viviendas
+          </Link>
+          <Link
+            to="/arrendador/mis-arrendamientos"
+            className={`arr-nav-mobile-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+            onClick={cerrarMenu}
+          >
+            📋 Mis Arrendamientos
+          </Link>
+          <Link to="/arrendador/perfil" className="arr-nav-mobile-link" onClick={cerrarMenu}>
+            👤 Mi Perfil
+          </Link>
+          <button className="arr-nav-mobile-btn" onClick={() => { cerrarMenu(); handleCerrarSesion(); }}>
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+      )}
     </nav>
   )
 }

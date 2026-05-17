@@ -1,0 +1,415 @@
+/* ════════════════════════════════════════════════
+   VerificarCorreo.css
+   Páginas de verificación de correo
+════════════════════════════════════════════════ */
+
+.verificar-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.verificar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.verificar-card {
+  background: var(--white);
+  border-radius: 28px;
+  box-shadow: 0 20px 48px rgba(5, 150, 105, 0.12);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.verificar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 56px rgba(5, 150, 105, 0.16);
+}
+
+/* Header */
+.verificar-header {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.verificar-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.verificar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.verificar-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 32px;
+}
+
+.verificar-header h2 {
+  color: var(--white);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.verificar-header p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+}
+
+/* Body */
+.verificar-body {
+  padding: 2rem;
+}
+
+/* Info del correo */
+.verificar-info {
+  background: var(--gray-50);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--gray-200);
+}
+
+.verificar-info label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-light);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.verificar-email {
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.verificar-update-btn {
+  background: none;
+  border: none;
+  color: var(--purple-600);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.5rem;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.verificar-update-btn:hover {
+  color: var(--purple-800);
+}
+
+/* Formulario de actualización */
+.verificar-update-form {
+  margin-top: 0.75rem;
+}
+
+.verificar-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 1rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.verificar-input:focus {
+  border-color: var(--purple-400);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.verificar-button-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.verificar-btn-small {
+  padding: 8px 16px;
+  border-radius: 40px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.verificar-btn-primary-small {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  color: white;
+}
+
+.verificar-btn-primary-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.verificar-btn-secondary-small {
+  background: transparent;
+  color: var(--text-mid);
+  border: 1px solid var(--gray-300);
+}
+
+.verificar-btn-secondary-small:hover {
+  background: var(--gray-50);
+  border-color: var(--purple-400);
+}
+
+/* Código */
+.verificar-code-group {
+  margin-bottom: 1.5rem;
+}
+
+.verificar-code-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.verificar-code-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 1rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.5rem;
+  color: var(--text-dark);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.verificar-code-input:focus {
+  border-color: var(--purple-400);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+/* Mensajes */
+.verificar-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc2626;
+  font-size: 0.8rem;
+}
+
+.verificar-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #059669;
+  font-size: 0.8rem;
+}
+
+/* Botones principales */
+.verificar-btn {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  margin-bottom: 0.75rem;
+}
+
+.verificar-btn-primary {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  color: white;
+}
+
+.verificar-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
+}
+
+.verificar-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.verificar-btn-secondary {
+  background: transparent;
+  color: var(--purple-600);
+  border: 1.5px solid var(--purple-200);
+}
+
+.verificar-btn-secondary:hover:not(:disabled) {
+  background: var(--purple-50);
+  border-color: var(--purple-400);
+  transform: translateY(-1px);
+}
+
+.verificar-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Enlace volver */
+.verificar-back-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.verificar-back-link button {
+  background: none;
+  border: none;
+  color: var(--text-mid);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-decoration: underline;
+}
+
+.verificar-back-link button:hover {
+  color: var(--purple-600);
+}
+
+/* Hint */
+.verificar-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .verificar-card {
+    max-width: 100%;
+  }
+  
+  .verificar-header {
+    padding: 1.5rem;
+  }
+  
+  .verificar-body {
+    padding: 1.5rem;
+  }
+  
+  .verificar-code-input {
+    height: 48px;
+    font-size: 1.2rem;
+    letter-spacing: 0.3rem;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RestablecerPasswordPage - Estilos adicionales
+════════════════════════════════════════════════ */
+
+.verificar-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0;
+  color: #9ca3af;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verificar-password-toggle:hover {
+  color: var(--purple-600);
+}
+
+.verificar-info ul {
+  margin: 0.5rem 0 0 1rem;
+  padding: 0;
+}
+
+.verificar-info li {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.verificar-back-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: color 0.2s;
+}
+
+.verificar-back-btn:hover {
+  color: var(--purple-600);
+}
+
+/* Ajuste para el input de código cuando no necesita letter-spacing */
+.verificar-code-input.normal {
+  letter-spacing: normal;
+  font-size: 1rem;
+  font-weight: 500;
+}

@@ -1,0 +1,207 @@
+/* ============================================
+   Footer.module.css
+   ============================================ */
+
+/* ── MODO PÚBLICO ── */
+.footer {
+  background: linear-gradient(135deg, #064e3b, #065f46);
+  color: #6ee7b7;
+  padding-top: 4rem;
+  font-family: 'Nunito', sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 3rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 3rem;
+}
+
+/* Marca */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+}
+
+.brandName {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.tagline {
+  font-size: 0.88rem;
+  color: #34d399;
+  line-height: 1.6;
+  max-width: 260px;
+}
+
+.inst {
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Columnas */
+.colTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.colList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.colLink {
+  font-size: 0.88rem;
+  color: #34d399;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.colLink:hover { color: #fff; }
+
+/* Bottom bar */
+.bottom {
+  border-top: 1px solid rgba(5, 150, 105, 0.2);
+  padding: 1.25rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #059669;
+  font-family: 'Nunito', sans-serif;
+}
+
+.adminAccess {
+  color: #065f46;
+  text-decoration: none;
+  font-size: 0.75rem;
+  transition: color 0.2s;
+}
+
+.adminAccess:hover { color: #34d399; }
+
+/* ── MODO MINI ── */
+.mini {
+  background: #fff;
+  border-top: 1px solid #d1fae5;
+  padding: 1.25rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Nunito', sans-serif;
+}
+
+.miniLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.miniLink {
+  font-size: 0.8rem;
+  color: #6B7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.miniLink:hover { color: #059669; }
+
+.miniDot {
+  color: #E5E7EB;
+  font-size: 0.8rem;
+}
+
+.miniCopy {
+  font-size: 0.75rem;
+  color: #D1D5DB;
+}
+
+/* ── MODO ADMIN ── */
+.admin {
+  background: #0F172A;
+  border-top: 1px solid #1E293B;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: 'Nunito', sans-serif;
+}
+
+.adminText {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.adminLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: #334155;
+}
+
+.adminLink {
+  color: #94A3B8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.adminLink:hover { color: #6ee7b7; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 540px) {
+  .container { grid-template-columns: 1fr; }
+  .bottom {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  .admin {
+    flex-direction: column;
+    text-align: center;
+  }
+}

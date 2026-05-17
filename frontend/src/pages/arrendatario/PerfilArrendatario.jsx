@@ -3,19 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
 import api from '../../services/api'
-import ECDHKeyManager from '../../components/common/ECDHKeyManager'
+import '../../styles/Arrendatario.css'
 
 const PerfilArrendatario = () => {
   const navigate = useNavigate()
-  
+
   const [perfil, setPerfil] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensajeExito, setMensajeExito] = useState('')
-  
-  // Campos editables
+
   const [nombres, setNombres] = useState('')
   const [apellidoPaterno, setApellidoPaterno] = useState('')
   const [apellidoMaterno, setApellidoMaterno] = useState('')
@@ -24,23 +23,28 @@ const PerfilArrendatario = () => {
   const [usernameError, setUsernameError] = useState('')
   const [usernameDisponible, setUsernameDisponible] = useState(true)
 
+  const [modal, setModal] = useState({ isOpen: false, type: '', message: '', title: '' })
+
   useEffect(() => {
     cargarPerfil()
   }, [])
+
+  const mostrarModal = (type, title, message) => setModal({ isOpen: true, type, title, message })
+  const cerrarModal = () => setModal({ isOpen: false, type: '', message: '', title: '' })
 
   const cargarPerfil = async () => {
     try {
       setLoading(true)
       const userId = localStorage.getItem('userId')
       const arrendatarioId = localStorage.getItem('arrendatarioId')
-      
+
       if (!userId || !arrendatarioId) {
         setError('No has iniciado sesión')
         setLoading(false)
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/usuarios/perfil-arrendatario`, {
+      const response = await fetch('http://localhost:5000/api/usuarios/perfil-arrendatario', {
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': userId,
@@ -52,17 +56,14 @@ const PerfilArrendatario = () => {
 
       const data = await response.json()
       setPerfil(data)
-      
-      // Llenar campos editables
       setNombres(data.usuario?.usuarioNom || '')
       setApellidoPaterno(data.usuario?.usuarioApePat || '')
       setApellidoMaterno(data.usuario?.usuarioApeMat || '')
       setTelefono(data.usuario?.usuarioTel || '')
       setUsername(data.arrendatarioUser || '')
-      
-    } catch (error) {
+    } catch (err) {
       setError('No se pudo cargar tu perfil')
-      console.error('Error:', error)
+      console.error('Error:', err)
     } finally {
       setLoading(false)
     }
@@ -74,13 +75,8 @@ const PerfilArrendatario = () => {
       setUsernameError('')
       return
     }
-    
     try {
-      const response = await api.post('/auth/validar-campo', {
-        campo: 'username',
-        valor: usernameNuevo
-      })
-      
+      const response = await api.post('/auth/validar-campo', { campo: 'username', valor: usernameNuevo })
       if (response.data.existe) {
         setUsernameDisponible(false)
         setUsernameError('Este username ya está en uso')
@@ -88,8 +84,8 @@ const PerfilArrendatario = () => {
         setUsernameDisponible(true)
         setUsernameError('')
       }
-    } catch (error) {
-      console.error('Error al verificar username:', error)
+    } catch (err) {
+      console.error('Error al verificar username:', err)
     }
   }
 
@@ -106,16 +102,15 @@ const PerfilArrendatario = () => {
 
   const handleGuardar = async () => {
     if (!usernameDisponible) {
-      alert('Corrige los errores antes de guardar')
+      mostrarModal('error', 'Error', 'Corrige los errores antes de guardar')
       return
     }
-
     try {
       setGuardando(true)
       const userId = localStorage.getItem('userId')
       const arrendatarioId = localStorage.getItem('arrendatarioId')
 
-      const response = await fetch(`http://localhost:5000/api/usuarios/actualizar-perfil-arrendatario`, {
+      const response = await fetch('http://localhost:5000/api/usuarios/actualizar-perfil-arrendatario', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -137,18 +132,16 @@ const PerfilArrendatario = () => {
       setPerfil(data.perfil)
       setEditando(false)
       setMensajeExito('Perfil actualizado exitosamente')
-      
       setTimeout(() => setMensajeExito(''), 3000)
-    } catch (error) {
-      alert('Error al guardar los cambios')
-      console.error('Error:', error)
+    } catch (err) {
+      mostrarModal('error', 'Error', 'Error al guardar los cambios')
+      console.error('Error:', err)
     } finally {
       setGuardando(false)
     }
   }
 
   const handleCancelar = () => {
-    // Restaurar valores originales
     setNombres(perfil?.usuario?.usuarioNom || '')
     setApellidoPaterno(perfil?.usuario?.usuarioApePat || '')
     setApellidoMaterno(perfil?.usuario?.usuarioApeMat || '')
@@ -165,11 +158,11 @@ const PerfilArrendatario = () => {
       const arrendatarioId = localStorage.getItem('arrendatarioId')
 
       if (!userId || !arrendatarioId) {
-        alert('No has iniciado sesión')
+        mostrarModal('error', 'Error', 'No has iniciado sesión')
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/usuarios/eliminar-cuenta-arrendatario`, {
+      const response = await fetch('http://localhost:5000/api/usuarios/eliminar-cuenta-arrendatario', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -181,27 +174,35 @@ const PerfilArrendatario = () => {
       const data = await response.json()
 
       if (response.ok) {
-        alert(data.message || 'Cuenta eliminada exitosamente')
-        localStorage.clear()
-        navigate('/')
+        mostrarModal('success', 'Cuenta eliminada', data.message || 'Cuenta eliminada exitosamente')
+        setTimeout(() => {
+          localStorage.clear()
+          navigate('/')
+        }, 2000)
       } else {
-        alert(data.error || 'Error al eliminar la cuenta')
+        mostrarModal('error', 'Error', data.error || 'Error al eliminar la cuenta')
       }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Error al eliminar la cuenta')
+    } catch (err) {
+      console.error('Error:', err)
+      mostrarModal('error', 'Error', 'Error al eliminar la cuenta')
     }
+  }
+
+  const confirmarEliminarCuenta = () => {
+    mostrarModal('confirm', '⚠️ Eliminar Cuenta',
+      '¿Estás seguro de eliminar tu cuenta? Esta acción no se puede deshacer. Tus datos personales serán eliminados, pero tus reseñas se conservarán de forma anónima.')
   }
 
   const usuario = perfil?.usuario || {}
   const carrera = perfil?.carrera || {}
+  const nombreCompleto = [usuario.usuarioNom, usuario.usuarioApePat, usuario.usuarioApeMat].filter(Boolean).join(' ')
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="atr-page">
         <NavbarArrendatario />
-        <div style={{ flex: 1, textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: '#666' }}>Cargando perfil...</p>
+        <div className="atr-main">
+          <div className="atr-loading"><p>Cargando perfil...</p></div>
         </div>
         <FooterInicio />
       </div>
@@ -209,277 +210,258 @@ const PerfilArrendatario = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="atr-page">
       <NavbarArrendatario />
 
-      <div style={{ flex: 1, maxWidth: '700px', margin: '0 auto', padding: '20px', width: '100%' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>👤 Mi Perfil</h1>
+      <div className="atr-main">
+        <h1 className="atr-page-title">Mi Perfil</h1>
 
-        {/* Mensaje de éxito */}
+        {/* Éxito */}
         {mensajeExito && (
-          <div style={{
-            padding: '15px',
-            backgroundColor: '#d4edda',
-            color: '#155724',
-            borderRadius: '5px',
-            marginBottom: '20px',
-            textAlign: 'center',
-            fontWeight: 'bold'
-          }}>
-            ✅ {mensajeExito}
+          <div className="atr-alert atr-alert-success" style={{ marginBottom: '1.25rem' }}>
+            <div className="atr-alert-icon">✅</div>
+            <div className="atr-alert-body">
+              <div className="atr-alert-title">{mensajeExito}</div>
+            </div>
           </div>
         )}
 
-        {error ? (
-          <div style={{
-            padding: '20px',
-            backgroundColor: '#ffe6e6',
-            color: '#dc3545',
-            borderRadius: '5px',
-            textAlign: 'center'
-          }}>
-            {error}
-          </div>
-        ) : perfil ? (
-          <div style={{
-            backgroundColor: 'white',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            padding: '30px'
-          }}>
-            {/* Avatar */}
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                backgroundColor: '#1a237e',
-                color: 'white',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '32px',
-                fontWeight: 'bold'
-              }}>
-                {usuario.usuarioNom?.charAt(0) || '?'}
-              </div>
-              <h2 style={{ marginTop: '15px', color: '#333' }}>
-                {usuario.usuarioNom} {usuario.usuarioApePat} {usuario.usuarioApeMat || ''}
-              </h2>
-              <p style={{ color: '#666', margin: '5px 0' }}>{perfil.arrendatarioUser}</p>
+        {/* Error */}
+        {error && (
+          <div className="atr-alert atr-alert-error" style={{ marginBottom: '1.25rem' }}>
+            <div className="atr-alert-icon">⚠️</div>
+            <div className="atr-alert-body">
+              <div className="atr-alert-title">{error}</div>
             </div>
+          </div>
+        )}
 
-            {/* Datos */}
-            {!editando ? (
-              <>
-                <div style={infoSectionStyle}>
-                  <h3 style={sectionTitleStyle}>📋 Información Personal</h3>
-                  
-                  <InfoRow label="Nombre" value={usuario.usuarioNom} />
-                  <InfoRow label="Apellido Paterno" value={usuario.usuarioApePat} />
-                  <InfoRow label="Apellido Materno" value={usuario.usuarioApeMat || '—'} />
-                  <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                  <InfoRow label="Teléfono" value={usuario.usuarioTel || '—'} />
-                  <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                  <InfoRow label="Fecha de Nacimiento" value={usuario.usuarioFechaNac ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX') : '—'} bloqueado />
+        {perfil && (
+          <div className="atr-card">
+            <div className="atr-card-body">
+
+              {/* Avatar y nombre */}
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <div className="atr-landlord-avatar" style={{ width: '72px', height: '72px', fontSize: '1.75rem', margin: '0 auto 1rem' }}>
+                  {usuario.usuarioNom?.charAt(0) || '?'}
                 </div>
+                <h2 style={{ margin: '0 0 4px', fontSize: '1.15rem', fontWeight: '800', color: '#111827' }}>
+                  {nombreCompleto || '—'}
+                </h2>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>@{perfil.arrendatarioUser}</p>
+              </div>
 
-                <div style={infoSectionStyle}>
-                  <h3 style={sectionTitleStyle}>🎓 Información Académica</h3>
-                  
-                  <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
-                  <InfoRow label="Username" value={`${perfil.arrendatarioUser}`} />
-                  <InfoRow label="Carrera" value={carrera.carreraNombre || '—'} />
-                  <InfoRow label="Verificado" value={perfil.arrendatarioVerificado ? '✅ Sí' : '❌ No'} />
-                </div>
+              <hr className="atr-divider" />
 
-                <button 
-                  onClick={() => setEditando(true)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#1a237e',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    marginTop: '20px'
-                  }}
-                >
-                  ✏️ Editar Perfil
-                </button>
-
-                {/* Módulo de claves criptográficas */}
-                <div style={{ marginTop: '25px' }}>
-                  <ECDHKeyManager />
-                </div>
-
-                {/* ✅ BOTÓN ELIMINAR CUENTA */}
-                <div style={{ marginTop: '15px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm('⚠️ ¿Estás seguro de eliminar tu cuenta?\n\nEsta acción no se puede deshacer. Tus datos personales serán eliminados, pero tus reseñas se conservarán de forma anónima.')) {
-                        handleEliminarCuenta()
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    🗑️ Eliminar Cuenta
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={infoSectionStyle}>
-                  <h3 style={sectionTitleStyle}>✏️ Editar Información</h3>
-                  
-                  <InputField label="Nombre" value={nombres} onChange={(e) => setNombres(e.target.value)} />
-                  <InputField label="Apellido Paterno" value={apellidoPaterno} onChange={(e) => setApellidoPaterno(e.target.value)} />
-                  <InputField label="Apellido Materno" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
-                  <InputField label="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} type="tel" />
-                  
-                  {/* Username con validación */}
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '14px' }}>
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={handleUsernameChange}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        borderRadius: '5px',
-                        border: usernameError ? '2px solid #dc3545' : usernameDisponible ? '2px solid #28a745' : '1px solid #ddd',
-                        fontSize: '14px',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                    {usernameError && <small style={{ color: '#dc3545' }}>{usernameError}</small>}
-                    {!usernameError && username !== perfil?.arrendatarioUser && usernameDisponible && (
-                      <small style={{ color: '#28a745' }}>✓ Disponible</small>
-                    )}
+              {!editando ? (
+                <>
+                  {/* Información Personal */}
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <p className="atr-section-title">Información Personal</p>
+                    <div className="atr-contact-list">
+                      <InfoRow label="Nombre" value={usuario.usuarioNom} />
+                      <InfoRow label="Apellido Paterno" value={usuario.usuarioApePat} />
+                      <InfoRow label="Apellido Materno" value={usuario.usuarioApeMat || '—'} />
+                      <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
+                      <InfoRow label="Teléfono" value={usuario.usuarioTel || '—'} />
+                      <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
+                      <InfoRow
+                        label="Fecha de Nacimiento"
+                        value={usuario.usuarioFechaNac
+                          ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX')
+                          : '—'}
+                        bloqueado
+                      />
+                    </div>
                   </div>
 
-                  {/* Campos bloqueados */}
-                  <div style={{ marginTop: '20px' }}>
-                    <p style={{ fontWeight: 'bold', color: '#666', fontSize: '13px', marginBottom: '10px' }}>
-                       Información no editable:
-                    </p>
-                    <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                    <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                    <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
-                    <InfoRow label="Fecha de Nacimiento" value={usuario.usuarioFechaNac ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX') : '—'} bloqueado />
-                  </div>
-                </div>
+                  <hr className="atr-divider" />
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <button 
-                    onClick={handleCancelar}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: '#f0f0f0',
-                      border: '1px solid #ddd',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
+                  {/* Información Académica */}
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <p className="atr-section-title">Información Académica</p>
+                    <div className="atr-contact-list">
+                      <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
+                      <InfoRow label="Username" value={`@${perfil.arrendatarioUser}`} />
+                      <InfoRow label="Carrera" value={carrera.carreraNombre || '—'} />
+                    </div>
+                  </div>
+
+                  <div className="atr-btn-group">
+                    <button className="atr-btn-primary" onClick={() => setEditando(true)}>
+                      ✏️ Editar Perfil
+                    </button>
+                    <hr className="atr-divider" style={{ margin: '0.5rem 0' }} />
+                    <button className="atr-btn-danger" onClick={confirmarEliminarCuenta}>
+                      🗑️ Eliminar Cuenta
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Formulario de edición */}
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <p className="atr-section-title">Editar Información</p>
+                    <FormField label="Nombre" value={nombres} onChange={(e) => setNombres(e.target.value)} />
+                    <FormField label="Apellido Paterno" value={apellidoPaterno} onChange={(e) => setApellidoPaterno(e.target.value)} />
+                    <FormField label="Apellido Materno" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
+                    <FormField label="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} type="tel" />
+
+                    {/* Username con validación */}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={labelStyle}>Username</label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={handleUsernameChange}
+                        style={{
+                          ...inputStyle,
+                          borderColor: usernameError ? '#DC2626' : usernameDisponible ? '#059669' : '#e5e7eb'
+                        }}
+                      />
+                      {usernameError && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#DC2626' }}>{usernameError}</p>
+                      )}
+                      {!usernameError && username !== perfil?.arrendatarioUser && usernameDisponible && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#059669' }}>✓ Disponible</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Campos no editables */}
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <p className="atr-section-title" style={{ color: '#9ca3af' }}>Información no editable</p>
+                    <div className="atr-contact-list">
+                      <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
+                      <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
+                      <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
+                      <InfoRow
+                        label="Fecha de Nacimiento"
+                        value={usuario.usuarioFechaNac
+                          ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX')
+                          : '—'}
+                        bloqueado
+                      />
+                    </div>
+                  </div>
+
+                  <div className="atr-modal-actions" style={{ justifyContent: 'stretch' }}>
+                    <button
+                      className="atr-btn-ghost"
+                      style={{ flex: 1 }}
+                      onClick={handleCancelar}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      className="atr-btn-primary"
+                      style={{ flex: 1 }}
+                      disabled={guardando || !usernameDisponible}
+                      onClick={handleGuardar}
+                    >
+                      {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {modal.isOpen && (
+        <div
+          className="atr-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal() }}
+        >
+          <div className="atr-modal">
+            <div className="atr-modal-icon">
+              {modal.type === 'confirm' ? '⚠️' : modal.type === 'success' ? '✅' : '❌'}
+            </div>
+            <h3 className="atr-modal-title">{modal.title}</h3>
+            <p className="atr-modal-desc" style={{ whiteSpace: 'pre-line' }}>{modal.message}</p>
+            <div className="atr-modal-actions">
+              {modal.type === 'confirm' ? (
+                <>
+                  <button className="atr-btn-ghost" style={{ width: 'auto', padding: '10px 24px' }} onClick={cerrarModal}>
                     Cancelar
                   </button>
-                  <button 
-                    onClick={handleGuardar}
-                    disabled={guardando || !usernameDisponible}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: guardando || !usernameDisponible ? '#ccc' : '#1a237e',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: guardando || !usernameDisponible ? 'not-allowed' : 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold'
-                    }}
+                  <button
+                    className="atr-btn-danger"
+                    style={{ width: 'auto', padding: '10px 24px' }}
+                    onClick={() => { cerrarModal(); handleEliminarCuenta() }}
                   >
-                    {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                    Sí, eliminar
                   </button>
-                </div>
-              </>
-            )}
+                </>
+              ) : (
+                <button className="atr-btn-primary" style={{ width: 'auto', padding: '10px 24px' }} onClick={cerrarModal}>
+                  Entendido
+                </button>
+              )}
+            </div>
           </div>
-        ) : null}
-      </div>
+        </div>
+      )}
 
       <FooterInicio />
     </div>
   )
 }
 
-// Componentes auxiliares
+const labelStyle = {
+  display: 'block',
+  fontSize: '0.8rem',
+  fontWeight: '700',
+  color: '#374151',
+  marginBottom: '6px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em'
+}
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px 14px',
+  borderRadius: '10px',
+  border: '1.5px solid #e5e7eb',
+  fontSize: '0.875rem',
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  color: '#111827',
+  boxSizing: 'border-box',
+  outline: 'none',
+  background: '#fafafa',
+  transition: 'border-color 0.2s'
+}
+
 const InfoRow = ({ label, value, bloqueado }) => (
   <div style={{
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '12px 0',
-    borderBottom: '1px solid #f0f0f0',
-    fontSize: '14px'
+    alignItems: 'center',
+    padding: '10px 0',
+    borderBottom: '1px solid #f3f4f6',
+    fontSize: '0.875rem',
+    gap: '1rem'
   }}>
-    <span style={{ color: '#666' }}>{label}</span>
-    <span style={{ 
-      color: bloqueado ? '#999' : '#333',
-      fontWeight: '500'
-    }}>
-      {bloqueado ? ' ' : ''}{value}
+    <span style={{ color: '#6b7280', flexShrink: 0 }}>{label}</span>
+    <span style={{ color: bloqueado ? '#9ca3af' : '#111827', fontWeight: '600', textAlign: 'right', wordBreak: 'break-all' }}>
+      {value}
     </span>
   </div>
 )
 
-const InputField = ({ label, value, onChange, type = 'text' }) => (
-  <div style={{ marginBottom: '15px' }}>
-    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '14px' }}>
-      {label}
-    </label>
+const FormField = ({ label, value, onChange, type = 'text' }) => (
+  <div style={{ marginBottom: '1rem' }}>
+    <label style={labelStyle}>{label}</label>
     <input
       type={type}
       value={value}
       onChange={onChange}
-      style={{
-        width: '100%',
-        padding: '10px',
-        borderRadius: '5px',
-        border: '1px solid #ddd',
-        fontSize: '14px',
-        boxSizing: 'border-box'
-      }}
+      style={inputStyle}
     />
   </div>
 )
-
-const infoSectionStyle = {
-  marginBottom: '25px',
-  paddingBottom: '15px',
-  borderBottom: '1px solid #e0e0e0'
-}
-
-const sectionTitleStyle = {
-  fontSize: '16px',
-  color: '#333',
-  marginBottom: '15px'
-}
 
 export default PerfilArrendatario

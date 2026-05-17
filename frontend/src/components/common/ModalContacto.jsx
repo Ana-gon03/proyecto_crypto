@@ -29,8 +29,8 @@ const ModalContacto = ({ onClose }) => {
         {/* Correo */}
         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
           <div style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>📧 Correo Electrónico</div>
-          <a href="mailto:contacto@burroomies.mx" style={{ color: '#0066cc', textDecoration: 'none', fontSize: '1rem' }}>
-            contacto@burroomies.mx
+          <a href="mailto:contacto@blockhoom.mx" style={{ color: '#0066cc', textDecoration: 'none', fontSize: '1rem' }}>
+            contacto@blockhoom.mx
           </a>
         </div>
 
@@ -40,7 +40,7 @@ const ModalContacto = ({ onClose }) => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <a 
-              href="https://facebook.com/burroomies" 
+              href="https://facebook.com/blockhoom" 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1877F2', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem', borderRadius: '4px' }}
@@ -51,7 +51,7 @@ const ModalContacto = ({ onClose }) => {
             </a>
             
             <a 
-              href="https://instagram.com/burroomies" 
+              href="https://instagram.com/blockhoom" 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#E4405F', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem', borderRadius: '4px' }}
@@ -62,7 +62,7 @@ const ModalContacto = ({ onClose }) => {
             </a>
             
             <a 
-              href="https://twitter.com/burroomies" 
+              href="https://twitter.com/blockhoom" 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1DA1F2', textDecoration: 'none', fontSize: '1rem', padding: '0.5rem', borderRadius: '4px' }}

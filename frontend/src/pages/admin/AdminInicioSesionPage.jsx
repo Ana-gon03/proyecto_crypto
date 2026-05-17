@@ -1,14 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { loginAdmin } from '../../services/authService'
+import burroLogo from '../../assets/burro.png'
+import '../../styles/Login.css'
 import '../../components/admin/admin.css'
 
 const AdminInicioSesionPage = () => {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    adminUser: '',
-    adminContra: ''
-  })
+  const [formData, setFormData] = useState({ adminUser: '', adminContra: '' })
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
   const [mostrarPassword, setMostrarPassword] = useState(false)
@@ -35,97 +34,97 @@ const AdminInicioSesionPage = () => {
   }
 
   return (
-    <div className="admin-login-bg">
-      {/* Mini navbar solo marca */}
-      <header style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '14px 40px',
-        background: 'rgba(255,255,255,0.85)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #f0e6f5',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 9,
-          background: 'linear-gradient(135deg, #7B2D6E, #6B3FA0)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.9rem', color: '#fff',
-          boxShadow: '0 3px 10px rgba(123,45,110,0.25)',
-          flexShrink: 0,
-        }}>
-          👑
-        </div>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '1rem', color: '#7B2D6E' }}>
-          Burroomies Admin
-        </span>
+    <div className="login-page">
+      <header className="admin-login-header">
+        <img src={burroLogo} alt="Blockhoom" className="admin-nav-logo" onError={e => { e.target.style.display = 'none' }} />
+        <span className="admin-nav-title">Blockhoom</span>
       </header>
 
-      <main className="admin-login-main">
-        <div className="admin-login-card">
-          <div className="admin-login-icon">👑</div>
-          <h1 className="admin-login-title">Panel Administrador</h1>
-          <p className="admin-login-sub">Inicia sesión para gestionar Burroomies</p>
-
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label className="admin-login-label">Usuario</label>
-              <div className="admin-login-input-wrap">
-                <input
-                  className="admin-login-input"
-                  type="text"
-                  name="adminUser"
-                  value={formData.adminUser}
-                  onChange={handleChange}
-                  placeholder="Ej: admin_root"
-                  required
-                />
-              </div>
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-header">
+            <div className="login-icon">
+              <img src={burroLogo} alt="Blockhoom" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
             </div>
+            <h2>Panel Administrador</h2>
+            <p>Inicia sesión para gestionar Blockhoom</p>
+          </div>
 
-            <div>
-              <label className="admin-login-label">Contraseña</label>
-              <div className="admin-login-input-wrap">
-                <input
-                  className="admin-login-input with-toggle"
-                  type={mostrarPassword ? 'text' : 'password'}
-                  name="adminContra"
-                  value={formData.adminContra}
-                  onChange={handleChange}
-                  placeholder="Ingresa tu contraseña"
-                  required
-                />
-                <button
-                  type="button"
-                  className="admin-login-toggle"
-                  onClick={() => setMostrarPassword(!mostrarPassword)}
+          <div className="login-body">
+            <form onSubmit={handleSubmit}>
+              <div className="login-group">
+                <label className="login-label">Usuario</label>
+                <div className="login-input-wrapper">
+                  <input
+                    className="login-input"
+                    type="text"
+                    name="adminUser"
+                    value={formData.adminUser}
+                    onChange={handleChange}
+                    placeholder="Ej: admin_root"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="login-group">
+                <label className="login-label">Contraseña</label>
+                <div className="login-input-wrapper">
+                  <input
+                    className="login-input login-input-icon"
+                    type={mostrarPassword ? 'text' : 'password'}
+                    name="adminContra"
+                    value={formData.adminContra}
+                    onChange={handleChange}
+                    placeholder="Ingresa tu contraseña"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="login-password-toggle"
+                    onClick={() => setMostrarPassword(!mostrarPassword)}
+                  >
+                    {mostrarPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="login-error">
+                  <span className="login-error-icon">⚠️</span>
+                  <span className="login-error-text">{error}</span>
+                </div>
+              )}
+
+              <button type="submit" className="login-btn" disabled={cargando}>
+                {cargando ? 'Iniciando sesión...' : 'Iniciar Sesión →'}
+              </button>
+
+              <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+                <Link to="/" style={{ color: 'var(--text-light)', fontSize: '0.82rem', textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--purple-600)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-light)'}
                 >
-                  {mostrarPassword ? '🙈' : '👁️'}
-                </button>
+                  ← Volver al inicio
+                </Link>
               </div>
-            </div>
-
-            {error && <div className="admin-login-error">{error}</div>}
-
-            <button
-              type="submit"
-              className="admin-login-btn"
-              disabled={cargando}
-            >
-              {cargando ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
-          </form>
-
-          <Link to="/" className="admin-login-back">
-            ← Volver al inicio
-          </Link>
+            </form>
+          </div>
         </div>
-      </main>
+      </div>
 
       <footer className="admin-login-footer">
-        Burroomies — Panel de Administración
+        Blockhoom — Panel de Administración
       </footer>
     </div>
   )

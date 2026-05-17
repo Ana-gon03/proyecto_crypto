@@ -8,8 +8,8 @@ export const AVISO_PRIVACIDAD = {
   comun: [
     {
       subtitulo: '1. Identidad del Responsable',
-      texto: `RentIPN (en adelante "el Sistema") es responsable del tratamiento de sus datos personales.
-Para ejercer sus derechos o resolver dudas puede contactarnos en: privacidad@rentipn.mx`
+      texto: `Blockhoom (en adelante "el Sistema") es responsable del tratamiento de sus datos personales.
+Para ejercer sus derechos o resolver dudas puede contactarnos en: privacidad@blockhoom.mx`
     },
     {
       subtitulo: '3. Finalidades del Tratamiento',
@@ -29,7 +29,7 @@ Para ejercer sus derechos o resolver dudas puede contactarnos en: privacidad@ren
     },
     {
       subtitulo: '6. Derechos ARCO',
-      texto: `Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse (derechos ARCO) al tratamiento de sus datos personales. Para ejercerlos envíe un correo a privacidad@rentipn.mx indicando: nombre completo, derecho que desea ejercer y descripción del dato involucrado. Responderemos en un plazo máximo de 20 días hábiles.`
+      texto: `Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse (derechos ARCO) al tratamiento de sus datos personales. Para ejercerlos envíe un correo a privacidad@blockhoom.mx indicando: nombre completo, derecho que desea ejercer y descripción del dato involucrado. Responderemos en un plazo máximo de 20 días hábiles.`
     },
     {
       subtitulo: '7. Transferencias Internacionales',
@@ -68,7 +68,7 @@ export const TERMINOS_USO = {
   comun: [
     {
       subtitulo: '1. Identidad y Objeto',
-      texto: `RentIPN es una plataforma digital que facilita el contacto entre estudiantes del Instituto Politécnico Nacional (IPN) que buscan arrendamiento y personas físicas que desean ofrecer inmuebles en renta. No somos parte de ningún contrato de arrendamiento.`
+      texto: `Blockhoom es una plataforma digital que facilita el contacto entre estudiantes del Instituto Politécnico Nacional (IPN) que buscan arrendamiento y personas físicas que desean ofrecer inmuebles en renta. No somos parte de ningún contrato de arrendamiento.`
     },
     {
       subtitulo: '3. Uso Permitido',
@@ -79,11 +79,11 @@ Queda prohibido publicar información falsa, usar el sistema para actividades il
     },
     {
       subtitulo: '4. Propiedad Intelectual',
-      texto: `El diseño, código fuente, logotipos y contenidos del sistema son propiedad de RentIPN o de sus licenciantes. No se permite su reproducción, distribución o modificación sin autorización expresa por escrito.`
+      texto: `El diseño, código fuente, logotipos y contenidos del sistema son propiedad de Blockhoom o de sus licenciantes. No se permite su reproducción, distribución o modificación sin autorización expresa por escrito.`
     },
     {
       subtitulo: '5. Limitación de Responsabilidad',
-      texto: `RentIPN actúa como intermediario tecnológico. No nos hacemos responsables de: la veracidad de los anuncios publicados por los usuarios, los acuerdos económicos o legales celebrados entre arrendadores y arrendatarios, ni de daños derivados del uso indebido de la plataforma por parte de terceros.`
+      texto: `Blockhoom actúa como intermediario tecnológico. No nos hacemos responsables de: la veracidad de los anuncios publicados por los usuarios, los acuerdos económicos o legales celebrados entre arrendadores y arrendatarios, ni de daños derivados del uso indebido de la plataforma por parte de terceros.`
     },
     {
       subtitulo: '6. Suspensión y Cancelación',
@@ -95,7 +95,7 @@ Queda prohibido publicar información falsa, usar el sistema para actividades il
     },
     {
       subtitulo: '8. Contacto',
-      texto: `Para reportes, quejas o aclaraciones: contacto@rentipn.mx`
+      texto: `Para reportes, quejas o aclaraciones: contacto@blockhoom.mx`
     }
   ],
   // Sección 2 diferente por rol

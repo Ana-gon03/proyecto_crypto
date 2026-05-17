@@ -2,43 +2,29 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarArrendador from '../../components/common/NavbarArrendador'
 import FooterInicio from '../../components/common/FooterInicio'
+import ModalConfirmacion from '../../components/common/ModalConfirmacion'
 import { getPerfilArrendador, actualizarPerfilArrendador } from '../../services/authService'
-import ECDHKeyManager from '../../components/common/ECDHKeyManager'
+import '../../styles/Arrendador.css'
 
 const PerfilArrendador = () => {
   const navigate = useNavigate()
-  const [cargando, setCargando] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [mensajeExito, setMensajeExito] = useState('')
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  const [modalEliminar, setModalEliminar] = useState(false)
+  const [modalAlerta, setModalAlerta] = useState({ abierto: false, mensaje: '' })
+
+  // Estado para modales
+  const [modal, setModal] = useState({ isOpen: false, type: '', message: '', title: '' })
 
   const [perfil, setPerfil] = useState({
-    usuario: {
-      usuarioNom: '',
-      usuarioApePat: '',
-      usuarioApeMat: '',
-      usuarioCorreo: '',
-      usuarioTel: '',
-      usuarioCurp: '',
-      usuarioFechaNac: ''
-    },
+    usuario: { usuarioNom: '', usuarioApePat: '', usuarioApeMat: '', usuarioCorreo: '', usuarioTel: '', usuarioCurp: '', usuarioFechaNac: '' },
     arrendadorRFC: '',
-    direccion: {
-      direccionCalle: '',
-      direccionNumExt: '',
-      direccionNumInt: '',
-      cp: {
-        d_codigo: '',
-        d_asenta: '',
-        D_mnpio: '',
-        d_estado: ''
-      }
-    }
+    direccion: { direccionCalle: '', direccionNumExt: '', direccionNumInt: '', cp: { d_codigo: '', d_asenta: '', D_mnpio: '', d_estado: '' } }
   })
 
-  // Campos editables
   const [nombres, setNombres] = useState('')
   const [apellidoPaterno, setApellidoPaterno] = useState('')
   const [apellidoMaterno, setApellidoMaterno] = useState('')
@@ -51,22 +37,23 @@ const PerfilArrendador = () => {
   const [municipio, setMunicipio] = useState('')
   const [estado, setEstado] = useState('')
 
-  useEffect(() => {
-    cargarPerfil()
-  }, [])
+  useEffect(() => { cargarPerfil() }, [])
+
+  const mostrarModal = (type, title, message) => {
+    setModal({ isOpen: true, type, title, message })
+  }
+
+  const cerrarModal = () => {
+    setModal({ isOpen: false, type: '', message: '', title: '' })
+  }
 
   const cargarPerfil = async () => {
     try {
       setLoading(true)
       const userId = localStorage.getItem('userId')
-      if (!userId) {
-        navigate('/usuarios/inicio-sesion')
-        return
-      }
+      if (!userId) { navigate('/usuarios/inicio-sesion'); return }
       const data = await getPerfilArrendador(userId)
       setPerfil(data)
-      
-      // Llenar campos
       setNombres(data.usuario?.usuarioNom || '')
       setApellidoPaterno(data.usuario?.usuarioApePat || '')
       setApellidoMaterno(data.usuario?.usuarioApeMat || '')
@@ -78,65 +65,37 @@ const PerfilArrendador = () => {
       setColonia(data.direccion?.cp?.d_asenta || '')
       setMunicipio(data.direccion?.cp?.D_mnpio || '')
       setEstado(data.direccion?.cp?.d_estado || '')
-      
-    } catch (err) {
-      setError('Error al cargar perfil')
-    } finally {
-      setLoading(false)
-    }
+    } catch { setError('Error al cargar perfil') }
+    finally { setLoading(false) }
   }
 
   const handleCPChange = async (e) => {
-    const valorCP = e.target.value.replace(/\D/g, '').slice(0, 5)
-    setCP(valorCP)
-    
-    if (valorCP.length === 5) {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 5)
+    setCP(val)
+    if (val.length === 5) {
       try {
         const { buscarCP } = await import('../../services/propiedadService')
-        const data = await buscarCP(valorCP)
-        setColonia(data.colonia || '')
-        setMunicipio(data.municipio || '')
-        setEstado(data.estado || '')
-      } catch (err) {
-        setColonia('')
-        setMunicipio('')
-        setEstado('')
-      }
+        const data = await buscarCP(val)
+        setColonia(data.colonia || ''); setMunicipio(data.municipio || ''); setEstado(data.estado || '')
+      } catch { setColonia(''); setMunicipio(''); setEstado('') }
     }
   }
 
   const handleGuardar = async () => {
-    setGuardando(true)
-    setError('')
-    setMensajeExito('')
-
+    setGuardando(true); setError(''); setMensajeExito('')
     try {
       const userId = localStorage.getItem('userId')
-      const datos = {
-        usuarioNom: nombres,
-        usuarioApePat: apellidoPaterno,
-        usuarioApeMat: apellidoMaterno,
-        usuarioTel: telefono,
-        direccionCalle: calle,
-        direccionNumExt: numExt,
-        direccionNumInt: numInt,
-        cp: cp
-      }
-
-      await actualizarPerfilArrendador(userId, datos)
-      
-      // Recargar perfil
+      await actualizarPerfilArrendador(userId, {
+        usuarioNom: nombres, usuarioApePat: apellidoPaterno, usuarioApeMat: apellidoMaterno,
+        usuarioTel: telefono, direccionCalle: calle, direccionNumExt: numExt, direccionNumInt: numInt, cp
+      })
       const dataActualizada = await getPerfilArrendador(userId)
       setPerfil(dataActualizada)
-      
       setMensajeExito('Perfil actualizado exitosamente')
       setEditando(false)
       setTimeout(() => setMensajeExito(''), 3000)
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al actualizar perfil')
-    } finally {
-      setGuardando(false)
-    }
+    } catch (err) { setError(err.response?.data?.error || 'Error al actualizar perfil') }
+    finally { setGuardando(false) }
   }
 
   const handleCancelar = () => {
@@ -151,329 +110,265 @@ const PerfilArrendador = () => {
     setColonia(perfil.direccion?.cp?.d_asenta || '')
     setMunicipio(perfil.direccion?.cp?.D_mnpio || '')
     setEstado(perfil.direccion?.cp?.d_estado || '')
-    setEditando(false)
+    setEditando(false); setError('')
   }
 
   const handleEliminarCuenta = async () => {
+    setModalEliminar(false)
     try {
       const userId = localStorage.getItem('userId')
       const arrendadorId = localStorage.getItem('arrendadorId')
-
-      if (!userId || !arrendadorId) {
-        alert('No has iniciado sesión')
-        return
-      }
-
-      const response = await fetch(`http://localhost:5000/api/usuarios/eliminar-cuenta-arrendador`, {
+      if (!userId || !arrendadorId) { setError('No has iniciado sesión'); return }
+      const response = await fetch('http://localhost:5000/api/usuarios/eliminar-cuenta-arrendador', {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId,
-          'x-arrendador-id': arrendadorId
-        }
+        headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-arrendador-id': arrendadorId }
       })
-
       const data = await response.json()
-
-      if (response.ok) {
-        alert(data.message || 'Cuenta eliminada exitosamente')
-        localStorage.clear()
-        navigate('/')
-      } else {
-        alert(data.error || 'Error al eliminar la cuenta')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Error al eliminar la cuenta')
-    }
+      if (response.ok) { localStorage.clear(); navigate('/') }
+      else setModalAlerta({ abierto: true, mensaje: data.error || 'Error al eliminar la cuenta' })
+    } catch { setModalAlerta({ abierto: true, mensaje: 'Error al eliminar la cuenta' }) }
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <NavbarArrendador />
-        <div style={{ flex: 1, textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: '#666' }}>Cargando perfil...</p>
-        </div>
-        <FooterInicio />
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="arr-page">
+      <NavbarArrendador />
+      <main className="arr-main"><p className="arr-loading">Cargando perfil...</p></main>
+      <FooterInicio />
+    </div>
+  )
 
   const usuario = perfil?.usuario || {}
+  const dir = perfil?.direccion || {}
+  const cpData = dir?.cp || {}
+
+  const iniciales = [usuario.usuarioNom, usuario.usuarioApePat]
+    .filter(Boolean).map(n => n[0].toUpperCase()).join('')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="arr-page">
       <NavbarArrendador />
+      <main className="arr-main">
+        <div className="arr-profile-wrapper">
 
-      <div style={{ flex: 1, maxWidth: '700px', margin: '0 auto', padding: '20px', width: '100%' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>👤 Mi Perfil</h1>
+          {mensajeExito && <div className="arr-alert arr-alert-success" style={{ marginBottom: '1rem' }}>✅ {mensajeExito}</div>}
+          {error && <div className="arr-alert arr-alert-error" style={{ marginBottom: '1rem' }}>⚠️ {error}</div>}
 
-        {/* Mensaje de éxito */}
-        {mensajeExito && (
-          <div style={{
-            padding: '15px',
-            backgroundColor: '#d4edda',
-            color: '#155724',
-            borderRadius: '5px',
-            marginBottom: '20px',
-            textAlign: 'center',
-            fontWeight: 'bold'
-          }}>
-            ✅ {mensajeExito}
-          </div>
-        )}
-
-        {error && (
-          <div style={{
-            padding: '15px',
-            backgroundColor: '#ffe6e6',
-            color: '#dc3545',
-            borderRadius: '5px',
-            marginBottom: '20px',
-            textAlign: 'center'
-          }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{
-          backgroundColor: 'white',
-          border: '1px solid #e0e0e0',
-          borderRadius: '8px',
-          padding: '30px'
-        }}>
-          {/* Avatar */}
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              backgroundColor: '#1a237e',
-              color: 'white',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '32px',
-              fontWeight: 'bold'
-            }}>
-              {usuario.usuarioNom?.charAt(0) || '?'}
+          {/* ── Hero ───────────────────────────────────────── */}
+          <div className="arr-profile-card">
+            <div className="arr-profile-hero">
+              <div className="arr-avatar">{iniciales || '?'}</div>
+              <p className="arr-profile-name">
+                {usuario.usuarioNom} {usuario.usuarioApePat} {usuario.usuarioApeMat || ''}
+              </p>
+              <div className="arr-profile-role-badge">🏠 Arrendador</div>
+              <p className="arr-profile-hero-email">{usuario.usuarioCorreo}</p>
             </div>
-            <h2 style={{ marginTop: '15px', color: '#333' }}>
-              {usuario.usuarioNom} {usuario.usuarioApePat} {usuario.usuarioApeMat || ''}
-            </h2>
+            <div className="arr-profile-hero-actions">
+              {!editando
+                ? <button className="arr-btn-primary" onClick={() => setEditando(true)}>✏️ Editar Perfil</button>
+                : <>
+                    <button className="arr-btn-ghost" onClick={handleCancelar}>Cancelar</button>
+                    <button className="arr-btn-primary" disabled={guardando} onClick={handleGuardar}>
+                      {guardando ? '⏳ Guardando...' : '💾 Guardar Cambios'}
+                    </button>
+                  </>
+              }
+            </div>
           </div>
 
-          {!editando ? (
+          {/* ── Modo ver ───────────────────────────────────── */}
+          {!editando && (
             <>
-              {/* Datos Personales */}
-              <div style={infoSectionStyle}>
-                <h3 style={sectionTitleStyle}>📋 Datos Personales</h3>
-                <InfoRow label="Nombre" value={usuario.usuarioNom} />
-                <InfoRow label="Apellido Paterno" value={usuario.usuarioApePat} />
-                <InfoRow label="Apellido Materno" value={usuario.usuarioApeMat || '—'} />
-                <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                <InfoRow label="Teléfono" value={usuario.usuarioTel || '—'} />
-                <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                <InfoRow label="RFC" value={perfil.arrendadorRFC} bloqueado />
-                <InfoRow label="Fecha de Nacimiento" value={usuario.usuarioFechaNac ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX') : '—'} bloqueado />
+              <div className="arr-profile-two-col">
+                {/* Datos Personales */}
+                <div className="arr-form-card" style={{ marginBottom: 0 }}>
+                  <div className="arr-form-card-header">
+                    <div className="arr-form-card-header-icon">👤</div>
+                    <div>
+                      <h3>Datos Personales</h3>
+                    </div>
+                  </div>
+                  <div className="arr-form-card-body">
+                    <div className="arr-pf-grid">
+                      <DataItem label="Nombre" value={usuario.usuarioNom} />
+                      <DataItem label="Apellido Paterno" value={usuario.usuarioApePat} />
+                      <DataItem label="Apellido Materno" value={usuario.usuarioApeMat} />
+                      <DataItem label="Teléfono" value={usuario.usuarioTel} />
+                      <DataItem label="Correo electrónico" value={usuario.usuarioCorreo} locked full />
+                      <DataItem label="CURP" value={usuario.usuarioCurp} locked />
+                      <DataItem label="RFC" value={perfil.arrendadorRFC} locked />
+                      <DataItem
+                        label="Fecha de Nacimiento"
+                        value={usuario.usuarioFechaNac
+                          ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+                          : null}
+                        locked
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dirección */}
+                <div className="arr-form-card" style={{ marginBottom: 0 }}>
+                  <div className="arr-form-card-header">
+                    <div className="arr-form-card-header-icon">📍</div>
+                    <div>
+                      <h3>Dirección</h3>
+                    </div>
+                  </div>
+                  <div className="arr-form-card-body">
+                    <div className="arr-pf-grid">
+                      <DataItem label="Calle" value={dir.direccionCalle} full />
+                      <DataItem label="Número Exterior" value={dir.direccionNumExt} />
+                      <DataItem label="Número Interior" value={dir.direccionNumInt} />
+                      <DataItem label="Código Postal" value={cpData.d_codigo} />
+                      <DataItem label="Colonia" value={cpData.d_asenta} />
+                      <DataItem label="Municipio" value={cpData.D_mnpio} full />
+                      <DataItem label="Estado" value={cpData.d_estado} full />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Dirección */}
-              <div style={infoSectionStyle}>
-                <h3 style={sectionTitleStyle}>📍 Dirección</h3>
-                <InfoRow label="Calle" value={perfil.direccion?.direccionCalle || '—'} />
-                <InfoRow label="Número Exterior" value={perfil.direccion?.direccionNumExt || '—'} />
-                <InfoRow label="Número Interior" value={perfil.direccion?.direccionNumInt || '—'} />
-                <InfoRow label="Código Postal" value={perfil.direccion?.cp?.d_codigo || '—'} />
-                <InfoRow label="Colonia" value={perfil.direccion?.cp?.d_asenta || '—'} />
-                <InfoRow label="Municipio" value={perfil.direccion?.cp?.D_mnpio || '—'} />
-                <InfoRow label="Estado" value={perfil.direccion?.cp?.d_estado || '—'} />
-              </div>
-
-              <button 
-                onClick={() => setEditando(true)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  backgroundColor: '#1a237e',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  marginTop: '20px'
-                }}
-              >
-                ✏️ Editar Perfil
-              </button>
-
-              {/* Módulo de claves criptográficas */}
-              <div style={{ marginTop: '25px' }}>
-                <ECDHKeyManager />
-              </div>
-
-              {/* Botón Eliminar Cuenta */}
-              <div style={{ marginTop: '15px', borderTop: '1px solid #e0e0e0', paddingTop: '15px' }}>
-                <button 
-                  onClick={() => {
-                    if (window.confirm('⚠️ ¿Estás seguro de eliminar tu cuenta?\n\nEsta acción no se puede deshacer. Se eliminarán tus propiedades, arrendamientos y datos personales.')) {
-                      handleEliminarCuenta()
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  🗑️ Eliminar Cuenta
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Editar Datos Personales */}
-              <div style={infoSectionStyle}>
-                <h3 style={sectionTitleStyle}>✏️ Editar Datos Personales</h3>
-                <InputField label="Nombre" value={nombres} onChange={(e) => setNombres(e.target.value)} />
-                <InputField label="Apellido Paterno" value={apellidoPaterno} onChange={(e) => setApellidoPaterno(e.target.value)} />
-                <InputField label="Apellido Materno" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
-                <InputField label="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} type="tel" />
-
-                <div style={{ marginTop: '20px' }}>
-                  <p style={{ fontWeight: 'bold', color: '#666', fontSize: '13px', marginBottom: '10px' }}>
-                     Información no editable:
+              {/* Zona de peligro */}
+              <div className="arr-profile-danger-card">
+                <div className="arr-profile-danger-info">
+                  <p className="arr-profile-danger-title">Eliminar Cuenta</p>
+                  <p className="arr-profile-danger-desc">
+                    Se borrarán permanentemente tus propiedades, arrendamientos y datos personales. Esta acción no se puede deshacer.
                   </p>
-                  <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                  <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                  <InfoRow label="RFC" value={perfil.arrendadorRFC} bloqueado />
-                  <InfoRow label="Fecha de Nacimiento" value={usuario.usuarioFechaNac ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX') : '—'} bloqueado />
                 </div>
-              </div>
-
-              {/* Editar Dirección */}
-              <div style={infoSectionStyle}>
-                <h3 style={sectionTitleStyle}>✏️ Editar Dirección</h3>
-                <InputField label="Calle" value={calle} onChange={(e) => setCalle(e.target.value)} />
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <InputField label="Número Exterior" value={numExt} onChange={(e) => setNumExt(e.target.value)} />
-                  <InputField label="Número Interior" value={numInt} onChange={(e) => setNumInt(e.target.value)} />
-                </div>
-
-                <InputField label="Código Postal" value={cp} onChange={handleCPChange} />
-                
-                <div style={{ marginTop: '20px' }}>
-                  <p style={{ fontWeight: 'bold', color: '#666', fontSize: '13px', marginBottom: '10px' }}>
-                     Autocompletado por CP:
-                  </p>
-                  <InfoRow label="Colonia" value={colonia || '—'} bloqueado />
-                  <InfoRow label="Municipio" value={municipio || '—'} bloqueado />
-                  <InfoRow label="Estado" value={estado || '—'} bloqueado />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button 
-                  onClick={handleCancelar}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    backgroundColor: '#f0f0f0',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={handleGuardar}
-                  disabled={guardando}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    backgroundColor: guardando ? '#ccc' : '#1a237e',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: guardando ? 'not-allowed' : 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                <button className="arr-btn-danger arr-btn-sm" style={{ flexShrink: 0 }} onClick={() => setModalEliminar(true)}>
+                  Eliminar
                 </button>
               </div>
             </>
           )}
-        </div>
-      </div>
 
+          {/* ── Modo editar ─────────────────────────────────── */}
+          {editando && (
+            <>
+              <div className="arr-profile-two-col">
+                {/* Editar datos personales */}
+                <div className="arr-form-card" style={{ marginBottom: 0 }}>
+                  <div className="arr-form-card-header">
+                    <div className="arr-form-card-header-icon">✏️</div>
+                    <div>
+                      <h3>Datos Personales</h3>
+                      <p>Campos editables</p>
+                    </div>
+                  </div>
+                  <div className="arr-form-card-body">
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Nombre</label>
+                      <input className="arr-form-input" value={nombres} onChange={e => setNombres(e.target.value)} />
+                    </div>
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Apellido Paterno</label>
+                      <input className="arr-form-input" value={apellidoPaterno} onChange={e => setApellidoPaterno(e.target.value)} />
+                    </div>
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Apellido Materno</label>
+                      <input className="arr-form-input" value={apellidoMaterno} onChange={e => setApellidoMaterno(e.target.value)} />
+                    </div>
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Teléfono</label>
+                      <input className="arr-form-input" type="tel" value={telefono} onChange={e => setTelefono(e.target.value)} />
+                    </div>
+
+                    <hr className="arr-divider" />
+                    <p className="arr-form-hint" style={{ marginBottom: '0.75rem', fontWeight: 600 }}>Información no editable</p>
+                    <div className="arr-pf-grid">
+                      <DataItem label="Correo" value={usuario.usuarioCorreo} locked full />
+                      <DataItem label="CURP" value={usuario.usuarioCurp} locked />
+                      <DataItem label="RFC" value={perfil.arrendadorRFC} locked />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Editar dirección */}
+                <div className="arr-form-card" style={{ marginBottom: 0 }}>
+                  <div className="arr-form-card-header">
+                    <div className="arr-form-card-header-icon">📍</div>
+                    <div>
+                      <h3>Dirección</h3>
+                      <p>CP autocompletado</p>
+                    </div>
+                  </div>
+                  <div className="arr-form-card-body">
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Código Postal</label>
+                      <input
+                        className="arr-form-input"
+                        value={cp}
+                        onChange={handleCPChange}
+                        maxLength={5}
+                        placeholder="07700"
+                      />
+                    </div>
+                    {(colonia || municipio || estado) && (
+                      <div className="arr-address-auto" style={{ marginBottom: '0.75rem' }}>
+                        Col. {colonia}, {municipio}, {estado}
+                      </div>
+                    )}
+                    <div className="arr-form-group">
+                      <label className="arr-form-label">Calle</label>
+                      <input className="arr-form-input" value={calle} onChange={e => setCalle(e.target.value)} />
+                    </div>
+                    <div className="arr-form-grid-2">
+                      <div className="arr-form-group">
+                        <label className="arr-form-label">Núm. Exterior</label>
+                        <input className="arr-form-input" value={numExt} onChange={e => setNumExt(e.target.value)} />
+                      </div>
+                      <div className="arr-form-group">
+                        <label className="arr-form-label">Núm. Interior</label>
+                        <input className="arr-form-input" value={numInt} onChange={e => setNumInt(e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+        </div>
+      </main>
       <FooterInicio />
+
+      {modalEliminar && (
+        <ModalConfirmacion
+          titulo="Eliminar Cuenta"
+          mensaje="Esta acción no se puede deshacer. Se eliminarán tus propiedades, arrendamientos y datos personales."
+          textoConfirmar="Eliminar"
+          textoCancelar="Cancelar"
+          peligro={true}
+          onConfirmar={handleEliminarCuenta}
+          onCancelar={() => setModalEliminar(false)}
+        />
+      )}
+
+      {modalAlerta.abierto && (
+        <ModalConfirmacion
+          titulo="Aviso"
+          mensaje={modalAlerta.mensaje}
+          textoConfirmar="Entendido"
+          peligro={false}
+          onConfirmar={() => setModalAlerta({ abierto: false, mensaje: '' })}
+        />
+      )}
     </div>
   )
 }
 
-// Componentes auxiliares
-const InfoRow = ({ label, value, bloqueado }) => (
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '12px 0',
-    borderBottom: '1px solid #f0f0f0',
-    fontSize: '14px'
-  }}>
-    <span style={{ color: '#666' }}>{label}</span>
-    <span style={{ 
-      color: bloqueado ? '#999' : '#333',
-      fontWeight: '500'
-    }}>
-      {bloqueado ? ' ' : ''}{value}
+const DataItem = ({ label, value, locked, full }) => (
+  <div className={`arr-pf-item${full ? ' arr-pf-item-full' : ''}`}>
+    <span className="arr-pf-label">
+        {label}
+    </span>
+    <span className={`arr-pf-value${locked ? ' locked' : ''}${!value ? ' empty' : ''}`}>
+      {value || '—'}
     </span>
   </div>
 )
-
-const InputField = ({ label, value, onChange, type = 'text' }) => (
-  <div style={{ marginBottom: '15px' }}>
-    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '14px' }}>
-      {label}
-    </label>
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      style={{
-        width: '100%',
-        padding: '10px',
-        borderRadius: '5px',
-        border: '1px solid #ddd',
-        fontSize: '14px',
-        boxSizing: 'border-box'
-      }}
-    />
-  </div>
-)
-
-const infoSectionStyle = {
-  marginBottom: '25px',
-  paddingBottom: '15px',
-  borderBottom: '1px solid #e0e0e0'
-}
-
-const sectionTitleStyle = {
-  fontSize: '16px',
-  color: '#333',
-  marginBottom: '15px'
-}
 
 export default PerfilArrendador

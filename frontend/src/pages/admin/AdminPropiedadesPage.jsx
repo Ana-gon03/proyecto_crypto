@@ -13,6 +13,7 @@ const AdminPropiedadesPage = () => {
   const [selectedPropiedad, setSelectedPropiedad] = useState(null)
   const [modalType, setModalType] = useState('')
   const [error, setError] = useState('')
+  const [alerta, setAlerta] = useState({ open: false, mensaje: '' })
 
   const loadPropiedades = async () => {
     setLoading(true)
@@ -32,12 +33,12 @@ const AdminPropiedadesPage = () => {
   const handleView = (p) => { setSelectedPropiedad(p); setModalType('view'); setShowModal(true) }
   const handleEdit = (p) => { setSelectedPropiedad(p); setModalType('edit'); setShowModal(true) }
   const handleDelete = (p) => {
-    if (p.rentasActivas > 0) { alert(`❌ No se puede eliminar: tiene ${p.rentasActivas} renta(s) activa(s)`); return }
+    if (p.rentasActivas > 0) { setAlerta({ open: true, mensaje: `No se puede eliminar: esta propiedad tiene ${p.rentasActivas} renta(s) activa(s).` }); return }
     setSelectedPropiedad(p); setModalType('delete'); setShowModal(true)
   }
   const confirmDelete = async () => {
     try { await deletePropiedad(selectedPropiedad.idPropiedad); setShowModal(false); loadPropiedades() }
-    catch (error) { alert(error.response?.data?.error || 'Error al eliminar') }
+    catch (error) { setShowModal(false); setAlerta({ open: true, mensaje: error.response?.data?.error || 'Error al eliminar' }) }
   }
 
   const modalWidth = modalType === 'edit' ? '600px' : '520px'
@@ -242,6 +243,22 @@ const AdminPropiedadesPage = () => {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {alerta.open && (
+        <div className="admin-modal-overlay" onClick={() => setAlerta({ open: false, mensaje: '' })}>
+          <div className="admin-modal" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2 className="admin-modal-title">Aviso</h2>
+              <button className="admin-modal-close" onClick={() => setAlerta({ open: false, mensaje: '' })}>×</button>
+            </div>
+            <div className="admin-modal-body">
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-dark)', margin: 0 }}>{alerta.mensaje}</p>
+            </div>
+            <div className="admin-modal-footer">
+              <button className="btn-save" onClick={() => setAlerta({ open: false, mensaje: '' })}>Entendido</button>
+            </div>
           </div>
         </div>
       )}

@@ -1,93 +1,69 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import NavbarRegistro from '../../components/common/NavbarRegistro'
-import FooterRegistro from '../../components/common/FooterRegistro'
+import FooterRegistro from '../../components/common/FooterInicio'
+import '../../styles/VerificarCorreo.css'
 
 const BienvenidaPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
   const rol = location.state?.rol
-  // Muestra aviso de pendiente ÚNICAMENTE cuando:
-  //   1. El rol es 'estudiante', Y
-  //   2. verificadoConDocumento es explícitamente false (no undefined, no null)
-  // Arrendadores siempre tienen verificadoConDocumento: true → nunca caen aquí.
-  // Si falta el state (acceso directo a la URL), se trata como verificado por seguridad.
   const verificadoConDocumento = location.state?.verificadoConDocumento
   const pendiente = rol === 'estudiante' && verificadoConDocumento === false
 
   // ── Estudiante con verificación pendiente ──────────────────────────────────
   if (pendiente) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="verificar-page">
         <NavbarRegistro />
-        <main style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem'
-        }}>
-          <div style={{
-            maxWidth: '520px',
-            width: '100%',
-            textAlign: 'center',
-            padding: '2.5rem',
-            border: '1px solid #e5e7eb',
-            borderRadius: '16px',
-            backgroundColor: '#fff'
-          }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-              ¡Bienvenid@ a RentIPN!
-            </h2>
-            <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
-              Tu cuenta ha sido creada exitosamente.
-            </p>
-
-            <div style={{
-              backgroundColor: '#fffbeb',
-              border: '1px solid #fcd34d',
-              borderRadius: '10px',
-              padding: '1rem 1.25rem',
-              marginBottom: '1.5rem',
-              textAlign: 'left'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem' }}>
-                <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>⚠️</span>
-                <div>
-                  <p style={{ fontWeight: 700, color: '#92400e', margin: '0 0 0.3rem' }}>
-                    Verificación de identidad pendiente
-                  </p>
-                  <p style={{ fontSize: '0.875rem', color: '#78350f', margin: 0, lineHeight: 1.6 }}>
-                    Tienes <strong>2 meses</strong> para subir tu constancia de estudios y verificar tu identidad.
-                    Si no lo haces antes de esa fecha, <strong>tu cuenta será eliminada automáticamente</strong>.
-                  </p>
-                  <p style={{ fontSize: '0.8rem', color: '#92400e', marginTop: '0.5rem', marginBottom: 0 }}>
-                    Puedes hacerlo desde tu perfil en cualquier momento.
-                  </p>
-                </div>
+        
+        <div className="verificar-container">
+          <div className="verificar-card">
+            <div className="verificar-header verificar-header-warning">
+              <div className="verificar-header-icon">🎉</div>
+              <div className="verificar-header-title">¡Bienvenid@ a Blockhoom!</div>
+              <div className="verificar-header-sub">
+                Tu cuenta ha sido creada exitosamente
               </div>
             </div>
+            
+            <div className="verificar-body">
+              
+              <div className="verificar-alert-warning" style={{
+                background: '#FFFBEB',
+                border: '1px solid #FDE68A',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#92400E', marginBottom: '0.25rem' }}>
+                      Verificación de identidad pendiente
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#78350F', lineHeight: 1.5 }}>
+                      Tienes <strong>2 meses</strong> para subir tu constancia de estudios y verificar tu identidad.
+                      Si no lo haces antes de esa fecha, <strong>tu cuenta será eliminada automáticamente</strong>.
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#92400E', marginTop: '0.5rem' }}>
+                      Puedes hacerlo desde tu perfil en cualquier momento.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <button
-              onClick={() => navigate('/usuarios/inicio-sesion')}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: '#2563eb',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Iniciar Sesión
-            </button>
+              <button
+                onClick={() => navigate('/usuarios/inicio-sesion')}
+                className="verificar-btn verificar-btn-primary"
+              >
+                Iniciar Sesión
+              </button>
+            </div>
           </div>
-        </main>
+        </div>
+        
         <FooterRegistro />
       </div>
     )
@@ -95,71 +71,50 @@ const BienvenidaPage = () => {
 
   // ── Cuenta verificada (arrendador o estudiante con constancia) ─────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="verificar-page">
       <NavbarRegistro />
-      <main style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}>
-        <div style={{
-          maxWidth: '520px',
-          width: '100%',
-          textAlign: 'center',
-          padding: '2.5rem',
-          border: '1px solid #e5e7eb',
-          borderRadius: '16px',
-          backgroundColor: '#fff'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            ¡Bienvenid@ a RentIPN!
-          </h2>
-          <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
-            Tu cuenta ha sido creada y verificada exitosamente.
-            {rol === 'arrendador'
-              ? ' Ya puedes publicar tus inmuebles.'
-              : ' Ya puedes buscar opciones de arrendamiento.'}
-          </p>
-
-          <div style={{
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '10px',
-            padding: '0.75rem 1.25rem',
-            marginBottom: '1.5rem',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: '#15803d',
-            fontWeight: 600,
-            fontSize: '0.9rem'
-          }}>
-            <span>✔</span>
-            Identidad verificada
+      
+      <div className="verificar-container">
+        <div className="verificar-card">
+          <div className="verificar-header verificar-header-success">
+            <div className="verificar-header-icon">✅</div>
+            <div className="verificar-header-title">¡Bienvenid@!</div>
+            <div className="verificar-header-sub">
+              Tu cuenta ha sido creada y verificada exitosamente
+            </div>
           </div>
+          
+          <div className="verificar-body">
+            
+            <div className="verificar-success" style={{
+              background: '#F0FDF4',
+              border: '1px solid #BBF7D0',
+              borderRadius: '12px',
+              padding: '0.75rem 1rem',
+              textAlign: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <span style={{ color: '#16A34A', fontWeight: 600 }}>
+                ✔ Identidad verificada
+              </span>
+            </div>
 
-          <button
-            onClick={() => navigate('/usuarios/inicio-sesion')}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              backgroundColor: '#2563eb',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'block'
-            }}
-          >
-            Iniciar Sesión
-          </button>
+            <p style={{ textAlign: 'center', color: '#4a4668', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              {rol === 'arrendador'
+                ? 'Ya puedes publicar tus inmuebles.'
+                : 'Ya puedes buscar opciones de arrendamiento.'}
+            </p>
+
+            <button
+              onClick={() => navigate('/usuarios/inicio-sesion')}
+              className="verificar-btn verificar-btn-primary"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
         </div>
-      </main>
+      </div>
+      
       <FooterRegistro />
     </div>
   )

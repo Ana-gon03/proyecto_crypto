@@ -12,70 +12,97 @@ const {
   Arrendatario 
 } = require('../models/associations');
 
-// Buscar propiedades con filtros (VERSIÓN SIMPLIFICADA)
-const buscarPropiedades = async (req, res) => {
-  try {
-    const {
-      serviciosBasicos,
-      serviciosEntretenimiento,
-      serviciosAdicionales,
-      precioMin,
-      precioMax,
-      ordenarPor = 'reciente',
-      pagina = 1,
-      limite = 12
-    } = req.query;
+// Función interna para intentar búsqueda con diferentes niveles de degradación
+const intentarBusqueda = async (queryParams, nivel) => {
+  const {
+    busqueda,
+    serviciosBasicos,
+    serviciosEntretenimiento,
+    serviciosAdicionales,
+    precioMin,
+    precioMax,
+    ordenarPor = 'reciente',
+    tipo,
+    precioPor,
+    lugaresMin,
+    pagina = 1,
+    limite = 12
+  } = queryParams;
 
-    const offset = (pagina - 1) * limite;
-    
-    // Construir condiciones WHERE
-    const whereConditions = {};
-    
-    // Filtro de rango de precios
-    if (precioMin || precioMax) {
-      whereConditions.propiedadPrecio = {};
-      if (precioMin) whereConditions.propiedadPrecio[Op.gte] = parseFloat(precioMin);
-      if (precioMax) whereConditions.propiedadPrecio[Op.lte] = parseFloat(precioMax);
+  const offset = (pagina - 1) * limite;
+  const whereConditions = {
+    propiedadEstatus: { [Op.ne]: 'Desactivada' }
+  };
+
+  // Aplicar filtros según nivel de degradación
+  const aplicarBusquedaTexto = !['sin_texto', 'sin_tipo', 'sin_precioPor', 'minimo'].includes(nivel);
+  const aplicarTipo = !['sin_tipo', 'sin_precioPor', 'minimo'].includes(nivel);
+  const aplicarPrecioPor = !['sin_precioPor', 'minimo'].includes(nivel);
+  const aplicarServicios = !['sin_servicios', 'sin_texto', 'sin_tipo', 'sin_precioPor', 'minimo'].includes(nivel);
+  const expandirPrecio = nivel === 'precio_expandido';
+
+  // Búsqueda por texto
+  if (aplicarBusquedaTexto && busqueda && busqueda.trim()) {
+    whereConditions[Op.or] = [
+      { propiedadTitulo: { [Op.like]: `%${busqueda}%` } },
+      { propiedadDescripcion: { [Op.like]: `%${busqueda}%` } }
+    ];
+  }
+
+  // Filtro de precio
+  if (precioMin || precioMax) {
+    whereConditions.propiedadPrecio = {};
+    if (precioMin) {
+      const min = parseFloat(precioMin);
+      whereConditions.propiedadPrecio[Op.gte] = expandirPrecio ? min * 0.7 : min;
     }
-
-    // Construir orden
-    let orderClause = [];
-    
-    // Orden por estatus
-    orderClause.push([
-      Sequelize.literal(`CASE 
-        WHEN propiedadEstatus = 'Disponible' THEN 1
-        WHEN propiedadEstatus = 'Sin Disponibilidad' THEN 2
-        WHEN propiedadEstatus = 'Desactivada' THEN 3
-        ELSE 4 END`), 
-      'ASC'
-    ]);
-
-    switch (ordenarPor) {
-      case 'antiguo':
-        orderClause.push(['propiedadFechaRegis', 'ASC']);
-        break;
-      case 'calificacion':
-        // Mejor calificación (DESC)
-        orderClause.push([Sequelize.literal('(SELECT AVG(resenaCalGen) FROM resenas WHERE resenas.propiedad_idPropiedad = Propiedad.idPropiedad)'), 'DESC']);
-        break;
-      case 'calificacion_asc':
-        // Menor calificación (ASC) - NUEVO
-        orderClause.push([Sequelize.literal('(SELECT AVG(resenaCalGen) FROM resenas WHERE resenas.propiedad_idPropiedad = Propiedad.idPropiedad)'), 'ASC']);
-        break;
-      case 'precio_asc':
-        orderClause.push(['propiedadPrecio', 'ASC']);
-        break;
-      case 'precio_desc':
-        orderClause.push(['propiedadPrecio', 'DESC']);
-        break;
-      case 'reciente':
-      default:
-        orderClause.push(['propiedadFechaRegis', 'DESC']);
-        break;
+    if (precioMax) {
+      const max = parseFloat(precioMax);
+      whereConditions.propiedadPrecio[Op.lte] = expandirPrecio ? max * 1.3 : max;
     }
+  }
 
-    // Parsear servicios seleccionados
+  // Filtro de tipo de vivienda
+  if (aplicarTipo && tipo) {
+    whereConditions.propiedadTipo = tipo;
+  }
+
+  // Filtro de precio por
+  if (aplicarPrecioPor && precioPor) {
+    whereConditions.propiedadPrecioPor = precioPor;
+  }
+
+  // Filtro de lugares mínimos (SIEMPRE se aplica)
+  if (lugaresMin) {
+    whereConditions.propiedadLugares = { [Op.gte]: parseInt(lugaresMin) };
+  }
+
+  // Orden
+  let orderClause = [];
+  switch (ordenarPor) {
+    case 'antiguo':
+      orderClause.push(['propiedadFechaRegis', 'ASC']);
+      break;
+    case 'calificacion':
+      orderClause.push([Sequelize.literal('(SELECT AVG(resenaCalGen) FROM resena WHERE resena.propiedad_idPropiedad = Propiedad.idPropiedad)'), 'DESC']);
+      break;
+    case 'calificacion_asc':
+      orderClause.push([Sequelize.literal('(SELECT AVG(resenaCalGen) FROM resena WHERE resena.propiedad_idPropiedad = Propiedad.idPropiedad)'), 'ASC']);
+      break;
+    case 'precio_asc':
+      orderClause.push(['propiedadPrecio', 'ASC']);
+      break;
+    case 'precio_desc':
+      orderClause.push(['propiedadPrecio', 'DESC']);
+      break;
+    case 'reciente':
+    default:
+      orderClause.push(['propiedadFechaRegis', 'DESC']);
+      break;
+  }
+
+  // Filtro de servicios
+  if (aplicarServicios) {
     const parseServicios = (param) => {
       if (!param) return [];
       if (Array.isArray(param)) return param.filter(Boolean).map(Number);
@@ -88,7 +115,6 @@ const buscarPropiedades = async (req, res) => {
       ...parseServicios(serviciosAdicionales)
     ];
 
-    // Si hay filtro de servicios, filtrar con subquery
     if (servicioIds.length > 0) {
       whereConditions.idPropiedad = {
         [Op.in]: Sequelize.literal(`(
@@ -98,35 +124,102 @@ const buscarPropiedades = async (req, res) => {
         )`)
       };
     }
+  }
 
-    // Consulta principal SIN GROUP BY (más simple y rápido)
-    const { count, rows } = await Propiedad.findAndCountAll({
-      where: whereConditions,
-      include: [
-        {
-          model: Fotos,
-          as: 'fotos',
-          attributes: ['idFotos', 'fotosURL'],
-          limit: 1,
-          required: false
-        },
-        {
-          model: Servicio,
-          as: 'servicios',
-          attributes: ['idServicio', 'servicioNombre', 'servicioCategoria'],
-          through: { attributes: [] },
-          required: false
-        }
+  // Include base
+  const includeBase = [
+    { 
+      model: Fotos, 
+      as: 'fotos', 
+      attributes: ['idFotos', 'fotosURL'], 
+      limit: 1, 
+      required: false 
+    },
+    { 
+      model: Servicio, 
+      as: 'servicios', 
+      attributes: ['idServicio', 'servicioNombre', 'servicioCategoria'], 
+      through: { attributes: [] }, 
+      required: false 
+    },
+  ];
+
+  // Include CP si hay búsqueda por texto
+  if (aplicarBusquedaTexto && busqueda && busqueda.trim()) {
+    includeBase.push({
+      model: Direccion,
+      as: 'direccion',
+      required: false,
+      include: [{
+        model: CP,
+        as: 'cp',
+        required: false,
+        where: { d_codigo: { [Op.like]: `%${busqueda}%` } }
+      }]
+    });
+  }
+
+  const { count, rows } = await Propiedad.findAndCountAll({
+    where: whereConditions,
+    include: includeBase,
+    order: orderClause,
+    offset,
+    limit: parseInt(limite),
+    distinct: true
+  });
+
+  return { count, rows };
+};
+
+const buscarPropiedades = async (req, res) => {
+  try {
+    const {
+      precioMin,
+      precioMax,
+      lugaresMin,
+      pagina = 1,
+      limite = 12
+    } = req.query;
+
+    // Niveles de degradación en orden
+    const niveles = [
+      { key: 'completa', mensaje: null },
+      { key: 'sin_servicios', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' },
+      { key: 'sin_texto', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' },
+      { key: 'precio_expandido', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' },
+      { key: 'sin_tipo', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' },
+      { key: 'sin_precioPor', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' },
+      { key: 'minimo', mensaje: 'No pudimos encontrar una vivienda con todos los filtros que señalaste, pero estas son las opciones más cercanas a tu búsqueda' }
+    ];
+
+    let resultados = null;
+    let nivelAplicado = null;
+    let mensajeRelajado = null;
+
+    // Intentar cada nivel hasta encontrar resultados
+    for (const nivel of niveles) {
+      const intento = await intentarBusqueda(req.query, nivel.key);
+      
+      if (intento.count > 0 || nivel.key === 'minimo') {
+        resultados = intento;
+        nivelAplicado = nivel.key;
+        mensajeRelajado = nivel.mensaje;
+        break;
+      }
+    }
+
+    // Obtener rango de precios globales
+    const preciosGlobales = await Propiedad.findAll({
+      where: { propiedadEstatus: { [Op.ne]: 'Desactivada' } },
+      attributes: [
+        [Sequelize.fn('MIN', Sequelize.col('propiedadPrecio')), 'minPrecio'],
+        [Sequelize.fn('MAX', Sequelize.col('propiedadPrecio')), 'maxPrecio']
       ],
-      order: orderClause,
-      offset,
-      limit: limite,
-      distinct: true
+      raw: true
     });
 
-    // Para cada propiedad, obtener calificación y número de reseñas
-    const propiedadesFormateadas = await Promise.all(rows.map(async (propiedad) => {
-      // Obtener promedio de calificación general
+    // Formatear propiedades
+    const propiedadesFormateadas = await Promise.all(resultados.rows.map(async (propiedad) => {
       const resenasData = await Resena.findOne({
         attributes: [
           [Sequelize.fn('AVG', Sequelize.col('resenaCalGen')), 'promedio'],
@@ -136,8 +229,8 @@ const buscarPropiedades = async (req, res) => {
         raw: true
       });
 
-      const calificacionGeneral = resenasData?.promedio 
-        ? parseFloat(resenasData.promedio).toFixed(1) 
+      const calificacionGeneral = resenasData?.promedio
+        ? parseFloat(resenasData.promedio).toFixed(1)
         : null;
       const totalResenas = parseInt(resenasData?.total) || 0;
 
@@ -150,9 +243,7 @@ const buscarPropiedades = async (req, res) => {
         precioPor: propiedad.propiedadPrecioPor,
         estatus: propiedad.propiedadEstatus,
         fechaRegistro: propiedad.propiedadFechaRegis,
-        fotoPrincipal: propiedad.fotos && propiedad.fotos.length > 0 
-          ? propiedad.fotos[0].fotosURL 
-          : null,
+        fotoPrincipal: propiedad.fotos?.[0]?.fotosURL || null,
         calificacionGeneral,
         totalResenas,
         servicios: propiedad.servicios || []
@@ -163,20 +254,21 @@ const buscarPropiedades = async (req, res) => {
       success: true,
       data: {
         propiedades: propiedadesFormateadas,
-        total: count,
+        total: resultados.count,
         pagina: parseInt(pagina),
-        totalPaginas: Math.ceil(count / limite),
-        limite: parseInt(limite)
+        totalPaginas: Math.ceil(resultados.count / parseInt(limite)),
+        limite: parseInt(limite),
+        precioMinGlobal: preciosGlobales[0]?.minPrecio || 0,
+        precioMaxGlobal: preciosGlobales[0]?.maxPrecio || 10000,
+        filtrosRelajados: nivelAplicado !== 'completa',
+        mensajeRelajado: mensajeRelajado,
+        nivelDegradacion: nivelAplicado
       }
     });
 
   } catch (error) {
     console.error('Error en buscarPropiedades:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al buscar propiedades',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Error al buscar propiedades', error: error.message });
   }
 };
 
@@ -251,7 +343,6 @@ const obtenerDetallePropiedad = async (req, res) => {
       });
     }
 
-    // Calcular promedios manualmente
     const resenas = propiedad.resenas || [];
     const totalResenas = resenas.length;
     const promedios = {

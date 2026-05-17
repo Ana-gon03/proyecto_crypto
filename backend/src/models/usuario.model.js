@@ -62,22 +62,6 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.DATE,
     allowNull: true,
   },
-  // Criptografía E2E — claves públicas del usuario (P-256)
-  ecdsaPublicKey: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-    defaultValue: null,
-  },
-  ecdhPublicKey: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-    defaultValue: null,
-  },
-  clavesGeneradas: {
-    type: DataTypes.TINYINT,
-    allowNull: true,
-    defaultValue: 0,
-  },
 }, {
   tableName: 'usuario',
   timestamps: false,

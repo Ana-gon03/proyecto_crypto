@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import NavbarSimple from '../../components/common/NavbarSimple'
+import NavbarInicio from '../../components/common/NavbarRegistro'
 import FooterInicio from '../../components/common/FooterInicio'
 import '../../styles/VerificarCorreo.css'
 
@@ -16,25 +16,16 @@ const RestablecerPasswordPage = () => {
   const [mostrarPassword, setMostrarPassword] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
-  const [mensaje, setMensaje] = useState('')
   const [exito, setExito] = useState(false)
-  const [tiempoReenvio, setTiempoReenvio] = useState(60)
 
   if (!correo) {
     navigate('/usuarios/inicio-sesion')
     return null
   }
 
-  useEffect(() => {
-    if (tiempoReenvio <= 0) return
-    const timer = setTimeout(() => setTiempoReenvio(tiempoReenvio - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [tiempoReenvio])
-
   const handleVerificarCodigo = async (e) => {
     e.preventDefault()
     setError('')
-    setMensaje('')
 
     if (codigo.length !== 8) {
       setError('El código debe tener 8 dígitos')
@@ -53,7 +44,6 @@ const RestablecerPasswordPage = () => {
       const data = await response.json()
 
       if (response.ok) {
-        setMensaje('Código verificado correctamente')
         setPaso(2)
       } else {
         setError(data.error || 'Código incorrecto')
@@ -68,7 +58,6 @@ const RestablecerPasswordPage = () => {
   const handleRestablecerPassword = async (e) => {
     e.preventDefault()
     setError('')
-    setMensaje('')
 
     const pwRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     
@@ -94,7 +83,6 @@ const RestablecerPasswordPage = () => {
       const data = await response.json()
 
       if (response.ok) {
-        setMensaje('¡Contraseña restablecida! Redirigiendo...')
         setExito(true)
         setTimeout(() => {
           navigate('/usuarios/inicio-sesion')
@@ -112,7 +100,6 @@ const RestablecerPasswordPage = () => {
   const handleReenviarCodigo = async () => {
     setCargando(true)
     setError('')
-    setMensaje('')
 
     try {
       const response = await fetch('http://localhost:5000/api/auth/recuperar-password', {
@@ -124,9 +111,7 @@ const RestablecerPasswordPage = () => {
       const data = await response.json()
 
       if (response.ok) {
-        setMensaje('Código reenviado. Revisa tu correo.')
-        setTiempoReenvio(60)
-        setCodigo('')
+        alert('Código reenviado a tu correo')
       } else {
         setError(data.error || 'Error al reenviar')
       }
@@ -137,34 +122,32 @@ const RestablecerPasswordPage = () => {
     }
   }
 
-  const getHeaderIcon = () => {
-    if (exito) return '✅'
-    if (paso === 1) return '🔐'
-    return '🔒'
-  }
-
-  const getHeaderTitle = () => {
-    if (exito) return '¡Contraseña restablecida!'
-    if (paso === 1) return 'Verifica tu código'
-    return 'Nueva contraseña'
-  }
-
-  const getHeaderSub = () => {
-    if (exito) return 'Serás redirigido al inicio de sesión...'
-    if (paso === 1) return `Ingresa el código que enviamos a ${correo}`
-    return 'Crea una contraseña segura para tu cuenta'
-  }
-
   return (
     <div className="verificar-page">
-      <NavbarSimple />
+      <NavbarInicio />
       
       <div className="verificar-container">
         <div className="verificar-card">
           <div className="verificar-header">
-            <div className="verificar-icon">{getHeaderIcon()}</div>
-            <h2>{getHeaderTitle()}</h2>
-            <p>{getHeaderSub()}</p>
+            <div className="verificar-icon">
+              {exito ? '✅' : paso === 1 ? '📧' : '🔐'}
+            </div>
+            <h2>
+              {exito 
+                ? '¡Contraseña restablecida!' 
+                : paso === 1 
+                  ? 'Verificar código' 
+                  : 'Nueva contraseña'
+              }
+            </h2>
+            <p>
+              {exito 
+                ? 'Serás redirigido al inicio de sesión...' 
+                : paso === 1 
+                  ? `Enviamos un código de 8 dígitos a ${correo}`
+                  : 'Ingresa tu nueva contraseña'
+              }
+            </p>
           </div>
           
           <div className="verificar-body">
@@ -172,11 +155,6 @@ const RestablecerPasswordPage = () => {
             {error && (
               <div className="verificar-error">
                 <span>⚠️</span> {error}
-              </div>
-            )}
-            {mensaje && (
-              <div className="verificar-success">
-                <span>✓</span> {mensaje}
               </div>
             )}
 
@@ -189,7 +167,11 @@ const RestablecerPasswordPage = () => {
                     type="text"
                     className="verificar-code-input"
                     value={codigo}
-                    onChange={(e) => setCodigo(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/\D/g, '').slice(0, 8)
+                      setCodigo(valor)
+                      setError('')
+                    }}
                     placeholder="12345678"
                     required
                   />
@@ -200,18 +182,16 @@ const RestablecerPasswordPage = () => {
                   className="verificar-btn verificar-btn-primary"
                   disabled={cargando || codigo.length !== 8}
                 >
-                  {cargando ? 'Verificando...' : 'Verificar Código →'}
+                  {cargando ? 'Verificando...' : 'Verificar código →'}
                 </button>
 
                 <button
                   type="button"
                   className="verificar-btn verificar-btn-secondary"
                   onClick={handleReenviarCodigo}
-                  disabled={cargando || tiempoReenvio > 0}
+                  disabled={cargando}
                 >
-                  {tiempoReenvio > 0
-                    ? `Reenviar código en ${tiempoReenvio}s`
-                    : 'Reenviar código'}
+                  📧 Reenviar código
                 </button>
               </form>
             )}
@@ -234,17 +214,7 @@ const RestablecerPasswordPage = () => {
                     <button
                       type="button"
                       onClick={() => setMostrarPassword(!mostrarPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '1.1rem',
-                        color: '#9ca3af'
-                      }}
+                      className="verificar-password-toggle"
                     >
                       {mostrarPassword ? '🙈' : '👁️'}
                     </button>
@@ -266,17 +236,7 @@ const RestablecerPasswordPage = () => {
                     <button
                       type="button"
                       onClick={() => setMostrarPassword(!mostrarPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '1.1rem',
-                        color: '#9ca3af'
-                      }}
+                      className="verificar-password-toggle"
                     >
                       {mostrarPassword ? '🙈' : '👁️'}
                     </button>
@@ -285,7 +245,7 @@ const RestablecerPasswordPage = () => {
 
                 <div className="verificar-info" style={{ marginBottom: '1.5rem' }}>
                   <label>Requisitos de la contraseña</label>
-                  <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0, fontSize: '0.75rem', color: '#6b7280' }}>
+                  <ul>
                     <li>Mínimo 8 caracteres</li>
                     <li>Al menos una letra mayúscula</li>
                     <li>Al menos una letra minúscula</li>
@@ -307,9 +267,9 @@ const RestablecerPasswordPage = () => {
             <div className="verificar-hint">
               <button
                 onClick={() => navigate('/usuarios/inicio-sesion')}
-                style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '0.75rem' }}
+                className="verificar-back-btn"
               >
-                ← Volver a Iniciar Sesión
+                Volver a Iniciar Sesión
               </button>
             </div>
           </div>

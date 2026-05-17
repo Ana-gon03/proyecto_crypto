@@ -1,43 +1,98 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import ModalContacto from './ModalContacto'
+import { Link } from "react-router-dom";
 
-const FooterRegistro = () => {
-  const [modalAbierto, setModalAbierto] = useState(false)
-
+/* ════════════════════════════════
+   FOOTER INICIO
+════════════════════════════════ */
+const FooterInicio = () => {
   return (
-    <>
-      <footer style={{
-        backgroundColor: '#333',
-        color: 'white',
-        textAlign: 'center',
-        padding: '1.25rem 1rem',
-        marginTop: 'auto',
-      }}>
-        <div style={{ marginBottom: '0.6rem', fontSize: '0.9rem', fontWeight: 600 }}>
-          Burroomies
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.3rem 1.25rem' }}>
-          <Link to="/legal/aviso-privacidad" style={{ color: '#cbd5e1', fontSize: '0.78rem', textDecoration: 'none' }}>
-            Aviso de Privacidad
-          </Link>
-          <span style={{ color: '#6b7280', fontSize: '0.78rem' }}>·</span>
-          <Link to="/legal/terminos-uso" style={{ color: '#cbd5e1', fontSize: '0.78rem', textDecoration: 'none' }}>
-            Términos y Condiciones
-          </Link>
-          <span style={{ color: '#6b7280', fontSize: '0.78rem' }}>·</span>
-          <button 
-            onClick={() => setModalAbierto(true)}
-            style={{ color: '#cbd5e1', fontSize: '0.78rem', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            Contacto
-          </button>
-        </div>
-      </footer>
+    <footer
+      style={{
+        background: "#064e3b",
+        color: "rgba(255,255,255,0.6)",
+        padding: "1rem 5vw",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "0.5rem",
+        fontSize: "0.85rem",
+        textAlign: "center",
+      }}
+    >
+      {/* Marca — enlace al panel admin */}
+      <Link
+        to="/admin/inicio-sesion"
+        style={{
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "1rem",
+          textDecoration: "none",
+          transition: "color 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "#6ee7b7")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "#ffffff")}
+      >
+        Blockhoom
+      </Link>
 
-      {modalAbierto && <ModalContacto onClose={() => setModalAbierto(false)} />}
-    </>
-  )
-}
+      {/* Links legales */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.6rem",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
+        {[
+          { to: "/legal/aviso-privacidad", label: "Aviso de Privacidad", isLink: true },
+          { label: "·", isSep: true },
+          { to: "/legal/terminos-uso", label: "Términos y Condiciones", isLink: true },
+          { label: "·", isSep: true },
+          { href: "mailto:contacto@blockhoom.mx", label: "Contacto", isEmail: true },
+        ].map((item, i) => {
+          if (item.isSep) {
+            return (
+              <span key={i} style={{ color: "rgba(255,255,255,0.3)" }}>
+                {item.label}
+              </span>
+            );
+          }
+          const linkStyle = {
+            color: "rgba(255,255,255,0.6)",
+            textDecoration: "none",
+            transition: "color 0.2s",
+          };
+          return item.isEmail ? (
+            <a
+              key={i}
+              href={item.href}
+              style={linkStyle}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+            >
+              {item.label}
+            </a>
+          ) : (
+            <Link
+              key={i}
+              to={item.to}
+              style={linkStyle}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
 
-export default FooterRegistro
+      {/* Copyright */}
+      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>
+        © 2025 Blockhoom · Todos los derechos reservados
+      </div>
+    </footer>
+  );
+};
+
+export default FooterInicio;

@@ -3,6 +3,7 @@ const router = express.Router();
 const PDFDocument = require('pdfkit');
 const { Arrendamiento, Arrendatario, Usuario, Propiedad, Direccion, CP, Arrendador } = require('../models/associations');
 const { Op } = require('sequelize');
+const { analizarSentimiento } = require('../utils/sentimiento');
 
 // =====================================================
 // RUTAS ESPECÍFICAS PRIMERO
@@ -73,64 +74,110 @@ router.get('/:id/pdf', async (req, res) => {
     });
 
     // ── CONSTANTES ───────────────────────────────────────────────────────────
-    const AZUL       = '#1a3a5c';
-    const AZUL_MED   = '#2e6da4';
-    const GRIS       = '#555555';
-    const NEGRO      = '#1e1e1e';
-    const ML         = 50;
-    const MR         = 545;
-    const ANCHO      = MR - ML;
+    const NEGRO   = '#000000';
+    const GRIS    = '#555555';
+    const ML      = 65;   // margen izquierdo
+    const MR      = 530;  // margen derecho
+    const ANCHO   = MR - ML;
+    const IND     = ML + 18; // sangría para párrafos
 
     const doc = new PDFDocument({ size: 'A4', margin: ML, bufferPages: true });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=contrato_arrendamiento_${id}.pdf`);
+    res.setHeader('Content-Disposition', `inline; filename=contrato_arrendamiento_${id}.pdf`);
     doc.pipe(res);
 
     // ── HELPERS ──────────────────────────────────────────────────────────────
-    const seccion = (num, titulo) => {
+
+    // Separador de línea delgada
+    const separador = () => {
+      doc.save().moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#aaaaaa').lineWidth(0.5).stroke().restore();
       doc.moveDown(0.4);
-      const y = doc.y;
-      doc.save().rect(ML - 8, y - 3, ANCHO + 16, 18).fill(AZUL).restore();
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#ffffff')
-         .text(`${num}. ${titulo}`, ML, y + 1, { width: ANCHO });
-      doc.fillColor(NEGRO);
-      doc.moveDown(0.55);
     };
 
+    // Título de sección (centrado, subrayado)
+    const tituloSeccion = (texto) => {
+      doc.moveDown(0.6);
+      doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+         .text(texto, ML, doc.y, { align: 'center', width: ANCHO, underline: true });
+      doc.moveDown(0.5);
+    };
+
+    // Fila de datos (etiqueta: valor en una sola línea)
     const fila = (etiqueta, valor) => {
       const y = doc.y;
-      doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRIS)
-         .text(etiqueta + ':', ML, y, { width: 145, continued: false });
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor(NEGRO)
+         .text(etiqueta + ':', ML, y, { width: 155, continued: false });
       doc.fontSize(8.5).font('Helvetica').fillColor(NEGRO)
-         .text(String(valor || '—'), ML + 150, y, { width: ANCHO - 150 });
-      doc.moveDown(0.2);
+         .text(String(valor || '—'), ML + 160, y, { width: ANCHO - 160 });
+      doc.moveDown(0.18);
+    };
+
+    // Párrafo con sangría y justificado
+    const parrafo = (texto, opciones = {}) => {
+      doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
+         .text(texto, IND, doc.y, { align: 'justify', width: ANCHO - (IND - ML), ...opciones });
+      doc.moveDown(0.35);
+    };
+
+    // Cláusula con título en negrita seguido del texto en la misma línea lógica
+    const clausula = (titulo, texto) => {
+      if (doc.y > 680) doc.addPage();
+      doc.moveDown(0.25);
+      doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+         .text(titulo + ' ', ML, doc.y, { continued: true, width: ANCHO });
+      doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
+         .text(texto, { align: 'justify', width: ANCHO });
+      doc.moveDown(0.3);
     };
 
     // ── ENCABEZADO ───────────────────────────────────────────────────────────
-    doc.save().rect(0, 0, 595, 72).fill(AZUL).restore();
-    doc.save().rect(0, 72, 595, 4).fill(AZUL_MED).restore();
-
-    doc.fontSize(17).font('Helvetica-Bold').fillColor('#ffffff')
-       .text('CONTRATO DE ARRENDAMIENTO', ML, 16, { align: 'center', width: ANCHO });
-    doc.fontSize(8.5).font('Helvetica').fillColor('#a8c8e8')
-       .text('Burroomies  ·  Plataforma de Arrendamiento para Estudiantes del IPN', ML, 44, { align: 'center', width: ANCHO });
-
-    doc.fillColor(NEGRO);
-    doc.moveDown(2.6);
-
-    // Badge número de contrato
     const numContrato = `ARR-${String(id).padStart(4, '0')}`;
-    const yBadge = doc.y;
-    doc.save().roundedRect(ML, yBadge, 150, 20, 4).fill(AZUL_MED).restore();
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#ffffff')
-       .text(`N.° Contrato: ${numContrato}`, ML + 7, yBadge + 5, { width: 136 });
-    doc.fontSize(8).font('Helvetica').fillColor(GRIS)
-       .text(`Generado: ${new Date().toLocaleDateString('es-MX')} ${new Date().toLocaleTimeString('es-MX')}`, ML + 160, yBadge + 6, { width: ANCHO - 160 });
-    doc.fillColor(NEGRO);
-    doc.moveDown(1.6);
+    const fechaGen = new Date();
+    const fechaGenStr = fechaGen.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // ── 1. DATOS DEL CONTRATO ────────────────────────────────────────────────
-    seccion('1', 'DATOS DEL CONTRATO');
+    // Número de contrato y fecha (esquina superior)
+    doc.fontSize(7.5).font('Helvetica').fillColor(GRIS)
+       .text(`N.° ${numContrato}`, ML, 55, { width: ANCHO / 2 })
+    doc.fontSize(7.5).font('Helvetica').fillColor(GRIS)
+       .text(`Generado: ${fechaGenStr}`, ML + ANCHO / 2, 55, { width: ANCHO / 2, align: 'right' });
+
+    // Línea superior
+    doc.save().moveTo(ML, 68).lineTo(MR, 68).strokeColor('#000000').lineWidth(1).stroke().restore();
+
+    // Título principal
+    doc.moveDown(0.2);
+    doc.fontSize(14).font('Helvetica-Bold').fillColor(NEGRO)
+       .text('CONTRATO DE ARRENDAMIENTO', ML, 76, { align: 'center', width: ANCHO });
+
+    doc.fontSize(8).font('Helvetica').fillColor(GRIS)
+       .text('Plataforma Blockhoom  –  Vivienda estudiantil IPN', ML, 98, { align: 'center', width: ANCHO });
+
+    // Línea inferior del encabezado
+    doc.save().moveTo(ML, 114).lineTo(MR, 114).strokeColor('#000000').lineWidth(1).stroke().restore();
+    doc.y = 122;
+
+    // ── PÁRRAFO INTRODUCTORIO ────────────────────────────────────────────────
+    const at          = arrendamiento.arrendatario.usuario;
+    const nomArrendador   = `${arrendador.usuario.usuarioNom} ${arrendador.usuario.usuarioApePat} ${arrendador.usuario.usuarioApeMat || ''}`.trim();
+    const nomArrendatario = `${at.usuarioNom} ${at.usuarioApePat} ${at.usuarioApeMat || ''}`.trim();
+
+    doc.moveDown(0.4);
+    doc.fontSize(9).font('Helvetica').fillColor(NEGRO).text(
+      'Contrato de arrendamiento que celebran, por una parte, en su carácter de ',
+      ML, doc.y, { continued: true, align: 'justify', width: ANCHO }
+    );
+    doc.font('Helvetica-Bold').text('ARRENDADOR', { continued: true });
+    doc.font('Helvetica').text(`, el C. ${nomArrendador}; y por otra parte, en su carácter de `, { continued: true });
+    doc.font('Helvetica-Bold').text('ARRENDATARIO', { continued: true });
+    doc.font('Helvetica').text(
+      `, el C. ${nomArrendatario}; ambos de conformidad con las siguientes declaraciones y cláusulas:`,
+      { align: 'justify' }
+    );
+    doc.moveDown(0.5);
+
+    // ── DECLARACIONES ────────────────────────────────────────────────────────
+    tituloSeccion('DECLARACIONES');
+
     const fechaInicio = new Date(arrendamiento.arrendamientoFechaInicio);
     const diasEnRenta = Math.floor((new Date() - fechaInicio) / (1000 * 60 * 60 * 24));
     const mesesEnRenta = Math.floor(diasEnRenta / 30);
@@ -138,181 +185,127 @@ router.get('/:id/pdf', async (req, res) => {
     const tiempoRenta = mesesEnRenta > 0
       ? `${mesesEnRenta} mes(es)${diasRest > 0 ? ` y ${diasRest} día(s)` : ''}`
       : `${diasEnRenta} día(s)`;
-    fila('Número de contrato', numContrato);
-    fila('Fecha de inicio', fechaInicio.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }));
-    fila('Tiempo en renta', `${tiempoRenta} (${diasEnRenta} días)`);
-    const tipoPrecio = propiedad.propiedadPrecioPor === 'Propiedad' ? ' (Propiedad completa)' :
-                      propiedad.propiedadPrecioPor === 'Persona' ? ' (Por persona)' :
-                      propiedad.propiedadPrecioPor === 'Habitación' ? ' (Por Habitación)' : '';
-    fila('Renta mensual', `$${arrendamiento.arrendamientoRenta} MXN${tipoPrecio}`);
-    fila('Descripción', arrendamiento.arrendamientoDescrip || 'Sin descripción adicional');
-
-    // ── 2. DATOS DEL ARRENDADOR ──────────────────────────────────────────────
-    seccion('2', 'DATOS DEL ARRENDADOR');
-    const nomArrendador = `${arrendador.usuario.usuarioNom} ${arrendador.usuario.usuarioApePat} ${arrendador.usuario.usuarioApeMat || ''}`.trim();
-    fila('Nombre completo', nomArrendador);
-    fila('Correo electrónico', arrendador.usuario.usuarioCorreo);
-    fila('Teléfono', arrendador.usuario.usuarioTel);
-    fila('RFC', arrendador.arrendadorRFC);
-
-    // ── 3. DATOS DEL ARRENDATARIO ────────────────────────────────────────────
-    seccion('3', 'DATOS DEL ARRENDATARIO');
-    const at = arrendamiento.arrendatario.usuario;
-    const nomArrendatario = `${at.usuarioNom} ${at.usuarioApePat} ${at.usuarioApeMat || ''}`.trim();
-    fila('Nombre completo', nomArrendatario);
-    fila('Correo electrónico', at.usuarioCorreo);
-    fila('Teléfono', at.usuarioTel);
-    fila('Username', arrendamiento.arrendatario.arrendatarioUser);
-
-    // ── 4. DATOS DE LA PROPIEDAD ─────────────────────────────────────────────
-    seccion('4', 'DATOS DE LA PROPIEDAD');
+    const tipoPrecio = propiedad.propiedadPrecioPor === 'Propiedad' ? ' (propiedad completa)' :
+                       propiedad.propiedadPrecioPor === 'Persona'   ? ' (por persona)'          :
+                       propiedad.propiedadPrecioPor === 'Habitación' ? ' (por habitación)'       : '';
     const dir = propiedad.direccion;
     let direccionCompleta = 'No disponible';
     if (dir) {
       direccionCompleta = `${dir.direccionCalle} #${dir.direccionNumExt}`;
       if (dir.direccionNumInt) direccionCompleta += ` Int. ${dir.direccionNumInt}`;
-      if (dir.cp) direccionCompleta += `, Col. ${dir.cp.d_asenta}, ${dir.cp.D_mnpio}, ${dir.cp.d_estado}, CP ${dir.cp.d_codigo}`;
+      if (dir.cp) direccionCompleta += `, Col. ${dir.cp.d_asenta}, ${dir.cp.D_mnpio}, ${dir.cp.d_estado}, C.P. ${dir.cp.d_codigo}`;
     }
-    fila('Título', propiedad.propiedadTitulo);
-    fila('Tipo de inmueble', propiedad.propiedadTipo);
-    fila('Dirección', direccionCompleta);
-    fila('Lugares totales', propiedad.propiedadLugares);
 
-    // ── 5. CLÁUSULAS ─────────────────────────────────────────────────────────
-    seccion('5', 'CLÁUSULAS DEL CONTRATO');
+    // Declaración I — Arrendador
+    const yDecI = doc.y;
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+       .text('I.', ML, yDecI, { width: 16, lineBreak: false });
+    doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
+       .text(
+         `Declara el ARRENDADOR ser mayor de edad, con correo: ${arrendador.usuario.usuarioCorreo || '—'}, ` +
+         `con RFC: ${arrendador.arrendadorRFC || '—'}, y manifiesta ser propietario o legítimo poseedor del inmueble ubicado en ${direccionCompleta}.`,
+         ML + 20, yDecI, { align: 'justify', width: ANCHO - 20 }
+       );
+    doc.moveDown(0.4);
 
-    const clausulas = [
-      {
-        titulo: 'PRIMERA. — OBJETO DEL CONTRATO',
-        texto: 'El ARRENDADOR cede en arrendamiento al ARRENDATARIO el inmueble descrito en la Sección 4, para uso exclusivo como vivienda estudiantil. Queda estrictamente prohibido cualquier otro uso sin autorización previa y por escrito del ARRENDADOR.'
-      },
-      {
-        titulo: 'SEGUNDA. — DURACIÓN',
-        texto: 'El presente contrato tendrá una duración indefinida a partir de la fecha de inicio establecida en la plataforma Burroomies. Cualquiera de las partes podrá darlo por terminado, requiriéndose la confirmación de ambas partes para su finalización definitiva.'
-      },
-      {
-        titulo: 'TERCERA. — RENTA Y FORMA DE PAGO',
-        texto: `La renta mensual acordada es de $${arrendamiento.arrendamientoRenta} MXN. El pago deberá realizarse de forma puntual conforme a los términos acordados entre las partes. Burroomies no interviene en las transacciones económicas entre arrendador y arrendatario.`
-      },
-      {
-        titulo: 'CUARTA. — DEPÓSITO EN GARANTÍA',
-        texto: 'Las partes podrán acordar un depósito en garantía equivalente a uno o más meses de renta, el cual será devuelto al ARRENDATARIO al término del contrato, descontando los daños comprobados al inmueble si los hubiere.'
-      },
-      {
-        titulo: 'QUINTA. — USO DEL INMUEBLE',
-        texto: 'El ARRENDATARIO se obliga a utilizar el inmueble únicamente como vivienda habitual para fines académicos. Queda prohibido subarrendar, ceder o traspasar, total o parcialmente, el uso del inmueble sin autorización expresa y por escrito del ARRENDADOR.'
-      },
-      {
-        titulo: 'SEXTA. — CONSERVACIÓN Y MANTENIMIENTO',
-        texto: 'El ARRENDATARIO se obliga a conservar el inmueble en buen estado, realizando las reparaciones menores derivadas del uso cotidiano. Las reparaciones estructurales o de mayor envergadura serán responsabilidad del ARRENDADOR y deberán atenderse en un plazo razonable.'
-      },
-      {
-        titulo: 'SÉPTIMA. — SERVICIOS E INSTALACIONES',
-        texto: 'Los servicios básicos incluidos en el arrendamiento (agua, luz, gas, internet, entre otros) serán los expresamente pactados entre las partes al momento de celebrar este contrato. Cualquier servicio no acordado será cubierto directamente por el ARRENDATARIO.'
-      },
-      {
-        titulo: 'OCTAVA. — VISITAS Y CONVIVENCIA',
-        texto: 'El ARRENDATARIO podrá recibir visitas en el inmueble siempre que no afecten la tranquilidad de los demás ocupantes ni del vecindario. Las visitas nocturnas prolongadas deberán ser acordadas con el ARRENDADOR, respetando en todo momento el reglamento interno del inmueble si lo hubiere.'
-      },
-      {
-        titulo: 'NOVENA. — MODIFICACIONES AL INMUEBLE',
-        texto: 'El ARRENDATARIO no podrá realizar modificaciones, remodelaciones ni obras de ningún tipo en el inmueble sin contar con el consentimiento previo y por escrito del ARRENDADOR. Las mejoras realizadas sin autorización quedarán en beneficio del inmueble sin derecho a reembolso.'
-      },
-      {
-        titulo: 'DÉCIMA. — ACCESO DEL ARRENDADOR',
-        texto: 'El ARRENDADOR podrá acceder al inmueble para realizar inspecciones o reparaciones, notificando al ARRENDATARIO con al menos 24 horas de anticipación, salvo en casos de emergencia que pongan en riesgo la integridad del inmueble o de sus ocupantes.'
-      },
-      {
-        titulo: 'DÉCIMA PRIMERA. — TERMINACIÓN ANTICIPADA',
-        texto: 'Cualquiera de las partes podrá solicitar la terminación anticipada del contrato mediante la plataforma Burroomies, con un aviso mínimo de 15 días naturales. La terminación se formalizará una vez que ambas partes la confirmen en la plataforma.'
-      },
-      {
-        titulo: 'DÉCIMA SEGUNDA. — RESPONSABILIDAD',
-        texto: 'El ARRENDATARIO será responsable de los daños causados al inmueble por negligencia, mal uso o descuido. El ARRENDADOR garantizará que el inmueble se encuentre en condiciones habitables al inicio del contrato y durante toda su vigencia.'
-      }
-    ];
-
-    clausulas.forEach(clausula => {
-      if (doc.y > 700) doc.addPage();
-      doc.fontSize(8.5).font('Helvetica-Bold').fillColor(AZUL_MED)
-         .text(clausula.titulo, ML, doc.y, { width: ANCHO });
-      doc.moveDown(0.12);
-      doc.fontSize(8).font('Helvetica').fillColor(NEGRO)
-         .text(clausula.texto, ML, doc.y, { align: 'justify', width: ANCHO });
-      doc.moveDown(0.3);
-    });
-
-    // ── FIRMAS ───────────────────────────────────────────────────────────────
-    if (doc.y > 600) doc.addPage();
+    // Declaración II — Arrendatario
+    const yDecII = doc.y;
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+       .text('II.', ML, yDecII, { width: 16, lineBreak: false });
+    doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
+       .text(
+         `Declara el ARRENDATARIO ser mayor de edad, estudiante del Instituto Politécnico Nacional, con número de boleta: ${arrendamiento.arrendatario.arrendatarioBoleta || '—'} ` +
+         `y correo institucional: ${at.usuarioCorreo || '—'}. Declara tener capacidad legal para contratar y obligarse en los términos del presente instrumento.`,
+         ML + 20, yDecII, { align: 'justify', width: ANCHO - 20 }
+       );
     doc.moveDown(0.5);
 
-    seccion('6', 'FIRMAS DE CONFORMIDAD');
+    doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
+       .text('Expuesto lo anterior, las partes se obligan conforme a las siguientes:', ML, doc.y, { align: 'justify', width: ANCHO });
+    doc.moveDown(0.5);
 
-    doc.moveDown(0.3);
-    doc.fontSize(8.5).font('Helvetica').fillColor(GRIS)
+    // ── CLÁUSULAS ────────────────────────────────────────────────────────────
+    tituloSeccion('CLÁUSULAS');
+
+    clausula('PRIMERA.–', `El ${doc.font ? '' : ''}ARRENDADOR cede en arrendamiento al ARRENDATARIO el inmueble ubicado en ${direccionCompleta}, denominado "${propiedad.propiedadTitulo}", para uso exclusivo como vivienda estudiantil. Queda estrictamente prohibido cualquier otro uso sin autorización previa y por escrito del ARRENDADOR.`);
+
+    clausula('SEGUNDA.–', `La duración del presente contrato es indefinida a partir del ${fechaInicio.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}, fecha registrada en la plataforma Blockhoom. A la fecha de generación de este documento, el tiempo transcurrido en renta es de ${tiempoRenta}. Cualquiera de las partes podrá darlo por terminado requiriéndose la confirmación de ambas partes en la plataforma.`);
+
+    clausula('TERCERA.–', `El ARRENDATARIO se obliga a pagar al ARRENDADOR, o a quien sus derechos represente, la cantidad de $${arrendamiento.arrendamientoRenta} MXN mensuales${tipoPrecio} como renta del inmueble arrendado. El pago deberá realizarse conforme a los términos acordados entre las partes. Blockhoom no interviene en las transacciones económicas entre arrendador y arrendatario.`);
+
+    clausula('CUARTA.–', `Las partes podrán acordar un depósito en garantía equivalente a uno o más meses de renta, el cual será devuelto al ARRENDATARIO al término del contrato, descontando los daños comprobados al inmueble si los hubiere, conforme a lo que establezca la legislación aplicable.`);
+
+    clausula('QUINTA.–', `El ARRENDATARIO se obliga a utilizar el inmueble únicamente como vivienda habitual para fines académicos. Queda prohibido subarrendar, ceder o traspasar, total o parcialmente, el uso del inmueble sin autorización expresa y por escrito del ARRENDADOR.`);
+
+    clausula('SEXTA.–', `El ARRENDATARIO se obliga a conservar el inmueble en buen estado, realizando las reparaciones menores derivadas del uso cotidiano. Las reparaciones estructurales o de mayor envergadura serán responsabilidad del ARRENDADOR y deberán atenderse en un plazo razonable tras ser notificado.`);
+
+    clausula('SÉPTIMA.–', `Los servicios básicos incluidos en el arrendamiento serán los expresamente pactados entre las partes al momento de celebrar este contrato. Cualquier servicio no acordado será cubierto directamente por el ARRENDATARIO, quien no podrá reclamar reembolso alguno al ARRENDADOR por dichos conceptos.`);
+
+    clausula('OCTAVA.–', `El ARRENDATARIO podrá recibir visitas en el inmueble siempre que no afecten la tranquilidad de los demás ocupantes ni del vecindario. Las visitas deberán respetar en todo momento el reglamento interno del inmueble si lo hubiere y los ordenamientos aplicables.`);
+
+    clausula('NOVENA.–', `El ARRENDATARIO no podrá realizar modificaciones, remodelaciones ni obras de ningún tipo en el inmueble sin contar con el consentimiento previo y por escrito del ARRENDADOR. Las mejoras realizadas sin autorización quedarán en beneficio del inmueble sin derecho a reembolso alguno.`);
+
+    clausula('DÉCIMA.–', `El ARRENDADOR podrá acceder al inmueble para realizar inspecciones o reparaciones, notificando al ARRENDATARIO con al menos 24 horas de anticipación, salvo en casos de emergencia que pongan en riesgo la integridad del inmueble o de sus ocupantes.`);
+
+    clausula('DÉCIMA PRIMERA.–', `Cualquiera de las partes podrá solicitar la terminación anticipada del contrato mediante la plataforma Blockhoom, con un aviso mínimo de 15 días naturales. La terminación se formalizará una vez que ambas partes la confirmen en la plataforma y el ARRENDATARIO haya desocupado totalmente el inmueble.`);
+
+    clausula('DÉCIMA SEGUNDA.–', `El ARRENDATARIO será responsable de los daños causados al inmueble por negligencia, mal uso o descuido. El ARRENDADOR garantizará que el inmueble se encuentre en condiciones habitables al inicio del contrato y las mantendrá durante toda la vigencia del mismo.`);
+
+    // Notas adicionales
+    if (arrendamiento.arrendamientoDescrip) {
+      doc.moveDown(0.25);
+      if (doc.y > 680) doc.addPage();
+      doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+         .text('NOTAS ADICIONALES.–', ML, doc.y, { continued: true });
+      doc.font('Helvetica').text(` ${arrendamiento.arrendamientoDescrip}`, { align: 'justify', width: ANCHO });
+      doc.moveDown(0.3);
+    }
+
+    // ── FIRMAS ───────────────────────────────────────────────────────────────
+    if (doc.y > 580) doc.addPage();
+    tituloSeccion('FIRMAS DE CONFORMIDAD');
+
+    doc.fontSize(9).font('Helvetica').fillColor(NEGRO)
        .text(
-         `Leído y aceptado por ambas partes en la Ciudad de México, a los ${new Date().getDate()} días del mes de ${new Date().toLocaleDateString('es-MX', { month: 'long' })} de ${new Date().getFullYear()}.`,
+         `Leído y aceptado en la Ciudad de México, a los ${fechaGen.getDate()} días del mes de ` +
+         `${fechaGen.toLocaleDateString('es-MX', { month: 'long' })} del año ${fechaGen.getFullYear()}.`,
          ML, doc.y, { align: 'justify', width: ANCHO }
        );
 
-    doc.moveDown(2.5); // espacio para firmar a mano
+    doc.moveDown(3.5);
 
-    const mitad = ML + ANCHO / 2;
-    const anchoFirma = (ANCHO / 2) - 20;
+    const mitad      = ML + ANCHO / 2;
+    const anchoFirma = (ANCHO / 2) - 15;
 
-    // Línea arrendador
-    doc.save().moveTo(ML, doc.y).lineTo(ML + anchoFirma, doc.y).strokeColor('#aaaaaa').lineWidth(0.8).stroke().restore();
-    // Línea arrendatario
-    doc.save().moveTo(mitad + 10, doc.y).lineTo(mitad + 10 + anchoFirma, doc.y).strokeColor('#aaaaaa').lineWidth(0.8).stroke().restore();
-
+    // Líneas de firma
+    doc.save().moveTo(ML, doc.y).lineTo(ML + anchoFirma, doc.y).strokeColor('#000000').lineWidth(0.7).stroke().restore();
+    doc.save().moveTo(mitad + 8, doc.y).lineTo(mitad + 8 + anchoFirma, doc.y).strokeColor('#000000').lineWidth(0.7).stroke().restore();
     doc.moveDown(0.3);
 
-    doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(NEGRO)
        .text('EL ARRENDADOR', ML, doc.y, { width: anchoFirma, align: 'center' });
-    doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
-       .text('EL ARRENDATARIO', mitad + 10, doc.y - doc.currentLineHeight(), { width: anchoFirma, align: 'center' });
-
-    doc.moveDown(0.2);
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(NEGRO)
+       .text('EL ARRENDATARIO', mitad + 8, doc.y - doc.currentLineHeight(), { width: anchoFirma, align: 'center' });
+    doc.moveDown(0.25);
 
     doc.fontSize(8).font('Helvetica').fillColor(GRIS)
        .text(nomArrendador, ML, doc.y, { width: anchoFirma, align: 'center' });
     doc.fontSize(8).font('Helvetica').fillColor(GRIS)
-       .text(nomArrendatario, mitad + 10, doc.y - doc.currentLineHeight(), { width: anchoFirma, align: 'center' });
-
-    doc.moveDown(1.5); // espacio para huella / sello
-
-    // Línea testigo (centrada)
-    const anchoTestigo = 180;
-    const xTestigo = ML + (ANCHO / 2) - (anchoTestigo / 2);
-    doc.save().moveTo(xTestigo, doc.y).lineTo(xTestigo + anchoTestigo, doc.y).strokeColor('#aaaaaa').lineWidth(0.8).stroke().restore();
-    doc.moveDown(0.3);
-    doc.fontSize(9).font('Helvetica-Bold').fillColor(NEGRO)
-       .text('TESTIGO', xTestigo, doc.y, { width: anchoTestigo, align: 'center' });
-    doc.moveDown(0.2);
+       .text(nomArrendatario, mitad + 8, doc.y - doc.currentLineHeight(), { width: anchoFirma, align: 'center' });
     doc.fontSize(8).font('Helvetica').fillColor(GRIS)
-       .text('Nombre y firma del testigo', xTestigo, doc.y, { width: anchoTestigo, align: 'center' });
+       .text(`RFC: ${arrendador.arrendadorRFC || '—'}`, ML, doc.y, { width: anchoFirma, align: 'center' });
+    doc.fontSize(8).font('Helvetica').fillColor(GRIS)
+       .text(`Boleta: ${arrendamiento.arrendatario.arrendatarioBoleta || '—'}`, mitad + 8, doc.y - doc.currentLineHeight(), { width: anchoFirma, align: 'center' });
 
-    // ── AVISO LEGAL ──────────────────────────────────────────────────────────
     doc.moveDown(1);
-    doc.save().moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#cccccc').lineWidth(0.8).stroke().restore();
-    doc.moveDown(0.4);
 
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(AZUL)
-       .text('AVISO IMPORTANTE:', ML, doc.y, { align: 'center', width: ANCHO });
-    doc.moveDown(0.25);
-    doc.fontSize(7.5).font('Helvetica-Oblique').fillColor(GRIS)
+    // ── PIE DE PÁGINA ────────────────────────────────────────────────────────
+    doc.moveDown(1.2);
+    doc.save().moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#cccccc').lineWidth(0.5).stroke().restore();
+    doc.moveDown(0.35);
+    doc.fontSize(7).font('Helvetica').fillColor('#aaaaaa')
        .text(
-         'Este documento es generado automáticamente por la plataforma Burroomies y tiene carácter meramente INFORMATIVO. ' +
-         'NO constituye un documento legal vinculante ni reemplaza un contrato formal de arrendamiento ante las autoridades competentes. ' +
-         'Burroomies no se hace responsable de las negociaciones, acuerdos o disputas que surjan entre las partes. ' +
-         'Se recomienda a ambas partes consultar con un profesional legal para la formalización de su relación contractual.',
-         ML, doc.y, { align: 'justify', width: ANCHO }
-       );
-
-    doc.moveDown(0.4);
-    doc.fontSize(7).font('Helvetica').fillColor('#888888')
-       .text(
-         `Documento generado el ${new Date().toLocaleDateString('es-MX')} a las ${new Date().toLocaleTimeString('es-MX')} - Burroomies © ${new Date().getFullYear()}`,
+         `Blockhoom © ${fechaGen.getFullYear()} — Documento generado el ${fechaGenStr}`,
          ML, doc.y, { align: 'center', width: ANCHO }
        );
 
@@ -411,8 +404,7 @@ router.put('/:id/finalizar-estudiante', async (req, res) => {
       resenaCalSerBasic, 
       resenaCalSerComEnt, 
       resenaCalSerAdicio, 
-      resenaDescrip,
-      resenaSentimiento 
+      resenaDescrip
     } = req.body;
 
     const arrendamiento = await Arrendamiento.findByPk(id, {
@@ -441,7 +433,7 @@ router.put('/:id/finalizar-estudiante', async (req, res) => {
       resenaCalSerComEnt: resenaCalSerComEnt || null,
       resenaCalSerAdicio: resenaCalSerAdicio || null,
       resenaDescrip: resenaDescrip || '',
-      resenaSentimiento: resenaSentimiento || null,
+      resenaSentimiento: (resenaDescrip && resenaDescrip !== 'Sin comentarios') ? analizarSentimiento(resenaDescrip) : null,
       resenaDuracionRenta: mesesRenta,  // ← agregar esto
       resenaFechaCreacion: new Date(),
       propiedad_idPropiedad: arrendamiento.propiedad_idPropiedad,
@@ -487,10 +479,10 @@ router.get('/:id', async (req, res) => {
           attributes: ['idPropiedad', 'propiedadTitulo', 'propiedadTipo', 'propiedadLugares', 'propiedadPrecio'],
           include: [
             {
-              model: require('../models/associations').Servicio, // ← nuevo
-              as: 'servicios',                                   // ← nuevo
-              attributes: ['idServicio', 'servicioCategoria'],   // ← nuevo
-              required: false                                    // ← nuevo
+              model: require('../models/associations').Servicio, 
+              as: 'servicios',                                   
+              attributes: ['idServicio', 'servicioNombre', 'servicioCategoria'],   
+              required: false                                    
             },
             {
               model: Direccion,
@@ -529,6 +521,16 @@ router.post('/', async (req, res) => {
     });
     if (arrendamientoExistente) {
       return res.status(400).json({ error: 'El arrendatario ya tiene un arrendamiento activo. No puede estar ligado a más de un arrendamiento al mismo tiempo.' });
+    }
+
+    if (arrendamientoFechaInicio) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const fechaInicio = new Date(arrendamientoFechaInicio + 'T00:00:00');
+      fechaInicio.setHours(0, 0, 0, 0);
+      if (fechaInicio < hoy) {
+        return res.status(400).json({ error: 'La fecha de inicio no puede ser una fecha pasada' });
+      }
     }
 
     const propiedad = await Propiedad.findByPk(propiedad_idPropiedad);

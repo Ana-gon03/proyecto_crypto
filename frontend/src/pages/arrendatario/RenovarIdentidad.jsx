@@ -5,7 +5,7 @@ import FooterInicio from '../../components/common/FooterInicio'
 import SubirDocumento from '../../components/ui/SubirDocumento'
 import '../../styles/Arrendatario.css'
 
-const VerificarIdentidad = () => {
+const RenovarIdentidad = () => {
   const navigate = useNavigate()
   const [constanciaFile, setConstanciaFile] = useState(null)
   const [enviando, setEnviando] = useState(false)
@@ -33,7 +33,7 @@ const VerificarIdentidad = () => {
       fd.append('userId', userId)
       fd.append('constancia', constanciaFile)
 
-      const response = await fetch('http://localhost:5000/api/auth/verificar-identidad', {
+      const response = await fetch('http://localhost:5000/api/auth/renovar-identidad', {
         method: 'POST',
         body: fd
       })
@@ -41,13 +41,17 @@ const VerificarIdentidad = () => {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Error al verificar')
+        setError(data.error || 'Error al renovar')
         if (data.detalles) setErroresDetalle(data.detalles)
         return
       }
 
       localStorage.setItem('arrendatarioVerificado', 'true')
-      navigate('/arrendatario/verificacion-exitosa')
+      localStorage.setItem('arrendatarioFechaVerificacion', new Date().toISOString())
+
+      navigate('/arrendatario/verificacion-exitosa', {
+        state: { esRenovacion: true }
+      })
 
     } catch (err) {
       setError('Error de conexión. Intenta de nuevo.')
@@ -62,22 +66,34 @@ const VerificarIdentidad = () => {
       <NavbarArrendatario />
 
       <div className="atr-verify-wrapper">
-        <div className="atr-verify-card" style={{ borderColor: '#059669' }}>
-          
-          {/* Header */}
-          <div className="atr-verify-header atr-verify-header-primary">
-            <div className="atr-verify-header-icon">📤</div>
-            <div className="atr-verify-header-title">Verificar mi identidad</div>
+        <div className="atr-verify-card" style={{ borderColor: '#D97706', borderWidth: '2px' }}>
+
+          {/* Header naranja */}
+          <div className="atr-verify-header atr-verify-header-warning">
+            <div className="atr-verify-header-icon">🔄</div>
+            <div className="atr-verify-header-title">Renovar verificación</div>
             <div className="atr-verify-header-sub">
-              Sube tu constancia de estudios vigente del IPN
+              Tu verificación expiró. Sube tu constancia vigente para renovarla.
             </div>
           </div>
 
           <div className="atr-verify-body">
 
+            {/* Aviso de expiración */}
+            <div className="atr-alert atr-alert-warning" style={{ marginBottom: '1.25rem' }}>
+              <div className="atr-alert-icon">⚠️</div>
+              <div className="atr-alert-body">
+                <div className="atr-alert-title">Tu verificación expiró</div>
+                <div className="atr-alert-desc">
+                  Por seguridad, las verificaciones duran 6 meses. Sube tu constancia más reciente
+                  para renovarla y seguir viendo los datos de contacto de los arrendadores.
+                </div>
+              </div>
+            </div>
+
             {/* Instrucciones */}
             <div className="atr-instructions-box">
-              <div className="atr-instructions-title">📋 Requisitos del documento:</div>
+              <div className="atr-instructions-title">📋 Requisitos del documento</div>
               {[
                 'Debe ser tu constancia de estudios vigente del IPN',
                 'Formato PDF únicamente',
@@ -103,20 +119,15 @@ const VerificarIdentidad = () => {
 
             {/* Errores */}
             {error && (
-              <div className="atr-alert atr-alert-error" style={{ marginBottom: '1.25rem' }}>
-                <div className="atr-alert-icon">❌</div>
-                <div className="atr-alert-body">
-                  <div className="atr-alert-title">{error}</div>
-                  {erroresDetalle.length > 0 && (
-                    <div className="atr-alert-desc">
-                      <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
-                        {erroresDetalle.map((e, i) => (
-                          <li key={i}>{e}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+              <div className="atr-error-box" style={{ marginBottom: '1.25rem' }}>
+                <div className="atr-error-title">❌ {error}</div>
+                {erroresDetalle.length > 0 && (
+                  <ul className="atr-error-list">
+                    {erroresDetalle.map((e, i) => (
+                      <li key={i}>{e}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -126,15 +137,11 @@ const VerificarIdentidad = () => {
                 onClick={handleEnviar}
                 disabled={enviando || !constanciaFile}
                 className="atr-btn-primary"
-                style={{
-                  opacity: enviando || !constanciaFile ? 0.6 : 1,
-                  cursor: enviando || !constanciaFile ? 'not-allowed' : 'pointer'
-                }}
               >
-                {enviando ? '⏳ Verificando documento...' : '✅ Verificar mi identidad'}
+                {enviando ? '⏳ Verificando documento...' : '🔄 Renovar verificación'}
               </button>
               <button
-                onClick={() => navigate('/arrendatario/verificacion-pendiente')}
+                onClick={() => navigate('/arrendatario/buscar-vivienda')}
                 className="atr-btn-ghost"
               >
                 ← Volver
@@ -150,4 +157,4 @@ const VerificarIdentidad = () => {
   )
 }
 
-export default VerificarIdentidad
+export default RenovarIdentidad

@@ -14,6 +14,7 @@ const AdminArrendatariosPage = () => {
   const [selectedArrendatario, setSelectedArrendatario] = useState(null)
   const [modalType, setModalType] = useState('')
   const [error, setError] = useState('')
+  const [alerta, setAlerta] = useState({ open: false, mensaje: '' })
 
   const loadArrendatarios = async () => {
     setLoading(true)
@@ -33,12 +34,12 @@ const AdminArrendatariosPage = () => {
   const handleView = (a) => { setSelectedArrendatario(a); setModalType('view'); setShowModal(true) }
   const handleEdit = (a) => { setSelectedArrendatario(a); setModalType('edit'); setShowModal(true) }
   const handleDelete = (a) => {
-    if (a.tieneRentasActivas) { alert('❌ No se puede eliminar: tiene rentas activas'); return }
+    if (a.tieneRentasActivas) { setAlerta({ open: true, mensaje: 'No se puede eliminar: este estudiante tiene rentas activas.' }); return }
     setSelectedArrendatario(a); setModalType('delete'); setShowModal(true)
   }
   const confirmDelete = async () => {
     try { await deleteArrendatario(selectedArrendatario.idArrendatario); setShowModal(false); loadArrendatarios() }
-    catch (error) { alert(error.response?.data?.error || 'Error al eliminar') }
+    catch (error) { setShowModal(false); setAlerta({ open: true, mensaje: error.response?.data?.error || 'Error al eliminar' }) }
   }
 
   const modalWidth = (modalType === 'edit' || modalType === 'create') ? '860px' : '520px'
@@ -75,7 +76,7 @@ const AdminArrendatariosPage = () => {
         ) : arrendatarios.length === 0 ? (
           <p className="admin-state">No hay estudiantes registrados.</p>
         ) : (
-          <div className="admin-table-card" style={{ overflowX: 'auto' }}>
+          <div className="admin-table-card">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -93,13 +94,13 @@ const AdminArrendatariosPage = () => {
                 {arrendatarios.map((a) => (
                   <tr key={a.idArrendatario}>
                     <td className="muted">{a.idArrendatario}</td>
-                    <td>{a.arrendatarioUser || '-'}</td>
-                    <td style={{ fontWeight: 500 }}>
+                    <td className="nowrap">{a.arrendatarioUser || '-'}</td>
+                    <td className="truncate" style={{ fontWeight: 500 }} title={`${a.usuario?.usuarioApePat} ${a.usuario?.usuarioApeMat || ''} ${a.usuario?.usuarioNom}`}>
                       {a.usuario?.usuarioApePat} {a.usuario?.usuarioApeMat || ''} {a.usuario?.usuarioNom}
                     </td>
-                    <td>{a.arrendatarioBoleta || '-'}</td>
-                    <td>{a.usuario?.usuarioCorreo || '-'}</td>
-                    <td className="muted">{a.usuario?.usuarioCurp || '-'}</td>
+                    <td className="nowrap">{a.arrendatarioBoleta || '-'}</td>
+                    <td className="truncate" title={a.usuario?.usuarioCorreo || '-'}>{a.usuario?.usuarioCorreo || '-'}</td>
+                    <td className="muted truncate" title={a.usuario?.usuarioCurp || '-'}>{a.usuario?.usuarioCurp || '-'}</td>
                     <td className="center">
                       <span className={`admin-badge ${a.arrendatarioVerificado === 1 ? 'badge-success' : 'badge-warning'}`}>
                         {a.arrendatarioVerificado === 1 ? '✓ Verificado' : '⏳ Pendiente'}
@@ -238,6 +239,22 @@ const AdminArrendatariosPage = () => {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {alerta.open && (
+        <div className="admin-modal-overlay" onClick={() => setAlerta({ open: false, mensaje: '' })}>
+          <div className="admin-modal" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2 className="admin-modal-title">Aviso</h2>
+              <button className="admin-modal-close" onClick={() => setAlerta({ open: false, mensaje: '' })}>×</button>
+            </div>
+            <div className="admin-modal-body">
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-dark)', margin: 0 }}>{alerta.mensaje}</p>
+            </div>
+            <div className="admin-modal-footer">
+              <button className="btn-save" onClick={() => setAlerta({ open: false, mensaje: '' })}>Entendido</button>
+            </div>
           </div>
         </div>
       )}

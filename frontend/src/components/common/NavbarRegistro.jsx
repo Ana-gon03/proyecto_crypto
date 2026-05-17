@@ -1,17 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import burroLogo from '../../assets/burro.png'
+import '../../styles/Registro.css'
 
 const NavbarRegistro = () => {
   return (
-    <nav style={{
-      backgroundColor: '#333',
-      padding: '1rem',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '1.5rem' }}>
-        🏠 Burroomies
+    <nav className="registro-nav">
+      <Link to="/" className="registro-nav-brand">
+        <img src={burroLogo} alt="Blockhoom" />
+        <span>Blockhoom</span>
       </Link>
     </nav>
   )

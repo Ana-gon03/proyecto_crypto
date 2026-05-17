@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
-import { tieneClavesGeneradas } from '../../utils/cryptoUtils'
+import '../../styles/Arrendatario.css'
 
 const MiArrendamiento = () => {
   const navigate = useNavigate()
@@ -17,56 +17,55 @@ const MiArrendamiento = () => {
   }, [])
 
   const cargarArrendamiento = async () => {
-  try {
-    setLoading(true)
-    
-    const userId = localStorage.getItem('userId')
+    try {
+      setLoading(true)
 
-    const arrendatarioVerificado = localStorage.getItem('arrendatarioVerificado')
-    if (arrendatarioVerificado === 'false' || arrendatarioVerificado === '0') {
-      navigate('/arrendatario/verificacion-pendiente')
-      return
-    }
-    const arrendatarioId = localStorage.getItem('arrendatarioId')
-    
-    if (!userId) {
-      setError('No has iniciado sesión')
-      setLoading(false)
-      return
-    }
+      const userId = localStorage.getItem('userId')
+      const arrendatarioVerificado = localStorage.getItem('arrendatarioVerificado')
+      const fechaVerificacion = localStorage.getItem('arrendatarioFechaVerificacion')
 
-    const response = await fetch('http://localhost:5000/api/arrendamientos/mi-arrendamiento', {
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-user-id': userId,
-        'x-arrendatario-id': arrendatarioId
+      const nuncaVerificado = (arrendatarioVerificado === 'false' || arrendatarioVerificado === '0')
+        && (!fechaVerificacion || fechaVerificacion === 'null' || fechaVerificacion === 'undefined')
+
+      if (nuncaVerificado) {
+        navigate('/arrendatario/verificacion-pendiente')
+        return
       }
-    })
 
-    if (response.status === 404) {
-      setArrendamiento(null)
+      const arrendatarioId = localStorage.getItem('arrendatarioId')
+
+      if (!userId) {
+        setError('No has iniciado sesión')
+        return
+      }
+
+      const response = await fetch('http://localhost:5000/api/arrendamientos/mi-arrendamiento', {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+          'x-arrendatario-id': arrendatarioId
+        }
+      })
+
+      if (response.status === 404) {
+        setArrendamiento(null)
+        return
+      }
+
+      if (!response.ok) throw new Error('Error al cargar')
+
+      const data = await response.json()
+      setArrendamiento(data)
+
+      if (data.arrendamientoValEstudiante === 1) {
+        setEsperandoArrendador(true)
+      }
+    } catch (err) {
+      setError('No se pudo cargar tu arrendamiento')
+      console.error('Error:', err)
+    } finally {
       setLoading(false)
-      return
     }
-
-    if (!response.ok) throw new Error('Error al cargar')
-
-    const data = await response.json()
-    setArrendamiento(data)
-    
-    if (data.arrendamientoValEstudiante === 1) {
-      setEsperandoArrendador(true)
-    }
-  } catch (error) {
-    setError('No se pudo cargar tu arrendamiento')
-    console.error('Error:', error)
-  } finally {
-    setLoading(false)
-  }
-}
-
-  const handleFinalizarClick = () => {
-    setMostrarModal(true)
   }
 
   const handleConfirmarFinalizar = () => {
@@ -74,334 +73,284 @@ const MiArrendamiento = () => {
     navigate(`/arrendatario/encuesta-finalizacion/${arrendamiento.idArrendamiento}`)
   }
 
-  const handleDescargarContrato = () => {
-    window.open(`http://localhost:5000/api/arrendamientos/${arrendamiento.idArrendamiento}/pdf`, '_blank')
+  const handleDescargarContrato = async () => {
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
+      const response = await fetch(`http://localhost:5000/api/arrendamientos/${arrendamiento.idArrendamiento}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!response.ok) throw new Error('Error al obtener el PDF')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (err) {
+      console.error('Error al abrir contrato:', err)
+      alert('No se pudo abrir el contrato')
+    }
   }
 
-  const propiedad = arrendamiento?.propiedad
-  const arrendador = propiedad?.arrendador?.usuario
-  const nombreArrendador = arrendador 
-    ? `${arrendador.usuarioNom} ${arrendador.usuarioApePat} ${arrendador.usuarioApeMat || ''}`.trim()
-    : 'No disponible'
-  
-  const primeraFoto = propiedad?.fotos?.[0]?.fotosURL || null
+  /* ── Verificación expirada ── */
+  const verificacionExpirada = (() => {
+    const fv = localStorage.getItem('arrendatarioFechaVerificacion')
+    if (!fv || fv === 'null' || fv === 'undefined') return false
+    const meses = (new Date() - new Date(fv)) / (1000 * 60 * 60 * 24 * 30)
+    return meses >= 6
+  })()
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f4f7f5' }}>
         <NavbarArrendatario />
-        <div style={{ flex: 1, textAlign: 'center', padding: '60px' }}>
-          <p style={{ color: '#666' }}>Cargando arrendamiento...</p>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ color: '#6b7280', fontSize: '16px' }}>Cargando arrendamiento...</p>
         </div>
         <FooterInicio />
       </div>
     )
   }
 
+  /* ── Derivar datos seguros ── */
+  const propiedad = arrendamiento?.propiedad || null
+  const arrendador = propiedad?.arrendador?.usuario || null
+  const primeraFoto = propiedad?.fotos?.[0]?.fotosURL || null
+  const nombreArrendador = arrendador
+    ? [arrendador.usuarioNom, arrendador.usuarioApePat, arrendador.usuarioApeMat].filter(Boolean).join(' ')
+    : 'No disponible'
+  const direccion = propiedad?.direccion || null
+  const renta = arrendamiento?.arrendamientoRenta
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="atr-page">
       <NavbarArrendatario />
 
-      <div style={{ flex: 1, maxWidth: '900px', margin: '0 auto', padding: '20px', width: '100%' }}>
-        <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>📋 Mi Arrendamiento</h1>
+      <div className="atr-main">
+        <h1 className="atr-page-title">Mi Arrendamiento</h1>
 
-        {/* MENSAJE DE ESPERA */}
-        {esperandoArrendador && (
-          <div style={{
-            padding: '20px',
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffc107',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            textAlign: 'center'
-          }}>
-            <p style={{ fontSize: '30px', margin: '0 0 10px 0' }}>⏳</p>
-            <p style={{ fontWeight: 'bold', color: '#856404', margin: '0 0 8px 0', fontSize: '16px' }}>
-              Esperando confirmación del arrendador
-            </p>
-            <p style={{ color: '#856404', fontSize: '14px', margin: 0 }}>
-              Ya has finalizado tu parte. El contrato seguirá disponible hasta que el arrendador confirme.
-            </p>
+        {/* ── Verificación expirada ── */}
+        {verificacionExpirada && (
+          <div className="atr-alert atr-alert-warning" style={{ marginBottom: '1.5rem' }}>
+            <div className="atr-alert-icon">⚠️</div>
+            <div className="atr-alert-body">
+              <div className="atr-alert-title">Tu verificación de identidad ha expirado</div>
+              <div className="atr-alert-desc">
+                Renueva tu verificación para poder ver los datos de contacto de nuevos arrendadores.
+              </div>
+              <button
+                onClick={() => navigate('/arrendatario/renovar-identidad')}
+                style={{
+                  marginTop: '10px', padding: '8px 18px', background: '#92400e',
+                  color: '#fff', border: 'none', borderRadius: '8px',
+                  cursor: 'pointer', fontSize: '13px', fontWeight: '700',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif'
+                }}
+              >
+                🔄 Renovar verificación
+              </button>
+            </div>
           </div>
         )}
 
-        {/* SIN ARRENDAMIENTO */}
-        {!loading && !error && !arrendamiento && (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            border: '1px solid #e0e0e0'
-          }}>
-            <p style={{ fontSize: '60px', marginBottom: '15px' }}>🏠</p>
-            <h2 style={{ fontSize: '20px', color: '#333', marginBottom: '10px' }}>
-              No tienes un arrendamiento activo
-            </h2>
-            <p style={{ color: '#666', marginBottom: '25px', fontSize: '14px' }}>
+        {/* ── Esperando arrendador ── */}
+        {esperandoArrendador && (
+          <div className="atr-alert atr-alert-info" style={{ marginBottom: '1.5rem' }}>
+            <div className="atr-alert-icon">⏳</div>
+            <div className="atr-alert-body">
+              <div className="atr-alert-title">Esperando confirmación del arrendador</div>
+              <div className="atr-alert-desc">
+                Ya completaste tu parte. El contrato seguirá disponible hasta que el arrendador confirme.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Error ── */}
+        {error && (
+          <div className="atr-alert atr-alert-error">
+            <div className="atr-alert-icon">⚠️</div>
+            <div className="atr-alert-body">
+              <div className="atr-alert-title">Error</div>
+              <div className="atr-alert-desc">{error}</div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Sin arrendamiento ── */}
+        {!error && !arrendamiento && (
+          <div className="atr-empty">
+            <div className="atr-empty-icon">🏠</div>
+            <div className="atr-empty-title">No tienes un arrendamiento activo</div>
+            <div className="atr-empty-sub">
               Cuando un arrendador te asigne una propiedad, aparecerá aquí.
-            </p>
-            <button 
+            </div>
+            <button
+              className="atr-btn-primary"
+              style={{ maxWidth: '220px', margin: '0 auto' }}
               onClick={() => navigate('/arrendatario/buscar-vivienda')}
-              style={{
-                padding: '12px 30px',
-                backgroundColor: '#1a237e',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: 'bold'
-              }}
             >
               🔍 Buscar Vivienda
             </button>
           </div>
         )}
 
-        {/* CON ARRENDAMIENTO ACTIVO */}
+        {/* ── Arrendamiento activo ── */}
         {arrendamiento && (
-          <>
-            {/* Tarjeta de la propiedad */}
-            <div style={{
-              backgroundColor: 'white',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              marginBottom: '20px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-            }}>
-              {/* Imagen */}
-              <div style={{
-                height: '250px',
-                backgroundColor: '#f0f0f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative'
-              }}>
-                {primeraFoto ? (
-                  <img 
-                    src={`http://localhost:5000${primeraFoto}`}
-                    alt={propiedad?.propiedadTitulo}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '60px' }}>🏠</span>
-                )}
-                <span style={{
-                  position: 'absolute',
-                  top: '15px',
-                  left: '15px',
-                  padding: '6px 15px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  borderRadius: '5px',
-                  fontSize: '13px',
-                  fontWeight: 'bold'
-                }}>
-                  ✅ Activo
-                </span>
-              </div>
+          <div className="mir-layout">
 
-              <div style={{ padding: '25px' }}>
-                {/* Título y precio */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '15px', marginBottom: '15px' }}>
-                  <div style={{ flex: 1 }}>
-                    <h2 style={{ fontSize: '20px', margin: '0 0 5px 0', color: '#333' }}>
-                      {propiedad?.propiedadTitulo || 'Propiedad'}
-                    </h2>
-                    <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>
-                      {propiedad?.propiedadTipo} · {propiedad?.direccion?.colonia}
-                    </p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '24px', color: '#1a237e' }}>
-                      ${arrendamiento.arrendamientoRenta?.toLocaleString('es-MX') || '0'}
-                    </span>
-                    <span style={{ fontSize: '13px', color: '#999', display: 'block' }}>MXN / mes</span>
-                  </div>
+            {/* ═══ COLUMNA PRINCIPAL ═══ */}
+            <div className="mir-main">
+              <div className="atr-card">
+                {/* Hero imagen */}
+                <div className="atr-card-hero">
+                  {primeraFoto ? (
+                    <img
+                      src={`http://localhost:5000${primeraFoto}`}
+                      alt={propiedad?.propiedadTitulo || 'Propiedad'}
+                      onError={(e) => { e.target.style.display = 'none' }}
+                    />
+                  ) : (
+                    <div className="atr-card-hero-placeholder">🏠</div>
+                  )}
+                  <span className="atr-card-hero-badge atr-card-hero-badge-active">✅ Activo</span>
                 </div>
 
-                {/* Descripción */}
-                <div style={{ 
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '5px',
-                  marginBottom: '20px'
-                }}>
-                  <p style={{ margin: 0, color: '#555', fontSize: '14px', lineHeight: '1.6' }}>
+                <div className="atr-card-body">
+                  {/* Título y precio */}
+                  <div className="atr-card-header">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h2 className="atr-card-title">
+                        {propiedad?.propiedadTitulo || 'Propiedad'}
+                      </h2>
+                      <p className="atr-card-subtitle">
+                        {propiedad?.propiedadTipo || ''}
+                        {direccion?.colonia ? ` · ${direccion.colonia}` : ''}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
+                      <div className="atr-card-price">
+                        {renta != null ? `$${Number(renta).toLocaleString('es-MX')}` : '—'}
+                      </div>
+                      <div className="atr-card-price-label">MXN / mes</div>
+                    </div>
+                  </div>
+
+                  {/* Dirección */}
+                  {direccion && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '1rem' }}>
+                      <span>📍</span>
+                      <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: 1.5 }}>
+                        {[
+                          direccion.calle ? `${direccion.calle}${direccion.numExt ? ' #' + direccion.numExt : ''}` : null,
+                          direccion.numInt ? `Int. ${direccion.numInt}` : null,
+                          direccion.colonia ? `Col. ${direccion.colonia}` : null,
+                          direccion.cp ? `C.P. ${direccion.cp}` : null
+                        ].filter(Boolean).join(', ')}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Descripción */}
+                  <div className="atr-card-desc">
                     {propiedad?.propiedadDescripcion || 'Sin descripción'}
-                  </p>
-                </div>
-
-                {/* Botones de contrato */}
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                  <button
-                    onClick={handleDescargarContrato}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: '#6c757d',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    📄 Ver PDF
-                  </button>
-
-                  <button
-                    onClick={() => navigate(`/arrendatario/contratos/${arrendamiento.idArrendamiento}`)}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      backgroundColor: tieneClavesGeneradas() ? '#1a237e' : '#856404',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                    }}
-                    title={tieneClavesGeneradas() ? 'Ver y firmar contrato cifrado' : 'Ve a tu perfil y genera tus claves primero'}
-                  >
-                    🔐 {tieneClavesGeneradas() ? 'Ver Contrato Cifrado' : 'Requiere claves'}
-                  </button>
-                </div>
-
-                <hr style={{ margin: '0 0 20px 0' }} />
-
-                {/* Información del arrendador */}
-                <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#333' }}>👤 Arrendador</h3>
-                
-                <div style={{ display: 'flex', gap: '15px', marginBottom: '15px', alignItems: 'center' }}>
-                  <div style={{
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    backgroundColor: '#1a237e',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    fontWeight: 'bold'
-                  }}>
-                    {nombreArrendador.charAt(0)}
                   </div>
-                  <div>
-                    <strong style={{ fontSize: '15px' }}>{nombreArrendador}</strong>
-                  </div>
-                </div>
 
-                <div style={{ paddingLeft: '10px' }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#555' }}>
-                    📧 Correo: {arrendador?.usuarioCorreo || 'No disponible'}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#555' }}>
-                    📞 Teléfono: {arrendador?.usuarioTel || 'No disponible'}
-                  </p>
+                  {/* Ver contrato */}
+                  <button className="atr-btn-primary" onClick={handleDescargarContrato}>
+                    📄 Ver Contrato
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Botón finalizar arrendamiento */}
-            {!esperandoArrendador && (
-              <button 
-                onClick={handleFinalizarClick}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '15px',
-                  fontWeight: 'bold'
-                }}
-              >
-                ⚠️ Finalizar Arrendamiento
-              </button>
-            )}
-          </>
-        )}
+            {/* ═══ COLUMNA LATERAL ═══ */}
+            <div className="mir-side">
 
-        {/* Error */}
-        {error && (
-          <div style={{
-            padding: '20px',
-            backgroundColor: '#ffe6e6',
-            color: '#dc3545',
-            borderRadius: '5px',
-            textAlign: 'center'
-          }}>
-            {error}
+              {/* Arrendador */}
+              <div className="atr-card" style={{ marginBottom: '1.25rem' }}>
+                <div className="atr-card-body">
+                  <p className="atr-section-title">Arrendador</p>
+                  <div className="atr-landlord-row">
+                    <div className="atr-landlord-avatar">
+                      {nombreArrendador.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="atr-landlord-name">{nombreArrendador}</div>
+                  </div>
+                  <hr className="atr-divider" />
+                  <p className="atr-section-title">Contacto</p>
+                  <div className="atr-contact-list">
+                    <p className="atr-contact-item">
+                      📧 {arrendador?.usuarioCorreo || 'No disponible'}
+                    </p>
+                    <p className="atr-contact-item">
+                      📞 {arrendador?.usuarioTel || 'No disponible'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detalles */}
+              <div className="atr-card" style={{ marginBottom: '1.25rem' }}>
+                <div className="atr-card-body">
+                  <p className="atr-section-title">Detalles del contrato</p>
+                  <div className="atr-contact-list">
+                    <p className="atr-contact-item">
+                      💵 Renta mensual:&nbsp;
+                      <strong style={{ color: '#059669' }}>
+                        {renta != null ? `$${Number(renta).toLocaleString('es-MX')} MXN` : '—'}
+                      </strong>
+                    </p>
+                    {arrendamiento.arrendamientoFechaInicio ? (
+                      <p className="atr-contact-item">
+                        📅 Inicio:&nbsp;
+                        {(() => {
+                          try {
+                            return new Date(arrendamiento.arrendamientoFechaInicio)
+                              .toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+                          } catch { return arrendamiento.arrendamientoFechaInicio }
+                        })()}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* Finalizar */}
+              {!esperandoArrendador && (
+                <button className="atr-btn-danger" onClick={() => setMostrarModal(true)}>
+                  ⚠️ Finalizar Arrendamiento
+                </button>
+              )}
+            </div>
+
           </div>
         )}
       </div>
 
-      {/* MODAL DE CONFIRMACIÓN */}
+      {/* ═══ MODAL ═══ */}
       {mostrarModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '30px',
-            maxWidth: '450px',
-            width: '90%',
-            textAlign: 'center'
-          }}>
-            <p style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</p>
-            <h3 style={{ marginBottom: '15px', color: '#333' }}>¿Finalizar arrendamiento?</h3>
-            <p style={{ color: '#666', fontSize: '14px', marginBottom: '10px', lineHeight: '1.5' }}>
+        <div
+          className="atr-modal-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setMostrarModal(false) }}
+        >
+          <div className="atr-modal">
+            <div className="atr-modal-icon">⚠️</div>
+            <h3 className="atr-modal-title">¿Finalizar arrendamiento?</h3>
+            <p className="atr-modal-desc">
               Esta acción no se puede deshacer. Para finalizar deberás contestar una breve encuesta sobre tu experiencia.
             </p>
-            <p style={{ color: '#dc3545', fontSize: '13px', fontWeight: 'bold', marginBottom: '20px' }}>
-              ¿Estás seguro de continuar?
-            </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button 
+            <p className="atr-modal-warning">¿Estás seguro de continuar?</p>
+            <div className="atr-modal-actions">
+              <button
+                className="atr-btn-ghost"
+                style={{ width: 'auto', padding: '10px 24px' }}
                 onClick={() => setMostrarModal(false)}
-                style={{
-                  padding: '10px 25px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ddd',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
               >
                 Cancelar
               </button>
-              <button 
+              <button
+                className="atr-btn-danger"
+                style={{ width: 'auto', padding: '10px 24px' }}
                 onClick={handleConfirmarFinalizar}
-                style={{
-                  padding: '10px 25px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}
               >
                 Sí, finalizar
               </button>

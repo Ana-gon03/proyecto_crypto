@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 // Páginas públicas
@@ -12,6 +12,8 @@ import Bienvenidapage from './pages/publicas/Bienvenidapage'
 import AvisoPrivacidadPage from './pages/publicas/AvisoPrivacidadPage'
 import TerminosUsoPage from './pages/publicas/TerminosUsoPage'
 import FaqPage from './pages/publicas/FaqPage'
+import RestablecerPasswordPage from './pages/publicas/RestablecerPasswordPage'
+
 
 // Páginas de arrendador
 import MisArrendamientosArrendador from './pages/arrendador/MisArrendamientosArrendador'
@@ -20,7 +22,6 @@ import CrearVivienda from './pages/arrendador/CrearVivienda'
 import CrearArrendamiento from './pages/arrendador/CrearArrendamiento'
 import ProtectedArrendadorRoute from './components/common/ProtectedArrendadorRoute'
 import PerfilArrendador from './pages/arrendador/PerfilArrendador'
-import UIContratos from './pages/arrendador/UIContratos'
 
 // Páginas de admin
 import AdminInicioSesionPage from './pages/admin/AdminInicioSesionPage'
@@ -39,6 +40,7 @@ import PerfilArrendatario from './pages/arrendatario/PerfilArrendatario'
 import VerificacionPendiente from './pages/arrendatario/VerificacionPendiente'
 import VerificarIdentidad from './pages/arrendatario/VerificarIdentidad'
 import VerificacionExitosa from './pages/arrendatario/VerificacionExitosa'
+import RenovarIdentidad from './pages/arrendatario/RenovarIdentidad'
 
 function App() {
   return (
@@ -55,6 +57,7 @@ function App() {
         <Route path="/legal/aviso-privacidad" element={<AvisoPrivacidadPage />} />
         <Route path="/legal/terminos-uso" element={<TerminosUsoPage />} />
         <Route path="/faq" element={<FaqPage />} />
+        <Route path="/restablecer-password" element={<RestablecerPasswordPage />} />
 
         {/* Rutas de arrendador */}
         <Route path="/arrendador/mis-arrendamientos" element={
@@ -71,14 +74,6 @@ function App() {
         } />
         <Route path="/arrendador/perfil" element={
           <ProtectedArrendadorRoute><PerfilArrendador /></ProtectedArrendadorRoute>
-        } />
-
-        {/* Rutas de contratos cifrados — accesibles por arrendador y arrendatario */}
-        <Route path="/contratos/:idArrendamiento" element={
-          <ProtectedArrendadorRoute><UIContratos /></ProtectedArrendadorRoute>
-        } />
-        <Route path="/arrendatario/contratos/:idArrendamiento" element={
-          <ProtectedArrendatarioRoute><UIContratos /></ProtectedArrendatarioRoute>
         } />
 
         {/* Rutas de arrendatario */}
@@ -110,6 +105,10 @@ function App() {
 
         <Route path="/arrendatario/verificacion-exitosa" element={
           <ProtectedArrendatarioRoute><VerificacionExitosa /></ProtectedArrendatarioRoute>
+        } />
+
+        <Route path="/arrendatario/renovar-identidad" element={
+          <ProtectedArrendatarioRoute><RenovarIdentidad /></ProtectedArrendatarioRoute>
         } />
 
         {/* Rutas de admin */}
