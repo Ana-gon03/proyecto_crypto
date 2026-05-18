@@ -73,7 +73,7 @@ const CP = sequelize.define('CP', {
     defaultValue: false,
   },
 }, {
-  tableName: 'CP',
+  tableName: 'cp',
   timestamps: false,
 });
 
