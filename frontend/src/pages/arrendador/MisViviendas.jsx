@@ -52,7 +52,7 @@ const MisViviendas = () => {
 
   const puedeEliminar = (p) => !p.tieneArrendamientos
 
-  const getStatusClass = (estatus) => {
+  const getStatusKey = (estatus) => {
     if (estatus === 'Disponible') return 'disponible'
     if (estatus === 'Sin Disponibilidad') return 'sin-disp'
     return 'desactivada'
@@ -71,10 +71,14 @@ const MisViviendas = () => {
       <NavbarArrendador />
 
       <main className="arr-main">
+
+        {/* ── Encabezado ── */}
         <div className="arr-page-header">
           <div>
             <h1 className="arr-page-title">Mis Viviendas</h1>
-            <p className="arr-page-hint">{propiedades.length} de 3 viviendas registradas</p>
+            <p className="arr-page-hint">
+              {propiedades.length} de 3 viviendas registradas
+            </p>
           </div>
           {propiedades.length < 3 && (
             <button
@@ -88,6 +92,7 @@ const MisViviendas = () => {
 
         {error && <div className="arr-alert arr-alert-error">⚠️ {error}</div>}
 
+        {/* ── Estado vacío ── */}
         {propiedades.length === 0 ? (
           <div className="arr-empty">
             <div className="arr-empty-icon">🏠</div>
@@ -101,11 +106,20 @@ const MisViviendas = () => {
             </button>
           </div>
         ) : (
-          <div>
-            {propiedades.map(propiedad => (
-              <div className="arr-card" key={propiedad.idPropiedad}>
-                <div className="arr-card-inner">
-                  <div className="arr-card-image">
+
+          /* ── Grid de tarjetas ── */
+          <div className="arr-viviendas-grid">
+            {propiedades.map(propiedad => {
+              const statusKey = getStatusKey(propiedad.propiedadEstatus)
+              const disponibles = propiedad.lugaresDisponibles ?? 0
+              const totales = propiedad.propiedadLugares ?? 0
+              const pctLugares = totales > 0 ? (disponibles / totales) * 100 : 0
+
+              return (
+                <div className="arr-viv-card" key={propiedad.idPropiedad}>
+
+                  {/* Hero imagen */}
+                  <div className="arr-viv-hero">
                     {propiedad.fotos?.[0] ? (
                       <img
                         src={`http://localhost:5000${propiedad.fotos[0].fotosURL}`}
@@ -113,28 +127,55 @@ const MisViviendas = () => {
                         onError={(e) => { e.target.style.display = 'none' }}
                       />
                     ) : (
-                      <div className="arr-card-image-empty">
-                        <span style={{ fontSize: '1.5rem' }}>📷</span>
+                      <div className="arr-viv-hero-empty">
+                        <span>📷</span>
                         <span>Sin foto</span>
                       </div>
                     )}
+                    <span className={`arr-viv-status-badge ${statusKey}`}>
+                      {propiedad.propiedadEstatus === 'Disponible'      ? '✅ Disponible'
+                       : propiedad.propiedadEstatus === 'Sin Disponibilidad' ? '⚠️ Sin disponibilidad'
+                       : '❌ Desactivada'}
+                    </span>
                   </div>
 
-                  <div className="arr-card-info">
-                    <h3 className="arr-card-title">{propiedad.propiedadTitulo}</h3>
-                    <p className="arr-card-meta">
-                      <strong>{propiedad.propiedadTipo}</strong> &nbsp;·&nbsp;
-                      <strong style={{ color: 'var(--purple-600)' }}>${propiedad.propiedadPrecio}/mes</strong>
+                  {/* Cuerpo */}
+                  <div className="arr-viv-body">
+                    <h3 className="arr-viv-title" title={propiedad.propiedadTitulo}>
+                      {propiedad.propiedadTitulo}
+                    </h3>
+                    <p className="arr-viv-type">{propiedad.propiedadTipo}</p>
+
+                    <div className="arr-viv-price-row">
+                      <span className="arr-viv-price">
+                        ${Number(propiedad.propiedadPrecio).toLocaleString('es-MX')}
+                      </span>
+                      <span className="arr-viv-price-label">MXN / mes</span>
+                    </div>
+
+                    {/* Barra de lugares */}
+                    <div className="arr-viv-places">
+                      <div className="arr-viv-places-label">
+                        <span>Lugares disponibles</span>
+                        <span>{disponibles} / {totales}</span>
+                      </div>
+                      <div className="arr-viv-places-track">
+                        <div
+                          className="arr-viv-places-fill"
+                          style={{ width: `${pctLugares}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <p className="arr-viv-desc">
+                      {propiedad.propiedadDescripcion || 'Sin descripción'}
                     </p>
-                    <p className="arr-card-meta">
-                      Lugares: <strong>{propiedad.lugaresDisponibles}</strong> disponibles / {propiedad.propiedadLugares} totales
-                    </p>
-                    <p className="arr-card-desc">{propiedad.propiedadDescripcion}</p>
                   </div>
 
-                  <div className="arr-card-actions">
+                  {/* Footer con acciones */}
+                  <div className="arr-viv-footer">
                     <select
-                      className={`arr-status-select ${getStatusClass(propiedad.propiedadEstatus)}`}
+                      className={`arr-status-select ${statusKey}`}
                       value={propiedad.propiedadEstatus}
                       onChange={(e) => handleCambiarEstado(propiedad.idPropiedad, e.target.value)}
                     >
@@ -143,25 +184,29 @@ const MisViviendas = () => {
                       <option value="Desactivada">❌ Desactivada</option>
                     </select>
 
-                    <button
-                      className="arr-btn-primary arr-btn-sm"
-                      onClick={() => { setPropiedadSeleccionada(propiedad); setModalAbierto(true) }}
-                    >
-                      👁 Ver Detalle
-                    </button>
-
-                    <button
-                      className="arr-btn-danger arr-btn-sm"
-                      onClick={() => handleSolicitarEliminar(propiedad.idPropiedad)}
-                      disabled={!puedeEliminar(propiedad)}
-                      title={!puedeEliminar(propiedad) ? 'No puedes eliminar una propiedad con arrendamientos activos' : ''}
-                    >
-                      🗑 Eliminar
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        className="arr-btn-primary arr-btn-sm"
+                        style={{ flex: 1 }}
+                        onClick={() => { setPropiedadSeleccionada(propiedad); setModalAbierto(true) }}
+                      >
+                        👁 Ver Detalle
+                      </button>
+                      <button
+                        className="arr-btn-danger arr-btn-sm"
+                        style={{ flex: 1 }}
+                        onClick={() => handleSolicitarEliminar(propiedad.idPropiedad)}
+                        disabled={!puedeEliminar(propiedad)}
+                        title={!puedeEliminar(propiedad) ? 'No puedes eliminar una propiedad con arrendamientos activos' : ''}
+                      >
+                        🗑 Eliminar
+                      </button>
+                    </div>
                   </div>
+
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>
