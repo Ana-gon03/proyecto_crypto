@@ -33,7 +33,7 @@ const VerificarIdentidad = () => {
       fd.append('userId', userId)
       fd.append('constancia', constanciaFile)
 
-      const response = await fetch('http://localhost:5000/api/auth/verificar-identidad', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/verificar-identidad`, {
         method: 'POST',
         body: fd
       })

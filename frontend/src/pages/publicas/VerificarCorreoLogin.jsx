@@ -44,7 +44,7 @@ const RestablecerPasswordPage = () => {
     setCargando(true)
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verificar-codigo-recuperacion', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/verificar-codigo-recuperacion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo, codigo })
@@ -85,7 +85,7 @@ const RestablecerPasswordPage = () => {
     setCargando(true)
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/restablecer-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/restablecer-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo, codigo, nuevaPassword })
@@ -115,7 +115,7 @@ const RestablecerPasswordPage = () => {
     setMensaje('')
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/recuperar-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/recuperar-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo })

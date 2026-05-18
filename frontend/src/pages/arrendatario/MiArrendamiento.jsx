@@ -39,7 +39,7 @@ const MiArrendamiento = () => {
         return
       }
 
-      const response = await fetch('http://localhost:5000/api/arrendamientos/mi-arrendamiento', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/mi-arrendamiento`, {
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': userId,
@@ -76,7 +76,7 @@ const MiArrendamiento = () => {
   const handleDescargarContrato = async () => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
-      const response = await fetch(`http://localhost:5000/api/arrendamientos/${arrendamiento.idArrendamiento}/pdf`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/${arrendamiento.idArrendamiento}/pdf`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!response.ok) throw new Error('Error al obtener el PDF')

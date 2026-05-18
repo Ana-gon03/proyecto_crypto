@@ -122,7 +122,7 @@ const MisViviendas = () => {
                   <div className="arr-viv-hero">
                     {propiedad.fotos?.[0] ? (
                       <img
-                        src={`http://localhost:5000${propiedad.fotos[0].fotosURL}`}
+                        src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${propiedad.fotos[0].fotosURL}`}
                         alt={propiedad.propiedadTitulo}
                         onError={(e) => { e.target.style.display = 'none' }}
                       />

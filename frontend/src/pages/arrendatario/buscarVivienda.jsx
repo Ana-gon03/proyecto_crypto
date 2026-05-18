@@ -331,7 +331,7 @@ const BuscarVivienda = () => {
                     {/* Imagen */}
                     <div className="atr-property-img">
                       {propiedad.fotoPrincipal ? (
-                        <img src={`http://localhost:5000${propiedad.fotoPrincipal}`} alt={propiedad.titulo} />
+                        <img src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${propiedad.fotoPrincipal}`} alt={propiedad.titulo} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>🏠</div>
                       )}

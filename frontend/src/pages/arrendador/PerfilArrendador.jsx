@@ -119,7 +119,7 @@ const PerfilArrendador = () => {
       const userId = localStorage.getItem('userId')
       const arrendadorId = localStorage.getItem('arrendadorId')
       if (!userId || !arrendadorId) { setError('No has iniciado sesión'); return }
-      const response = await fetch('http://localhost:5000/api/usuarios/eliminar-cuenta-arrendador', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/usuarios/eliminar-cuenta-arrendador`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-arrendador-id': arrendadorId }
       })

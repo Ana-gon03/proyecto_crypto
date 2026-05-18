@@ -199,7 +199,7 @@ const ModalDetalleVivienda = ({ propiedad, onClose, onUpdate }) => {
                   <div className="arr-foto-grid">
                     {fotosExistentes.map(foto => (
                       <div key={foto.idFotos} className="arr-foto-item">
-                        <img src={`http://localhost:5000${foto.fotosURL}`} alt="Foto" />
+                        <img src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${foto.fotosURL}`} alt="Foto" />
                       </div>
                     ))}
                   </div>
@@ -328,7 +328,7 @@ const ModalDetalleVivienda = ({ propiedad, onClose, onUpdate }) => {
                   <div className="arr-foto-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>
                     {fotosExistentes.map(foto => (
                       <div key={foto.idFotos} className="arr-foto-item">
-                        <img src={`http://localhost:5000${foto.fotosURL}`} alt="Foto" />
+                        <img src={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${foto.fotosURL}`} alt="Foto" />
                         <button type="button" className="arr-foto-remove" onClick={() => eliminarFotoExistente(foto.idFotos)}>✕</button>
                       </div>
                     ))}

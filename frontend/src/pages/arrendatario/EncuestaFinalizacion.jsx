@@ -51,7 +51,7 @@ const EncuestaFinalizacion = () => {
   const cargarArrendamiento = async () => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
-      const response = await fetch(`http://localhost:5000/api/arrendamientos/${idArrendamiento}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/${idArrendamiento}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
 
@@ -110,7 +110,7 @@ const EncuestaFinalizacion = () => {
         datos.resenaCalSerAdicio = calAdicionales || null
       }
 
-      const response = await fetch(`http://localhost:5000/api/arrendamientos/${idArrendamiento}/finalizar-estudiante`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/${idArrendamiento}/finalizar-estudiante`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
