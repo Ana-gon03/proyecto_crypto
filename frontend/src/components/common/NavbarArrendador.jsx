@@ -40,6 +40,19 @@ const NavbarArrendador = () => {
           >
             Mis Arrendamientos
           </Link>
+          <Link
+            to="/arrendador/mi-certificado-digital"
+            className={`arr-nav-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
+          >
+            Mi Certificado
+          </Link>
+          <Link
+            to="/arrendador/mis-arrendamientos"
+            className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+            style={{ color: 'var(--purple-600)', fontWeight: 600 }}
+          >
+            ✍️ Firmar Contrato
+          </Link>
         </div>
 
         <div className="arr-nav-right">
@@ -77,6 +90,20 @@ const NavbarArrendador = () => {
             onClick={cerrarMenu}
           >
             Mis Arrendamientos
+          </Link>
+          <Link
+            to="/arrendador/mi-certificado-digital"
+            className={`arr-nav-mobile-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
+            onClick={cerrarMenu}
+          >
+            Mi Certificado
+          </Link>
+          <Link
+            to="/arrendador/mis-arrendamientos"
+            className="arr-nav-mobile-link"
+            onClick={cerrarMenu}
+          >
+            ✍️ Firmar Contrato
           </Link>
           <Link to="/arrendador/perfil" className="arr-nav-mobile-link" onClick={cerrarMenu}>
             Mi Perfil

@@ -23,7 +23,9 @@ import CrearArrendamiento from './pages/arrendador/CrearArrendamiento'
 import ProtectedArrendadorRoute from './components/common/ProtectedArrendadorRoute'
 import PerfilArrendador from './pages/arrendador/PerfilArrendador'
 import ContratosPage from './pages/arrendador/ContratosPage'
+import MiCertificadoArrendadorPage from './pages/arrendador/MiCertificadoArrendadorPage'
 import ContratosArrendatario from './pages/arrendatario/ContratosArrendatario'
+import MiCertificadoPage from './pages/arrendatario/MiCertificadoPage'
 
 // Páginas de admin
 import AdminInicioSesionPage from './pages/admin/AdminInicioSesionPage'
@@ -80,6 +82,9 @@ function App() {
         <Route path="/arrendador/contratos/:idArrendamiento" element={
           <ProtectedArrendadorRoute><ContratosPage /></ProtectedArrendadorRoute>
         } />
+        <Route path="/arrendador/mi-certificado-digital" element={
+          <ProtectedArrendadorRoute><MiCertificadoArrendadorPage /></ProtectedArrendadorRoute>
+        } />
 
         {/* Rutas de arrendatario */}
         <Route path="/arrendatario/buscar-vivienda" element={
@@ -117,6 +122,9 @@ function App() {
         } />
         <Route path="/arrendatario/contratos/:idArrendamiento" element={
           <ProtectedArrendatarioRoute><ContratosArrendatario /></ProtectedArrendatarioRoute>
+        } />
+        <Route path="/arrendatario/mi-certificado-digital" element={
+          <ProtectedArrendatarioRoute><MiCertificadoPage /></ProtectedArrendatarioRoute>
         } />
 
         {/* Rutas de admin */}
