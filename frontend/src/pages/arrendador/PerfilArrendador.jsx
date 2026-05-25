@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NavbarArrendador from '../../components/common/NavbarArrendador'
 import FooterInicio from '../../components/common/FooterInicio'
 import ModalConfirmacion from '../../components/common/ModalConfirmacion'
+import GestionLlaves from '../../components/common/GestionLlaves'
 import { getPerfilArrendador, actualizarPerfilArrendador } from '../../services/authService'
 import '../../styles/Arrendador.css'
 
@@ -132,7 +133,12 @@ const PerfilArrendador = () => {
   if (loading) return (
     <div className="arr-page">
       <NavbarArrendador />
-      <main className="arr-main"><p className="arr-loading">Cargando perfil...</p></main>
+      <main className="arr-main">
+        <div className="arr-loading">
+          <div className="arr-spinner" />
+          <p>Cargando perfil…</p>
+        </div>
+      </main>
       <FooterInicio />
     </div>
   )
@@ -160,16 +166,16 @@ const PerfilArrendador = () => {
               <p className="arr-profile-name">
                 {usuario.usuarioNom} {usuario.usuarioApePat} {usuario.usuarioApeMat || ''}
               </p>
-              <div className="arr-profile-role-badge">🏠 Arrendador</div>
+              <div className="arr-profile-role-badge">Arrendador · Blockhome</div>
               <p className="arr-profile-hero-email">{usuario.usuarioCorreo}</p>
             </div>
             <div className="arr-profile-hero-actions">
               {!editando
-                ? <button className="arr-btn-primary" onClick={() => setEditando(true)}>✏️ Editar Perfil</button>
+                ? <button className="arr-btn-primary" onClick={() => setEditando(true)}>Editar Perfil</button>
                 : <>
                     <button className="arr-btn-ghost" onClick={handleCancelar}>Cancelar</button>
                     <button className="arr-btn-primary" disabled={guardando} onClick={handleGuardar}>
-                      {guardando ? '⏳ Guardando...' : '💾 Guardar Cambios'}
+                      {guardando ? 'Guardando…' : 'Guardar Cambios'}
                     </button>
                   </>
               }
@@ -229,6 +235,11 @@ const PerfilArrendador = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Identidad Digital */}
+              <GestionLlaves
+                nombreUsuario={`${usuario.usuarioNom || ''} ${usuario.usuarioApePat || ''}`}
+              />
 
               {/* Zona de peligro */}
               <div className="arr-profile-danger-card">

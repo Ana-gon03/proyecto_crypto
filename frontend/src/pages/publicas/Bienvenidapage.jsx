@@ -22,7 +22,7 @@ const BienvenidaPage = () => {
           <div className="verificar-card">
             <div className="verificar-header verificar-header-warning">
               <div className="verificar-header-icon">🎉</div>
-              <div className="verificar-header-title">¡Bienvenid@ a Blockhoom!</div>
+              <div className="verificar-header-title">¡Bienvenid@ a Blockhome!</div>
               <div className="verificar-header-sub">
                 Tu cuenta ha sido creada exitosamente
               </div>

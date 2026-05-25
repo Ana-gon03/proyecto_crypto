@@ -62,6 +62,19 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  ecdsaPublicKey: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  clavesGeneradas: {
+    type: DataTypes.TINYINT,
+    allowNull: false,
+    defaultValue: 0,
+  },
+  certificadoSerial: {
+    type: DataTypes.STRING(36),
+    allowNull: true,
+  },
 }, {
   tableName: 'usuario',
   timestamps: false,

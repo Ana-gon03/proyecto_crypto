@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blockhome CA &mdash; Portal de la Entidad Certificadora</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Entidad Certificadora Digital</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav" id="navPublico">
+    <a class="ca-nav-link" href="/verificar">Verificar Certificado</a>
+    <span class="ca-nav-sep"></span>
+    <a class="ca-nav-link activo" href="/">Iniciar Sesi&oacute;n</a>
+  </nav>
+  <nav class="ca-header-nav" id="navAuth" style="display:none">
+    <a class="ca-nav-link" href="/solicitar">Solicitar Certificado</a>
+    <a class="ca-nav-link" href="/mi-certificado">Mi Certificado</a>
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <span class="ca-nav-sep"></span>
+    <span class="ca-nav-link" id="navNombre" style="opacity:0.7"></span>
+    <button class="ca-nav-link" id="btnLogout">Salir</button>
+  </nav>
+  <nav class="ca-header-nav" id="navAdmin" style="display:none">
+    <a class="ca-nav-link" href="/solicitar">Solicitar</a>
+    <a class="ca-nav-link" href="/mi-certificado">Mi Cert.</a>
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <a class="ca-nav-link" href="/admin">&#9881; Admin</a>
+    <span class="ca-nav-sep"></span>
+    <button class="ca-nav-link" id="btnLogoutAdmin">Salir</button>
+  </nav>
+</header>
+
+<main class="ca-main">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo">&#128737;&#65039;</div>
+    <h1>Entidad Certificadora Blockhome</h1>
+    <p>Infraestructura de Llave P&uacute;blica (PKI) para la plataforma de arrendamiento estudiantil. Certificados X.509&nbsp;v3 con firma ECDSA&nbsp;P-256.</p>
+    <span class="ca-hero-badge">ECDSA P-256 &middot; X.509 v3 &middot; AES-256-GCM</span>
+  </section>
+
+  <!-- Card login/registro -->
+  <div class="ca-card" id="cardAcceso">
+    <div class="ca-card-header">
+      <div class="ca-card-icon">&#128274;</div>
+      <div>
+        <h2>Acceso al Portal</h2>
+        <p>Inicia sesi&oacute;n o crea una cuenta para gestionar tu certificado digital</p>
+      </div>
+    </div>
+
+    <div class="ca-tabs">
+      <button class="ca-tab activo" id="tabLogin" onclick="mostrarTab('login')">Iniciar Sesi&oacute;n</button>
+      <button class="ca-tab" id="tabRegistro" onclick="mostrarTab('registro')">Crear cuenta</button>
+    </div>
+
+    <div id="formLogin">
+      <div class="ca-form-group">
+        <label class="ca-label" for="loginCorreo">Correo electr&oacute;nico</label>
+        <input class="ca-input" type="email" id="loginCorreo" placeholder="tu@correo.mx" autocomplete="username" />
+      </div>
+      <div class="ca-form-group">
+        <label class="ca-label" for="loginPass">Contrase&ntilde;a</label>
+        <input class="ca-input" type="password" id="loginPass" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+      </div>
+      <div id="alertLogin"></div>
+      <div class="ca-btn-group">
+        <button class="ca-btn ca-btn-primary ca-btn-full" id="btnLogin" onclick="doLogin()">
+          Iniciar Sesi&oacute;n
+        </button>
+      </div>
+    </div>
+
+    <div id="formRegistro" style="display:none">
+      <div class="ca-form-group">
+        <label class="ca-label" for="regNombre">Nombre completo</label>
+        <input class="ca-input" type="text" id="regNombre" placeholder="Nombre Apellido" />
+      </div>
+      <div class="ca-form-group">
+        <label class="ca-label" for="regCorreo">Correo electr&oacute;nico</label>
+        <input class="ca-input" type="email" id="regCorreo" placeholder="tu@correo.mx" autocomplete="username" />
+      </div>
+      <div class="ca-form-group">
+        <label class="ca-label" for="regPass">Contrase&ntilde;a</label>
+        <input class="ca-input" type="password" id="regPass" placeholder="M&iacute;nimo 8 caracteres" autocomplete="new-password" />
+        <p class="ca-input-hint">Esta contrase&ntilde;a es para el portal, no para el archivo .key.</p>
+      </div>
+      <div id="alertRegistro"></div>
+      <div class="ca-btn-group">
+        <button class="ca-btn ca-btn-primary ca-btn-full" id="btnRegistro" onclick="doRegistro()">
+          Crear Cuenta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bienvenida post-login -->
+  <div class="ca-card" id="cardBienvenida" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon">&#9989;</div>
+      <div>
+        <h2 id="msgBienvenida">Sesi&oacute;n iniciada</h2>
+        <p>Tu cuenta est&aacute; lista. Procede a solicitar tu certificado digital.</p>
+      </div>
+    </div>
+    <div class="ca-btn-group">
+      <a class="ca-btn ca-btn-primary" href="/solicitar">Solicitar Certificado</a>
+      <a class="ca-btn ca-btn-ghost" href="/mi-certificado">Mi Certificado</a>
+    </div>
+  </div>
+
+  <!-- Info PKI -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon">&#128295;</div>
+      <div>
+        <h2>&iquest;C&oacute;mo funciona?</h2>
+        <p>PKI con certificados X.509 v3 y firma el&iacute;ptica</p>
+      </div>
+    </div>
+    <div class="ca-data-grid">
+      <div class="ca-data-item">
+        <div class="ca-data-label">Algoritmo de firma</div>
+        <div class="ca-data-value">ECDSA P-256 / SHA-256</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Formato de certificado</div>
+        <div class="ca-data-value">X.509 v3 (.cer PEM)</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Protecci&oacute;n llave privada</div>
+        <div class="ca-data-value">AES-256-GCM + PBKDF2</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Validez del certificado</div>
+        <div class="ca-data-value">1 a&ntilde;o desde emisi&oacute;n</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA &mdash; Entidad Certificadora Digital
+</footer>
+
+<script>
+  const API = '';
+
+  function mostrarTab(tab) {
+    document.getElementById('formLogin').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('formRegistro').style.display = tab === 'registro' ? '' : 'none';
+    document.getElementById('tabLogin').classList.toggle('activo',    tab === 'login');
+    document.getElementById('tabRegistro').classList.toggle('activo', tab === 'registro');
+  }
+
+  function alerta(id, tipo, msg) {
+    const iconos = { success:'&#10003;', error:'&#10007;', info:'&#9432;', warn:'&#9888;' };
+    document.getElementById(id).innerHTML =
+      `<div class="ca-alert ca-alert-${tipo}"><span>${iconos[tipo]||'!'}</span><span>${msg}</span></div>`;
+  }
+
+  async function doLogin() {
+    const correo     = document.getElementById('loginCorreo').value.trim();
+    const contrasena = document.getElementById('loginPass').value;
+    if (!correo || !contrasena) return alerta('alertLogin', 'warn', 'Completa todos los campos.');
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ca-spinner"></span> Verificando&hellip;';
+    try {
+      const r    = await fetch(`${API}/api/portal/login`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo, contrasena }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al iniciar sesión');
+      mostrarSesionIniciada(data.usuario);
+    } catch (e) {
+      alerta('alertLogin', 'error', e.message);
+      btn.disabled = false;
+      btn.innerHTML = 'Iniciar Sesión';
+    }
+  }
+
+  async function doRegistro() {
+    const nombre     = document.getElementById('regNombre').value.trim();
+    const correo     = document.getElementById('regCorreo').value.trim();
+    const contrasena = document.getElementById('regPass').value;
+    if (!nombre || !correo || !contrasena) return alerta('alertRegistro', 'warn', 'Completa todos los campos.');
+    if (contrasena.length < 8) return alerta('alertRegistro', 'warn', 'La contraseña debe tener al menos 8 caracteres.');
+    const btn = document.getElementById('btnRegistro');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ca-spinner"></span> Registrando&hellip;';
+    try {
+      const r    = await fetch(`${API}/api/portal/register`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, correo, contrasena }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al registrar');
+      mostrarSesionIniciada(data.usuario);
+    } catch (e) {
+      alerta('alertRegistro', 'error', e.message);
+      btn.disabled = false;
+      btn.innerHTML = 'Crear Cuenta';
+    }
+  }
+
+  async function doLogout() {
+    await fetch(`${API}/api/portal/logout`, { method: 'POST', credentials: 'include' });
+    location.reload();
+  }
+
+  document.getElementById('btnLogout').addEventListener('click', doLogout);
+  document.getElementById('btnLogoutAdmin').addEventListener('click', doLogout);
+
+  function mostrarSesionIniciada(usuario) {
+    document.getElementById('cardAcceso').style.display     = 'none';
+    document.getElementById('cardBienvenida').style.display = '';
+    document.getElementById('msgBienvenida').textContent    = `Bienvenido/a, ${usuario.nombre}`;
+    if (usuario.rol === 'admin') {
+      document.getElementById('navPublico').style.display = 'none';
+      document.getElementById('navAdmin').style.display   = '';
+    } else {
+      document.getElementById('navPublico').style.display = 'none';
+      document.getElementById('navAuth').style.display    = '';
+      document.getElementById('navNombre').textContent    = usuario.nombre.split(' ')[0];
+    }
+  }
+
+  (async () => {
+    try {
+      const r    = await fetch(`${API}/api/portal/sesion`, { credentials: 'include' });
+      const data = await r.json();
+      if (data.autenticado) mostrarSesionIniciada(data.usuario);
+    } catch { /* sin sesión */ }
+  })();
+
+  document.getElementById('loginPass').addEventListener('keydown',   e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('loginCorreo').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

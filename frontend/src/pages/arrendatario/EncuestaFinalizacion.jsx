@@ -50,7 +50,7 @@ const EncuestaFinalizacion = () => {
 
   const cargarArrendamiento = async () => {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
+      const token = localStorage.getItem('token') || localStorage.getItem('blockhome_token')
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/${idArrendamiento}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -92,7 +92,7 @@ const EncuestaFinalizacion = () => {
 
     try {
       setEnviando(true)
-      const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
+      const token = localStorage.getItem('token') || localStorage.getItem('blockhome_token')
 
       const datos = {
         resenaCalGen: calGeneral,

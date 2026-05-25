@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════
    Arrendador.css — Módulo Arrendador
    Sistema de diseño: Homepage + Login + Registro
    Variables de global.css (importado en main.jsx)
@@ -9,7 +9,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--gray-50);
+  background-color: #f0f4f2;
+  background-image: radial-gradient(circle at 1px 1px, rgba(5,150,105,0.07) 1px, transparent 0);
+  background-size: 28px 28px;
   font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--text-dark);
 }
@@ -34,11 +36,23 @@
 }
 
 .arr-page-title {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--text-dark);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  position: relative;
+  display: inline-block;
+}
+
+.arr-page-title::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #059669, #34d399);
+  border-radius: 2px;
+  margin-top: 6px;
 }
 
 .arr-page-hint {
@@ -282,7 +296,22 @@
   padding: 4rem;
   color: var(--text-light);
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
+
+.arr-spinner {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: arr-spin 0.75s linear infinite;
+}
+@keyframes arr-spin { to { transform: rotate(360deg); } }
 
 /* ── Alertas ──────────────────────────────────────────── */
 .arr-alert {
@@ -301,11 +330,16 @@
 /* ── Formularios ──────────────────────────────────────── */
 .arr-form-card {
   background: var(--white);
-  border: 1px solid var(--gray-300);
+  border: 1px solid rgba(229, 231, 235, 0.9);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
   overflow: hidden;
   margin-bottom: 1.5rem;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.arr-form-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 16px 40px rgba(5,150,105,0.09);
+  transform: translateY(-1px);
 }
 
 .arr-form-card-header {
@@ -758,18 +792,28 @@
 /* Hero card */
 .arr-profile-card {
   background: var(--white);
-  border: 1px solid var(--gray-300);
+  border: 1px solid rgba(229, 231, 235, 0.9);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
   overflow: hidden;
   margin-bottom: 1rem;
 }
 
 .arr-profile-hero {
-  background: linear-gradient(135deg, var(--purple-800) 0%, var(--purple-600) 60%, var(--purple-400) 100%);
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #059669 100%);
   padding: 2.5rem 2rem 2rem;
   text-align: center;
   position: relative;
+  overflow: hidden;
+}
+
+.arr-profile-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+  pointer-events: none;
 }
 
 .arr-avatar {

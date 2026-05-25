@@ -75,7 +75,7 @@ const MiArrendamiento = () => {
 
   const handleDescargarContrato = async () => {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('blockhoom_token')
+      const token = localStorage.getItem('token') || localStorage.getItem('blockhome_token')
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/arrendamientos/${arrendamiento.idArrendamiento}/pdf`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -100,10 +100,11 @@ const MiArrendamiento = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f4f7f5' }}>
+      <div className="atr-page">
         <NavbarArrendatario />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: '#6b7280', fontSize: '16px' }}>Cargando arrendamiento...</p>
+        <div className="atr-loading-center">
+          <div className="atr-spinner" />
+          <p>Cargando arrendamiento…</p>
         </div>
         <FooterInicio />
       </div>
@@ -200,63 +201,66 @@ const MiArrendamiento = () => {
             {/* ═══ COLUMNA PRINCIPAL ═══ */}
             <div className="mir-main">
               <div className="atr-card">
-                {/* Hero imagen */}
+                {/* Hero con overlay */}
                 <div className="atr-card-hero">
                   {primeraFoto ? (
                     <img
-                      src={`http://localhost:5000${primeraFoto}`}
+                      src={`${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:5000'}${primeraFoto}`}
                       alt={propiedad?.propiedadTitulo || 'Propiedad'}
                       onError={(e) => { e.target.style.display = 'none' }}
                     />
                   ) : (
                     <div className="atr-card-hero-placeholder">🏠</div>
                   )}
-                  <span className="atr-card-hero-badge atr-card-hero-badge-active">✅ Activo</span>
+                  <div className="atr-hero-overlay" />
+                  <div className="atr-hero-bottom">
+                    <div className="atr-hero-badge-row">
+                      <span className="atr-hero-pill atr-hero-pill-green">Activo</span>
+                      {propiedad?.propiedadTipo && (
+                        <span className="atr-hero-pill atr-hero-pill-white">{propiedad.propiedadTipo}</span>
+                      )}
+                    </div>
+                    <h2 className="atr-hero-title">{propiedad?.propiedadTitulo || 'Mi Propiedad'}</h2>
+                    {direccion && (
+                      <p className="atr-hero-subtitle">
+                        {[
+                          direccion.calle ? `${direccion.calle}${direccion.numExt ? ' #' + direccion.numExt : ''}` : null,
+                          direccion.colonia ? `Col. ${direccion.colonia}` : null,
+                        ].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {renta != null && (
+                      <p className="atr-hero-price">
+                        ${Number(renta).toLocaleString('es-MX')} <span>MXN / mes</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="atr-card-body">
-                  {/* Título y precio */}
-                  <div className="atr-card-header">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h2 className="atr-card-title">
-                        {propiedad?.propiedadTitulo || 'Propiedad'}
-                      </h2>
-                      <p className="atr-card-subtitle">
-                        {propiedad?.propiedadTipo || ''}
-                        {direccion?.colonia ? ` · ${direccion.colonia}` : ''}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
-                      <div className="atr-card-price">
-                        {renta != null ? `$${Number(renta).toLocaleString('es-MX')}` : '—'}
-                      </div>
-                      <div className="atr-card-price-label">MXN / mes</div>
-                    </div>
-                  </div>
-
-                  {/* Dirección */}
-                  {direccion && (
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '1rem' }}>
-                      <span>📍</span>
-                      <span style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: 1.5 }}>
-                        {[
-                          direccion.calle ? `${direccion.calle}${direccion.numExt ? ' #' + direccion.numExt : ''}` : null,
-                          direccion.numInt ? `Int. ${direccion.numInt}` : null,
-                          direccion.colonia ? `Col. ${direccion.colonia}` : null,
-                          direccion.cp ? `C.P. ${direccion.cp}` : null
-                        ].filter(Boolean).join(', ')}
-                      </span>
-                    </div>
-                  )}
-
                   {/* Descripción */}
-                  <div className="atr-card-desc">
-                    {propiedad?.propiedadDescripcion || 'Sin descripción'}
-                  </div>
+                  {propiedad?.propiedadDescripcion && (
+                    <>
+                      <div className="atr-section-header">
+                        <div className="atr-section-dot" />
+                        <p className="atr-section-title" style={{ margin: 0 }}>Descripción</p>
+                      </div>
+                      <div className="atr-card-desc" style={{ marginBottom: '1.5rem' }}>
+                        {propiedad.propiedadDescripcion}
+                      </div>
+                    </>
+                  )}
 
                   {/* Ver contrato */}
                   <button className="atr-btn-primary" onClick={handleDescargarContrato}>
-                    📄 Ver Contrato
+                    Ver Contrato
+                  </button>
+                  <button
+                    className="atr-btn-ghost"
+                    style={{ marginTop: '0.6rem' }}
+                    onClick={() => navigate(`/arrendatario/contratos/${arrendamiento.idArrendamiento}`)}
+                  >
+                    ✍️ Firmar Contrato Digital
                   </button>
                 </div>
               </div>
@@ -266,50 +270,82 @@ const MiArrendamiento = () => {
             <div className="mir-side">
 
               {/* Arrendador */}
-              <div className="atr-card" style={{ marginBottom: '1.25rem' }}>
+              <div className="atr-card">
                 <div className="atr-card-body">
-                  <p className="atr-section-title">Arrendador</p>
-                  <div className="atr-landlord-row">
-                    <div className="atr-landlord-avatar">
+                  <div className="atr-section-header" style={{ marginBottom: '0.85rem' }}>
+                    <div className="atr-section-dot" />
+                    <p className="atr-section-title" style={{ margin: 0 }}>Arrendador</p>
+                  </div>
+
+                  <div className="atr-landlord-card-v2">
+                    <div className="atr-landlord-avatar-v2">
                       {nombreArrendador.charAt(0).toUpperCase()}
                     </div>
-                    <div className="atr-landlord-name">{nombreArrendador}</div>
+                    <div>
+                      <p className="atr-landlord-name-v2">{nombreArrendador}</p>
+                      <span className="atr-landlord-tag">Arrendador verificado</span>
+                    </div>
                   </div>
-                  <hr className="atr-divider" />
-                  <p className="atr-section-title">Contacto</p>
-                  <div className="atr-contact-list">
-                    <p className="atr-contact-item">
-                      📧 {arrendador?.usuarioCorreo || 'No disponible'}
-                    </p>
-                    <p className="atr-contact-item">
-                      📞 {arrendador?.usuarioTel || 'No disponible'}
-                    </p>
+
+                  <div className="atr-section-header" style={{ marginBottom: '0.75rem', marginTop: '0.25rem' }}>
+                    <div className="atr-section-dot" />
+                    <p className="atr-section-title" style={{ margin: 0 }}>Contacto</p>
+                  </div>
+
+                  <div className="atr-contact-chip">
+                    <div className="atr-contact-chip-icon">✉</div>
+                    <span>{arrendador?.usuarioCorreo || 'No disponible'}</span>
+                  </div>
+                  <div className="atr-contact-chip">
+                    <div className="atr-contact-chip-icon">☎</div>
+                    <span>{arrendador?.usuarioTel || 'No disponible'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Detalles */}
-              <div className="atr-card" style={{ marginBottom: '1.25rem' }}>
+              {/* Detalles del contrato */}
+              <div className="atr-card">
                 <div className="atr-card-body">
-                  <p className="atr-section-title">Detalles del contrato</p>
-                  <div className="atr-contact-list">
-                    <p className="atr-contact-item">
-                      💵 Renta mensual:&nbsp;
-                      <strong style={{ color: '#059669' }}>
+                  <div className="atr-section-header" style={{ marginBottom: '0.5rem' }}>
+                    <div className="atr-section-dot" />
+                    <p className="atr-section-title" style={{ margin: 0 }}>Detalles del contrato</p>
+                  </div>
+
+                  <div className="atr-contract-row">
+                    <div className="atr-contract-icon">💵</div>
+                    <div>
+                      <div className="atr-contract-label">Renta mensual</div>
+                      <div className="atr-contract-value-green">
                         {renta != null ? `$${Number(renta).toLocaleString('es-MX')} MXN` : '—'}
-                      </strong>
-                    </p>
-                    {arrendamiento.arrendamientoFechaInicio ? (
-                      <p className="atr-contact-item">
-                        📅 Inicio:&nbsp;
-                        {(() => {
-                          try {
-                            return new Date(arrendamiento.arrendamientoFechaInicio)
-                              .toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
-                          } catch { return arrendamiento.arrendamientoFechaInicio }
-                        })()}
-                      </p>
-                    ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  {arrendamiento.arrendamientoFechaInicio && (
+                    <div className="atr-contract-row">
+                      <div className="atr-contract-icon">📅</div>
+                      <div>
+                        <div className="atr-contract-label">Fecha de inicio</div>
+                        <div className="atr-contract-value">
+                          {(() => {
+                            try {
+                              return new Date(arrendamiento.arrendamientoFechaInicio)
+                                .toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+                            } catch { return arrendamiento.arrendamientoFechaInicio }
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="atr-contract-row">
+                    <div className="atr-contract-icon">✅</div>
+                    <div>
+                      <div className="atr-contract-label">Estado</div>
+                      <div className="atr-contract-value">
+                        {esperandoArrendador ? 'Pendiente de confirmar' : 'Activo'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -317,7 +353,7 @@ const MiArrendamiento = () => {
               {/* Finalizar */}
               {!esperandoArrendador && (
                 <button className="atr-btn-danger" onClick={() => setMostrarModal(true)}>
-                  ⚠️ Finalizar Arrendamiento
+                  Finalizar Arrendamiento
                 </button>
               )}
             </div>

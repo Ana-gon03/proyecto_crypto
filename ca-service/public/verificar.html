@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificar Certificado &mdash; Blockhome CA</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Entidad Certificadora Digital</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav">
+    <a class="ca-nav-link" href="/">Iniciar Sesi&oacute;n</a>
+    <a class="ca-nav-link activo" href="/verificar">Verificar Certificado</a>
+  </nav>
+</header>
+
+<main class="ca-main">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="44" height="44"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="m8 11 2 2 4-4"/></svg></div>
+    <h1>Verificar Certificado Digital</h1>
+    <p>Comprueba la autenticidad y vigencia de un certificado emitido por la Entidad Certificadora Blockhome.</p>
+    <span class="ca-hero-badge">Verificaci&oacute;n p&uacute;blica &middot; Sin autenticaci&oacute;n requerida</span>
+  </section>
+
+  <!-- Verificación por número de serie -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <div>
+        <h2>Verificar por n&uacute;mero de serie</h2>
+        <p>Introduce el n&uacute;mero de serie (serialHex) del certificado</p>
+      </div>
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="inputSerial">N&uacute;mero de serie (hex)</label>
+      <input class="ca-input" type="text" id="inputSerial" placeholder="ej. a1b2c3d4e5f6&hellip;" style="font-family:monospace" />
+      <p class="ca-input-hint">El n&uacute;mero de serie se muestra en el apartado &ldquo;Mi Certificado&rdquo; o en el archivo .cer.</p>
+    </div>
+    <div id="alertSerial"></div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" onclick="verificarPorSerial()">&#128269; Verificar</button>
+      <button class="ca-btn ca-btn-ghost" onclick="limpiarResultados()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Verificación por archivo .cer -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="12 18 15 15 12 12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+      <div>
+        <h2>Verificar archivo .cer</h2>
+        <p>Sube un archivo .cer (PEM) para validar su autenticidad</p>
+      </div>
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="inputCer">Archivo de certificado (.cer)</label>
+      <input class="ca-input" type="file" id="inputCer" accept=".cer,.pem,.crt" />
+    </div>
+    <div id="alertCer"></div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" onclick="verificarPorCer()">&#128269; Verificar archivo</button>
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  <div id="panelResultado" style="display:none">
+    <div class="ca-card" id="cardResultado">
+      <div class="ca-card-header">
+        <span class="ca-card-icon" id="iconoResultado"></span>
+        <div>
+          <h2 id="tituloResultado">Resultado de verificaci&oacute;n</h2>
+          <p id="subtituloResultado"></p>
+        </div>
+      </div>
+      <div id="alertResultado"></div>
+      <div class="ca-data-grid" id="datosResultado" style="margin-top:1rem"></div>
+    </div>
+  </div>
+
+  <!-- Info CA pública -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div>
+        <h2>Informaci&oacute;n de la Entidad Certificadora</h2>
+        <p>Clave p&uacute;blica y datos de la CA ra&iacute;z</p>
+      </div>
+    </div>
+    <div class="ca-data-grid" id="datosCA">
+      <div class="ca-data-item">
+        <div class="ca-data-label">Nombre</div>
+        <div class="ca-data-value" id="caName">Cargando&hellip;</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Organizaci&oacute;n</div>
+        <div class="ca-data-value" id="caOrg">&mdash;</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Algoritmo</div>
+        <div class="ca-data-value" id="caAlg">&mdash;</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem">
+      <div class="ca-data-label">Certificado ra&iacute;z CA (PEM)</div>
+      <textarea id="caCertBox" readonly style="width:100%;height:100px;font-family:monospace;font-size:0.72rem;padding:0.75rem;border:1.5px solid var(--ca-border);border-radius:7px;resize:vertical;color:var(--ca-text-light);background:var(--ca-bg);margin-top:0.5rem"></textarea>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA
+</footer>
+
+<script>
+  const API = '';
+
+  function alerta(id, tipo, msg) {
+    const iconos = { success:'&#10003;', error:'&#10007;', info:'&#8505;', warn:'&#9888;' };
+    document.getElementById(id).innerHTML =
+      `<div class="ca-alert ca-alert-${tipo}"><span>${iconos[tipo]||'!'}</span><span>${msg}</span></div>`;
+  }
+  function fmtFecha(iso) { return new Date(iso).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }); }
+
+  function badgeEstado(estado) {
+    const map = { activo:'ca-badge-activo', revocado:'ca-badge-revocado', expirado:'ca-badge-expirado' };
+    return `<span class="ca-badge ${map[estado]||''}">${estado.toUpperCase()}</span>`;
+  }
+
+  (async () => {
+    try {
+      const r    = await fetch(`${API}/api/ca/info`);
+      const data = await r.json();
+      document.getElementById('caName').textContent = data.nombre || '&mdash;';
+      document.getElementById('caOrg').textContent  = data.organizacion || '&mdash;';
+      document.getElementById('caAlg').textContent  = data.algoritmo || '&mdash;';
+      document.getElementById('caCertBox').value    = data.certificadoCA || '';
+    } catch { /* sin datos CA */ }
+  })();
+
+  async function verificarPorSerial() {
+    const serial = document.getElementById('inputSerial').value.trim();
+    if (!serial) return alerta('alertSerial', 'warn', 'Introduce un número de serie.');
+    alerta('alertSerial', 'info', 'Verificando…');
+    try {
+      const r    = await fetch(`${API}/api/ca/certificados/${encodeURIComponent(serial)}`);
+      if (r.status === 404) {
+        mostrarResultado({ valido: false, motivo: 'Certificado no encontrado en esta CA' }, serial);
+        document.getElementById('alertSerial').innerHTML = '';
+        return;
+      }
+      const data = await r.json();
+      const vencido = new Date() > new Date(data.fechaVencimiento);
+      if (data.estado === 'activo' && !vencido) {
+        mostrarResultado({ valido: true, ...data, serialHex: serial }, serial);
+      } else {
+        mostrarResultado({ valido: false, motivo: `Certificado ${vencido ? 'expirado' : data.estado}` }, serial);
+      }
+      document.getElementById('alertSerial').innerHTML = '';
+    } catch (e) {
+      alerta('alertSerial', 'error', 'Error al conectar con la CA.');
+    }
+  }
+
+  async function verificarPorCer() {
+    const file = document.getElementById('inputCer').files[0];
+    if (!file) return alerta('alertCer', 'warn', 'Selecciona un archivo .cer.');
+    alerta('alertCer', 'info', 'Leyendo y verificando certificado…');
+    try {
+      const texto = await file.text();
+      const r     = await fetch(`${API}/api/ca/certificados/validar-pem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ certPEM: texto }),
+      });
+      const data  = await r.json();
+      mostrarResultado(data);
+      document.getElementById('alertCer').innerHTML = '';
+    } catch (e) {
+      alerta('alertCer', 'error', 'Error al verificar el archivo.');
+    }
+  }
+
+  const svgCheck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 6 9 17l-5-5"/></svg>';
+  const svgCross = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+
+  function mostrarResultado(data, serial) {
+    document.getElementById('panelResultado').style.display = '';
+    const valido = data.valido;
+
+    document.getElementById('iconoResultado').innerHTML        = valido ? svgCheck : svgCross;
+    document.getElementById('tituloResultado').textContent     = valido ? 'Certificado válido' : 'Certificado no válido';
+    document.getElementById('subtituloResultado').textContent  = valido ? 'Emitido y firmado por Blockhome CA' : (data.motivo || 'Certificado inválido');
+
+    document.getElementById('alertResultado').innerHTML = valido
+      ? `<div class="ca-alert ca-alert-success"><span>&#10003;</span><span>La firma de la CA es válida y el certificado está activo y vigente.</span></div>`
+      : `<div class="ca-alert ca-alert-error"><span>&#10007;</span><span>${data.motivo || 'El certificado no es válido o no fue emitido por esta CA.'}</span></div>`;
+
+    if (valido) {
+      document.getElementById('datosResultado').innerHTML = `
+        <div class="ca-data-item">
+          <div class="ca-data-label">Serial</div>
+          <div class="ca-data-value mono">${data.serialHex || serial || '&mdash;'}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Titular</div>
+          <div class="ca-data-value">${data.nombre || '&mdash;'}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Correo</div>
+          <div class="ca-data-value">${data.correo || '&mdash;'}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Rol</div>
+          <div class="ca-data-value">${data.rol || '&mdash;'}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Válido desde</div>
+          <div class="ca-data-value">${data.fechaEmision || data.notBefore ? fmtFecha(data.fechaEmision || data.notBefore) : '&mdash;'}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Válido hasta</div>
+          <div class="ca-data-value">${data.fechaVencimiento || data.notAfter ? fmtFecha(data.fechaVencimiento || data.notAfter) : '&mdash;'}</div>
+        </div>
+      `;
+    } else {
+      document.getElementById('datosResultado').innerHTML = '';
+    }
+
+    document.getElementById('panelResultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function limpiarResultados() {
+    document.getElementById('inputSerial').value = '';
+    document.getElementById('alertSerial').innerHTML = '';
+    document.getElementById('panelResultado').style.display = 'none';
+    document.getElementById('datosResultado').innerHTML = '';
+  }
+
+  document.getElementById('inputSerial').addEventListener('keydown', e => { if (e.key === 'Enter') verificarPorSerial(); });
+</script>
+</body>
+</html>

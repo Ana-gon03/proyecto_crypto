@@ -61,7 +61,12 @@ const MisViviendas = () => {
   if (cargando) return (
     <div className="arr-page">
       <NavbarArrendador />
-      <main className="arr-main"><p className="arr-loading">Cargando viviendas...</p></main>
+      <main className="arr-main">
+        <div className="arr-loading">
+          <div className="arr-spinner" />
+          <p>Cargando viviendas…</p>
+        </div>
+      </main>
       <FooterInicio />
     </div>
   )

@@ -23,8 +23,8 @@ const NavbarArrendatario = () => {
     <nav className="atr-nav">
       <div className="atr-nav-inner">
         <Link to="/arrendatario/buscar-vivienda" className="atr-nav-brand" onClick={cerrarMenu}>
-          <img src={logoImg} alt="Blockhoom" className="atr-nav-logo" />
-          <span className="atr-nav-brand-name">Blockhoom</span>
+          <img src={logoImg} alt="Blockhome" className="atr-nav-logo" />
+          <span className="atr-nav-brand-name">Blockhome</span>
         </Link>
 
         <div className="atr-nav-links">
@@ -32,13 +32,13 @@ const NavbarArrendatario = () => {
             to="/arrendatario/buscar-vivienda"
             className={`atr-nav-link${isActive('/arrendatario/buscar-vivienda') ? ' active' : ''}`}
           >
-            🔍 Buscar Vivienda
+            Buscar Vivienda
           </Link>
           <Link
             to="/arrendatario/mi-arrendamiento"
             className={`atr-nav-link${isActive('/arrendatario/mi-arrendamiento') ? ' active' : ''}`}
           >
-            📋 Mi Arrendamiento
+            Mi Arrendamiento
           </Link>
         </div>
 
@@ -69,20 +69,20 @@ const NavbarArrendatario = () => {
             className={`atr-nav-mobile-link${isActive('/arrendatario/buscar-vivienda') ? ' active' : ''}`}
             onClick={cerrarMenu}
           >
-            🔍 Buscar Vivienda
+            Buscar Vivienda
           </Link>
           <Link
             to="/arrendatario/mi-arrendamiento"
             className={`atr-nav-mobile-link${isActive('/arrendatario/mi-arrendamiento') ? ' active' : ''}`}
             onClick={cerrarMenu}
           >
-            📋 Mi Arrendamiento
+            Mi Arrendamiento
           </Link>
           <Link to="/arrendatario/perfil" className="atr-nav-mobile-link" onClick={cerrarMenu}>
-            👤 Mi Perfil
+            Mi Perfil
           </Link>
           <button className="atr-nav-mobile-btn" onClick={() => { cerrarMenu(); handleCerrarSesion(); }}>
-            🚪 Cerrar Sesión
+            Cerrar Sesión
           </button>
         </div>
       )}

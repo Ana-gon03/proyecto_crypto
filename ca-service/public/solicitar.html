@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solicitar Certificado &mdash; Blockhome CA</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Entidad Certificadora Digital</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav" id="navAuth">
+    <a class="ca-nav-link activo" href="/solicitar">Solicitar Certificado</a>
+    <a class="ca-nav-link" href="/mi-certificado">Mi Certificado</a>
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <span class="ca-nav-sep"></span>
+    <span class="ca-nav-link" id="navNombre" style="opacity:0.7"></span>
+    <button class="ca-nav-link" id="btnLogout" style="background:none;border:none;cursor:pointer">Salir</button>
+  </nav>
+</header>
+
+<main class="ca-main">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="44" height="44"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="15" r="2"/><path d="m9 18 3-3 3 3"/></svg></div>
+    <h1>Solicitar Certificado Digital</h1>
+    <p>Tu llave privada se genera en tu navegador y nunca sale de tu equipo. El archivo .key queda protegido con tu contrase&ntilde;a.</p>
+    <span class="ca-hero-badge">ECDSA P-256 &middot; X.509 v3</span>
+  </section>
+
+  <!-- Pasos -->
+  <div class="ca-steps" id="pasos">
+    <div class="ca-step activo" id="step1">
+      <div class="ca-step-num">1</div>
+      <div class="ca-step-label">Contrase&ntilde;a</div>
+    </div>
+    <div class="ca-step-line" id="line1"></div>
+    <div class="ca-step" id="step2">
+      <div class="ca-step-num">2</div>
+      <div class="ca-step-label">Generar llaves</div>
+    </div>
+    <div class="ca-step-line" id="line2"></div>
+    <div class="ca-step" id="step3">
+      <div class="ca-step-num">3</div>
+      <div class="ca-step-label">Descargar</div>
+    </div>
+    <div class="ca-step-line" id="line3"></div>
+    <div class="ca-step" id="step4">
+      <div class="ca-step-num">4</div>
+      <div class="ca-step-label">Listo</div>
+    </div>
+  </div>
+
+  <!-- Paso 1: Contraseña -->
+  <div class="ca-card" id="panelPaso1">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div>
+        <h2>Paso 1 &mdash; Contrase&ntilde;a de tu archivo .key</h2>
+        <p>Esta contrase&ntilde;a protege tu llave privada. Gu&aacute;rdala en un lugar seguro &mdash; sin ella no podr&aacute;s firmar contratos.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-warn">
+      <span>&#9888;</span>
+      <span><strong>Importante:</strong> Esta contrase&ntilde;a es diferente a la de tu cuenta. Si la pierdes, no hay forma de recuperar tu llave privada.</span>
+    </div>
+    <div class="ca-form-group" style="margin-top:1rem">
+      <label class="ca-label" for="passKey">Contrase&ntilde;a del archivo .key</label>
+      <input class="ca-input" type="password" id="passKey" placeholder="M&iacute;nimo 8 caracteres" autocomplete="new-password" />
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="passKeyConfirm">Confirmar contrase&ntilde;a</label>
+      <input class="ca-input" type="password" id="passKeyConfirm" placeholder="Repite la contrase&ntilde;a" autocomplete="new-password" />
+    </div>
+    <div id="alertPaso1"></div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" onclick="irPaso2()">Continuar &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Paso 2: Generar -->
+  <div class="ca-card" id="panelPaso2" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+      <div>
+        <h2>Paso 2 &mdash; Generando tu par de llaves</h2>
+        <p>Tu llave privada se genera localmente con Web Crypto API. Nunca se transmite al servidor.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-info">
+      <span>&#8505;</span>
+      <span>La generaci&oacute;n utiliza <strong>ECDSA P-256</strong> (secp256r1). La llave p&uacute;blica (SPKI) se env&iacute;a a la CA para emitir tu certificado X.509 v3.</span>
+    </div>
+    <div id="alertPaso2"></div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" id="btnGenerar" onclick="generarYSolicitar()">
+        &#9881; Generar llaves y solicitar certificado
+      </button>
+    </div>
+  </div>
+
+  <!-- Paso 3: Descargar -->
+  <div class="ca-card" id="panelPaso3" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div>
+        <h2>Paso 3 &mdash; Descarga tus archivos</h2>
+        <p>Guarda ambos archivos en un lugar seguro. El .key est&aacute; cifrado con tu contrase&ntilde;a.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-warn">
+      <span>&#9888;</span>
+      <span>Descarga ambos archivos <strong>antes de cerrar esta p&aacute;gina</strong>. No podr&aacute;s volver a descargar el .key cifrado.</span>
+    </div>
+    <div class="ca-download-grid">
+      <div class="ca-download-card cer-card">
+        <div class="icon">&#128196;</div>
+        <h3>Certificado Digital</h3>
+        <p>Archivo .cer en formato X.509 PEM. Contiene tu llave p&uacute;blica e identidad firmada por la CA.</p>
+        <button class="ca-btn ca-btn-primary ca-btn-full" id="btnDescargarCer" onclick="descargarCer()">
+          &#8659; Descargar .cer
+        </button>
+      </div>
+      <div class="ca-download-card key-card">
+        <div class="icon">&#128273;</div>
+        <h3>Llave Privada Cifrada</h3>
+        <p>Archivo .key protegido con tu contrase&ntilde;a (AES-256-GCM + PBKDF2). Nunca lo compartas.</p>
+        <button class="ca-btn ca-btn-secondary ca-btn-full" id="btnDescargarKey" onclick="descargarKey()">
+          &#8659; Descargar .key
+        </button>
+      </div>
+    </div>
+    <div class="ca-btn-group" style="margin-top:1.5rem">
+      <button class="ca-btn ca-btn-success" onclick="confirmarDescarga()">
+        &#10003; Confirmar &mdash; ya descarg&uacute;e mis archivos
+      </button>
+    </div>
+  </div>
+
+  <!-- Paso 4: Listo -->
+  <div class="ca-card" id="panelPaso4" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div>
+        <h2>&iexcl;Certificado emitido exitosamente!</h2>
+        <p>Tu identidad digital est&aacute; lista para firmar contratos en Blockhome.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-success">
+      <span>&#10003;</span>
+      <span>Certificado X.509 emitido y registrado en la CA. Puedes firmar contratos usando tus archivos .cer y .key.</span>
+    </div>
+    <div class="ca-data-grid" id="infoCert"></div>
+    <div class="ca-btn-group" style="margin-top:1.5rem">
+      <a class="ca-btn ca-btn-primary" href="/mi-certificado">Ver mi certificado</a>
+      <a class="ca-btn ca-btn-ghost" href="/">Ir al inicio</a>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA
+</footer>
+
+<script src="/js/cripto.js"></script>
+<script>
+  const API = '';
+  let pasoActual = 1;
+  let certPEMGlobal = null;
+  let keyFileDatosGlobal = null;
+  let serialHexGlobal = null;
+  let nombreArchivoGlobal = '';
+
+  let usuarioActual = null;
+  (async () => {
+    try {
+      const r = await fetch(`${API}/api/portal/sesion`, { credentials: 'include' });
+      const d = await r.json();
+      if (!d.autenticado) { location.href = '/'; return; }
+      usuarioActual = d.usuario;
+      document.getElementById('navNombre').textContent = usuarioActual.nombre.split(' ')[0];
+    } catch { location.href = '/'; }
+  })();
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await fetch(`${API}/api/portal/logout`, { method: 'POST', credentials: 'include' });
+    location.href = '/';
+  });
+
+  function alerta(id, tipo, msg) {
+    const iconos = { success:'&#10003;', error:'&#10007;', info:'&#8505;', warn:'&#9888;' };
+    document.getElementById(id).innerHTML =
+      `<div class="ca-alert ca-alert-${tipo}"><span>${iconos[tipo]||'!'}</span><span>${msg}</span></div>`;
+  }
+
+  function avanzarPaso(n) {
+    for (let i = 1; i <= 4; i++) {
+      const step = document.getElementById(`step${i}`);
+      step.classList.remove('activo', 'listo');
+      if (i < n)  step.classList.add('listo');
+      if (i === n) step.classList.add('activo');
+    }
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById(`line${i}`).classList.toggle('listo', i < n);
+    }
+    pasoActual = n;
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById(`panelPaso${i}`).style.display = i === n ? '' : 'none';
+    }
+  }
+
+  function irPaso2() {
+    const pass    = document.getElementById('passKey').value;
+    const confirm = document.getElementById('passKeyConfirm').value;
+    if (pass.length < 8) return alerta('alertPaso1', 'warn', 'La contraseña debe tener al menos 8 caracteres.');
+    if (pass !== confirm) return alerta('alertPaso1', 'error', 'Las contraseñas no coinciden.');
+    avanzarPaso(2);
+  }
+
+  async function generarYSolicitar() {
+    const pass = document.getElementById('passKey').value;
+    const btn  = document.getElementById('btnGenerar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ca-spinner"></span> Generando llaves&hellip;';
+    alerta('alertPaso2', 'info', 'Generando par de llaves ECDSA P-256 en tu navegador&hellip;');
+
+    try {
+      const { publicKey, privateKey } = await CA_CRIPTO.generarParLlaves();
+      const publicKeySpki = await CA_CRIPTO.exportarLlavePublicaSpki(publicKey);
+
+      alerta('alertPaso2', 'info', 'Cifrando llave privada con AES-256-GCM + PBKDF2&hellip;');
+      const privateKeyJwk = await CA_CRIPTO.exportarLlavePrivadaJwk(privateKey);
+      keyFileDatosGlobal  = await CA_CRIPTO.cifrarLlavePrivada(privateKeyJwk, pass);
+
+      alerta('alertPaso2', 'info', 'Solicitando certificado X.509 a la CA&hellip;');
+      const r = await fetch(`${API}/api/portal/solicitar-certificado`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicKeySpki }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al emitir el certificado');
+
+      certPEMGlobal      = data.certPEM;
+      serialHexGlobal    = data.serialHex;
+      nombreArchivoGlobal = (usuarioActual?.nombre || 'usuario').replace(/\s+/g, '_');
+
+      avanzarPaso(3);
+    } catch (e) {
+      alerta('alertPaso2', 'error', e.message);
+      btn.disabled = false;
+      btn.innerHTML = '&#9881; Generar llaves y solicitar certificado';
+    }
+  }
+
+  function descargarCer() {
+    if (!certPEMGlobal) return;
+    CA_CRIPTO.descargarTexto(certPEMGlobal, `${nombreArchivoGlobal}.cer`);
+  }
+
+  function descargarKey() {
+    if (!keyFileDatosGlobal) return;
+    CA_CRIPTO.descargarJSON(keyFileDatosGlobal, `${nombreArchivoGlobal}.key`);
+  }
+
+  function confirmarDescarga() {
+    avanzarPaso(4);
+    const grid = document.getElementById('infoCert');
+    grid.innerHTML = `
+      <div class="ca-data-item">
+        <div class="ca-data-label">Serial</div>
+        <div class="ca-data-value mono">${serialHexGlobal}</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Titular</div>
+        <div class="ca-data-value">${usuarioActual?.nombre || '&mdash;'}</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Correo</div>
+        <div class="ca-data-value">${usuarioActual?.correo || '&mdash;'}</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Emitido por</div>
+        <div class="ca-data-value">Blockhome CA</div>
+      </div>
+    `;
+    certPEMGlobal      = null;
+    keyFileDatosGlobal = null;
+  }
+</script>
+</body>
+</html>

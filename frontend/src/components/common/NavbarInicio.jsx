@@ -49,11 +49,11 @@ const NavbarInicio = () => {
       >
         <img
           src={burroLogo}
-          alt="Blockhoom logo"
+          alt="Blockhome logo"
           style={{ width: 36, height: 36, objectFit: "contain" }}
           onError={(e) => { e.target.style.display = "none"; }}
         />
-        Blockhoom
+        Blockhome
       </Link>
 
       {/* Links de navegación — ocultos en móvil por CSS en global.css */}

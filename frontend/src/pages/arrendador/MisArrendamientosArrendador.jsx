@@ -39,7 +39,12 @@ const MisArrendamientosArrendador = () => {
   if (cargando) return (
     <div className="arr-page">
       <NavbarArrendador />
-      <main className="arr-main"><p className="arr-loading">Cargando arrendamientos...</p></main>
+      <main className="arr-main">
+        <div className="arr-loading">
+          <div className="arr-spinner" />
+          <p>Cargando arrendamientos…</p>
+        </div>
+      </main>
       <FooterInicio />
     </div>
   )
@@ -121,6 +126,13 @@ const MisArrendamientosArrendador = () => {
                       onClick={() => descargarContratoPDF(a.idArrendamiento)}
                     >
                       📄 Ver PDF
+                    </button>
+
+                    <button
+                      className="arr-btn-ghost arr-btn-sm"
+                      onClick={() => navigate(`/arrendador/contratos/${a.idArrendamiento}`)}
+                    >
+                      ✍️ Firmar Contrato Digital
                     </button>
 
                     {a.arrendamientoValArrendador === 0 && (

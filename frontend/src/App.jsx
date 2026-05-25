@@ -22,6 +22,8 @@ import CrearVivienda from './pages/arrendador/CrearVivienda'
 import CrearArrendamiento from './pages/arrendador/CrearArrendamiento'
 import ProtectedArrendadorRoute from './components/common/ProtectedArrendadorRoute'
 import PerfilArrendador from './pages/arrendador/PerfilArrendador'
+import ContratosPage from './pages/arrendador/ContratosPage'
+import ContratosArrendatario from './pages/arrendatario/ContratosArrendatario'
 
 // Páginas de admin
 import AdminInicioSesionPage from './pages/admin/AdminInicioSesionPage'
@@ -75,6 +77,9 @@ function App() {
         <Route path="/arrendador/perfil" element={
           <ProtectedArrendadorRoute><PerfilArrendador /></ProtectedArrendadorRoute>
         } />
+        <Route path="/arrendador/contratos/:idArrendamiento" element={
+          <ProtectedArrendadorRoute><ContratosPage /></ProtectedArrendadorRoute>
+        } />
 
         {/* Rutas de arrendatario */}
         <Route path="/arrendatario/buscar-vivienda" element={
@@ -109,6 +114,9 @@ function App() {
 
         <Route path="/arrendatario/renovar-identidad" element={
           <ProtectedArrendatarioRoute><RenovarIdentidad /></ProtectedArrendatarioRoute>
+        } />
+        <Route path="/arrendatario/contratos/:idArrendamiento" element={
+          <ProtectedArrendatarioRoute><ContratosArrendatario /></ProtectedArrendatarioRoute>
         } />
 
         {/* Rutas de admin */}

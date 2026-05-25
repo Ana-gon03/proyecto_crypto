@@ -20,6 +20,7 @@ const {
   Servicio,
   ServicioHasPropiedad,
   Administrador,
+  ContratoDigital,
 } = require('./src/models/associations');
 
 // Importar rutas
@@ -31,6 +32,8 @@ const contactoRoutes = require('./src/routes/contacto.routes');
 const arrendamientoRoutes = require('./src/routes/arrendamiento.routes');
 const usuarioRoutes = require('./src/routes/usuario.routes');
 const propiedadRoutes = require('./src/routes/propiedad.routes');
+const caRoutes = require('./src/routes/ca.routes');
+const contratosDigitalesRoutes = require('./src/routes/contratosDigitales.routes');
 
 
 dotenv.config();
@@ -52,6 +55,8 @@ app.use('/api', contactoRoutes);
 app.use('/api/arrendamientos', arrendamientoRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/propiedades', propiedadRoutes);
+app.use('/api/ca', caRoutes);
+app.use('/api/contratos-digitales', contratosDigitalesRoutes);
 
 // Servir archivos estáticos (para las fotos)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

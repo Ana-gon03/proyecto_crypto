@@ -7,8 +7,8 @@ const NavbarRegistro = () => {
   return (
     <nav className="registro-nav">
       <Link to="/" className="registro-nav-brand">
-        <img src={burroLogo} alt="Blockhoom" />
-        <span>Blockhoom</span>
+        <img src={burroLogo} alt="Blockhome" />
+        <span>Blockhome</span>
       </Link>
     </nav>
   )

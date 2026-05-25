@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Certificado &mdash; Blockhome CA</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Entidad Certificadora Digital</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav">
+    <a class="ca-nav-link" href="/solicitar">Solicitar Certificado</a>
+    <a class="ca-nav-link activo" href="/mi-certificado">Mi Certificado</a>
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <span class="ca-nav-sep"></span>
+    <span class="ca-nav-link" id="navNombre" style="opacity:0.7"></span>
+    <button class="ca-nav-link" id="btnLogout" style="background:none;border:none;cursor:pointer">Salir</button>
+  </nav>
+</header>
+
+<main class="ca-main">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="44" height="44"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+    <h1>Mi Certificado Digital</h1>
+    <p>Estado y detalles de tu certificado X.509 emitido por la Entidad Certificadora Blockhome.</p>
+    <span class="ca-hero-badge">X.509 v3 &middot; ECDSA P-256</span>
+  </section>
+
+  <!-- Cargando -->
+  <div class="ca-card" id="panelCargando">
+    <div style="text-align:center; padding:2rem; color:var(--ca-text-light)">
+      <span class="ca-spinner ca-spinner-azul" style="width:32px;height:32px;border-width:4px"></span>
+      <p style="margin-top:1rem">Consultando estado del certificado&hellip;</p>
+    </div>
+  </div>
+
+  <!-- Sin certificado -->
+  <div class="ca-card" id="panelSinCert" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div>
+        <h2>Sin certificado activo</h2>
+        <p>A&uacute;n no has solicitado tu certificado digital.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-warn">
+      <span>&#9888;</span>
+      <span>Para firmar contratos digitales necesitas un certificado X.509 emitido por esta CA.</span>
+    </div>
+    <div class="ca-btn-group">
+      <a class="ca-btn ca-btn-primary" href="/solicitar">&#128273; Solicitar Certificado</a>
+    </div>
+  </div>
+
+  <!-- Con certificado -->
+  <div class="ca-card" id="panelCert" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+      <div>
+        <h2>Certificado Digital Activo</h2>
+        <p>Tu identidad digital est&aacute; verificada y vigente.</p>
+      </div>
+    </div>
+
+    <div id="estadoCert"></div>
+
+    <div class="ca-data-grid" id="datosCert" style="margin-top:1rem"></div>
+
+    <div style="margin-top:1.5rem">
+      <div class="ca-data-label" style="margin-bottom:0.5rem">Certificado X.509 (PEM)</div>
+      <textarea id="certPEMBox" readonly style="width:100%;height:120px;font-family:monospace;font-size:0.75rem;padding:0.75rem;border:1.5px solid var(--ca-border);border-radius:7px;resize:vertical;color:var(--ca-text-light);background:var(--ca-bg)"></textarea>
+    </div>
+
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" id="btnDescargarCer" onclick="descargarCer()">
+        &#8659; Descargar .cer
+      </button>
+      <button class="ca-btn ca-btn-ghost" onclick="copiarPEM()">
+        &#9113; Copiar PEM
+      </button>
+    </div>
+  </div>
+
+  <!-- Certificado revocado/expirado -->
+  <div class="ca-card" id="panelInvalido" style="display:none">
+    <div class="ca-card-header">
+      <span class="ca-card-icon" id="iconoInvalido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+      <div>
+        <h2 id="tituloInvalido">Certificado no v&aacute;lido</h2>
+        <p id="subtituloInvalido">El certificado ya no est&aacute; activo.</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-error" id="alertInvalido"></div>
+    <div class="ca-btn-group">
+      <a class="ca-btn ca-btn-primary" href="/solicitar">Solicitar nuevo certificado</a>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA
+</footer>
+
+<script>
+  const API = '';
+  let certPEMGlobal = null;
+  let nombreGlobal  = '';
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await fetch(`${API}/api/portal/logout`, { method: 'POST', credentials: 'include' });
+    location.href = '/';
+  });
+
+  function mostrar(id) {
+    ['panelCargando','panelSinCert','panelCert','panelInvalido'].forEach(p => {
+      document.getElementById(p).style.display = p === id ? '' : 'none';
+    });
+  }
+
+  function fmtFecha(iso) {
+    return new Date(iso).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  }
+
+  function badgeEstado(estado) {
+    const map = { activo: 'ca-badge-activo', revocado: 'ca-badge-revocado', expirado: 'ca-badge-expirado' };
+    return `<span class="ca-badge ${map[estado] || ''}">${estado.toUpperCase()}</span>`;
+  }
+
+  (async () => {
+    try {
+      const sesion = await fetch(`${API}/api/portal/sesion`, { credentials: 'include' });
+      const sd     = await sesion.json();
+      if (!sd.autenticado) { location.href = '/'; return; }
+      document.getElementById('navNombre').textContent = sd.usuario.nombre.split(' ')[0];
+      nombreGlobal = sd.usuario.nombre.replace(/\s+/g, '_');
+
+      const r    = await fetch(`${API}/api/portal/mi-certificado`, { credentials: 'include' });
+      const data = await r.json();
+
+      if (r.status === 404 || !data.serialHex) {
+        mostrar('panelSinCert');
+        return;
+      }
+
+      if (data.estado !== 'activo') {
+        mostrar('panelInvalido');
+        const svgRev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        const svgExp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+        document.getElementById('iconoInvalido').innerHTML              = data.estado === 'revocado' ? svgRev : svgExp;
+        document.getElementById('tituloInvalido').textContent           = data.estado === 'revocado' ? 'Certificado Revocado' : 'Certificado Expirado';
+        document.getElementById('subtituloInvalido').textContent        = `Estado: ${data.estado}`;
+        document.getElementById('alertInvalido').innerHTML              =
+          `<span>&#9888;</span><span>Este certificado fue ${data.estado}. Solicita uno nuevo para continuar firmando contratos.</span>`;
+        return;
+      }
+
+      certPEMGlobal = data.certPEM;
+      mostrar('panelCert');
+
+      document.getElementById('estadoCert').innerHTML =
+        `<div style="margin-bottom:1rem">${badgeEstado(data.estado)}</div>`;
+
+      document.getElementById('datosCert').innerHTML = `
+        <div class="ca-data-item">
+          <div class="ca-data-label">N&uacute;mero de serie</div>
+          <div class="ca-data-value mono">${data.serialHex}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Titular</div>
+          <div class="ca-data-value">${data.nombre}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Correo</div>
+          <div class="ca-data-value">${data.correo}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Rol</div>
+          <div class="ca-data-value">${data.rol}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Fecha de emisi&oacute;n</div>
+          <div class="ca-data-value">${fmtFecha(data.fechaEmision)}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">V&aacute;lido hasta</div>
+          <div class="ca-data-value">${fmtFecha(data.fechaVencimiento)}</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Emitido por</div>
+          <div class="ca-data-value">Blockhome CA</div>
+        </div>
+        <div class="ca-data-item">
+          <div class="ca-data-label">Algoritmo</div>
+          <div class="ca-data-value">ECDSA P-256 / SHA-256withECDSA</div>
+        </div>
+      `;
+
+      document.getElementById('certPEMBox').value = data.certPEM;
+
+    } catch (e) {
+      mostrar('panelSinCert');
+      console.error(e);
+    }
+  })();
+
+  function descargarCer() {
+    if (!certPEMGlobal) return;
+    const blob = new Blob([certPEMGlobal], { type: 'application/x-pem-file' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `${nombreGlobal}.cer` });
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }
+
+  async function copiarPEM() {
+    const txt = document.getElementById('certPEMBox').value;
+    await navigator.clipboard.writeText(txt);
+    const btn = event.target;
+    btn.textContent = '&#10003; Copiado';
+    setTimeout(() => btn.textContent = '&#9113; Copiar PEM', 2000);
+  }
+</script>
+</body>
+</html>

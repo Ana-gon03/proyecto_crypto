@@ -36,7 +36,7 @@ const VerificacionExitosa = () => {
                 <div className="atr-alert-desc">
                   {esRenovacion
                     ? 'Tu verificación ha sido renovada. Ya puedes ver los datos de contacto de los arrendadores.'
-                    : 'Tu constancia fue validada exitosamente. Ya tienes acceso completo a la plataforma Blockhoom.'
+                    : 'Tu constancia fue validada exitosamente. Ya tienes acceso completo a la plataforma Blockhome.'
                   }
                 </div>
               </div>

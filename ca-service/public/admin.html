@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrador &mdash; Blockhome CA</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Administraci&oacute;n del Sistema</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav">
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <a class="ca-nav-link activo" href="/admin">&#9881; Administrador</a>
+    <span class="ca-nav-sep"></span>
+    <button class="ca-nav-link" id="btnLogout" style="background:none;border:none;cursor:pointer">Salir</button>
+  </nav>
+</header>
+
+<main class="ca-main-wide">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="44" height="44"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2"/><path d="M12 13v3"/></svg></div>
+    <h1>Panel Administrador CA</h1>
+    <p>Gesti&oacute;n de certificados X.509, revocaciones y estado de la infraestructura PKI.</p>
+    <span class="ca-hero-badge">Solo administradores</span>
+  </section>
+
+  <!-- Estadísticas CA -->
+  <div class="ca-card" id="cardCAInfo">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <div>
+        <h2>Estado de la CA</h2>
+        <p>Informaci&oacute;n de la Entidad Certificadora</p>
+      </div>
+    </div>
+    <div class="ca-data-grid" id="datosCA" style="grid-template-columns:repeat(3,1fr)">
+      <div class="ca-data-item">
+        <div class="ca-data-label">Nombre</div>
+        <div class="ca-data-value" id="caName">Cargando&hellip;</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Algoritmo</div>
+        <div class="ca-data-value" id="caAlg">&mdash;</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Total emitidos</div>
+        <div class="ca-data-value" id="caTotal">&mdash;</div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Activos</div>
+        <div class="ca-data-value" id="caActivos">&mdash;</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem">
+      <div class="ca-data-label">Llave p&uacute;blica CA (SPKI PEM)</div>
+      <textarea id="caPubKeyBox" readonly style="width:100%;height:80px;font-family:monospace;font-size:0.72rem;padding:0.6rem;border:1.5px solid var(--ca-border);border-radius:7px;resize:vertical;color:var(--ca-text-light);background:var(--ca-bg);margin-top:0.4rem"></textarea>
+    </div>
+    <div style="margin-top:0.75rem">
+      <div class="ca-data-label">Certificado ra&iacute;z CA (X.509 PEM)</div>
+      <textarea id="caCertBox" readonly style="width:100%;height:80px;font-family:monospace;font-size:0.72rem;padding:0.6rem;border:1.5px solid var(--ca-border);border-radius:7px;resize:vertical;color:var(--ca-text-light);background:var(--ca-bg);margin-top:0.4rem"></textarea>
+    </div>
+  </div>
+
+  <!-- Verificar PEM manualmente -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <div>
+        <h2>Verificar PEM manualmente</h2>
+        <p>Pega un certificado PEM para analizar su firma y contenido</p>
+      </div>
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="pemInput">Certificado PEM</label>
+      <textarea class="ca-input" id="pemInput" rows="5" placeholder="-----BEGIN CERTIFICATE-----&#10;&hellip;&#10;-----END CERTIFICATE-----" style="font-family:monospace;font-size:0.8rem;resize:vertical"></textarea>
+    </div>
+    <div id="alertPEM"></div>
+    <div id="resultadoPEM"></div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" onclick="verificarPEM()">&#128269; Analizar</button>
+    </div>
+  </div>
+
+  <!-- Tabla de certificados -->
+  <div class="ca-card">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <div>
+        <h2>Todos los Certificados</h2>
+        <p>Listado completo de certificados emitidos por la CA</p>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+      <select id="filtroEstado" class="ca-input" style="width:auto;min-width:140px" onchange="filtrarTabla()">
+        <option value="">Todos los estados</option>
+        <option value="activo">Activo</option>
+        <option value="revocado">Revocado</option>
+        <option value="expirado">Expirado</option>
+      </select>
+      <input class="ca-input" type="text" id="filtroBuscar" placeholder="Buscar por nombre, correo o serial&hellip;" style="flex:1;min-width:200px" oninput="filtrarTabla()" />
+    </div>
+
+    <div class="ca-table-wrap">
+      <table class="ca-table">
+        <thead>
+          <tr>
+            <th>Serial</th>
+            <th>Titular</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Emisi&oacute;n</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCerts">
+          <tr><td colspan="8" style="text-align:center;color:var(--ca-text-light);padding:2rem">Cargando&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA
+</footer>
+
+<!-- Modal de confirmación de revocación -->
+<div id="modalRevocacion" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center">
+  <div class="ca-card" style="max-width:420px;margin:0;width:90%">
+    <div class="ca-card-header">
+      <div class="ca-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div>
+        <h2>Revocar Certificado</h2>
+        <p>Esta acci&oacute;n es irreversible</p>
+      </div>
+    </div>
+    <div class="ca-alert ca-alert-error">
+      <span>&#9888;</span>
+      <span>&iquest;Confirmas la revocaci&oacute;n del certificado de <strong id="modalNombre"></strong>? Esta acci&oacute;n no puede deshacerse.</span>
+    </div>
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-danger" id="btnConfirmarRevocar" onclick="confirmarRevocar()">Revocar</button>
+      <button class="ca-btn ca-btn-ghost" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '';
+  let todosLosCerts = [];
+  let serialARevocar = null;
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await fetch(`${API}/api/portal/logout`, { method: 'POST', credentials: 'include' });
+    location.href = '/';
+  });
+
+  function alerta(id, tipo, msg) {
+    const iconos = { success:'&#10003;', error:'&#10007;', info:'&#8505;', warn:'&#9888;' };
+    document.getElementById(id).innerHTML =
+      `<div class="ca-alert ca-alert-${tipo}"><span>${iconos[tipo]||'!'}</span><span>${msg}</span></div>`;
+  }
+  function fmtFecha(iso) { return iso ? new Date(iso).toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' }) : '&mdash;'; }
+  function badgeEstado(e) {
+    const map = { activo:'ca-badge-activo', revocado:'ca-badge-revocado', expirado:'ca-badge-expirado' };
+    return `<span class="ca-badge ${map[e]||''}">${e.toUpperCase()}</span>`;
+  }
+
+  (async () => {
+    try {
+      const r = await fetch(`${API}/api/portal/sesion`, { credentials: 'include' });
+      const d = await r.json();
+      if (!d.autenticado || d.usuario.rol !== 'admin') { location.href = '/'; return; }
+      cargarDatos();
+    } catch { location.href = '/'; }
+  })();
+
+  async function cargarDatos() {
+    await Promise.all([ cargarCAInfo(), cargarCertificados() ]);
+  }
+
+  async function cargarCAInfo() {
+    try {
+      const r    = await fetch(`${API}/api/admin/ca-info`, { credentials: 'include' });
+      const data = await r.json();
+      document.getElementById('caName').textContent    = data.nombre || '&mdash;';
+      document.getElementById('caAlg').textContent     = data.algoritmo || '&mdash;';
+      document.getElementById('caTotal').textContent   = data.totalEmitidos ?? '&mdash;';
+      document.getElementById('caActivos').textContent = data.activos ?? '&mdash;';
+      document.getElementById('caPubKeyBox').value     = data.publicKeyPEM || '';
+      document.getElementById('caCertBox').value       = data.certificadoCA || '';
+    } catch {}
+  }
+
+  async function cargarCertificados() {
+    try {
+      const r    = await fetch(`${API}/api/admin/certificados`, { credentials: 'include' });
+      todosLosCerts = await r.json();
+      renderTabla(todosLosCerts);
+    } catch {
+      document.getElementById('tablaCerts').innerHTML =
+        '<tr><td colspan="8" style="text-align:center;color:var(--ca-error-text)">Error al cargar certificados.</td></tr>';
+    }
+  }
+
+  function renderTabla(certs) {
+    const tbody = document.getElementById('tablaCerts');
+    if (!certs.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ca-text-light);padding:2rem">Sin certificados registrados.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = certs.map(c => `
+      <tr>
+        <td class="mono" style="font-size:0.72rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.serialHex}">${c.serialHex.substring(0,12)}&hellip;</td>
+        <td>${c.nombre}</td>
+        <td style="font-size:0.8rem">${c.correo}</td>
+        <td>${c.rol}</td>
+        <td>${fmtFecha(c.fechaEmision)}</td>
+        <td>${fmtFecha(c.fechaVencimiento)}</td>
+        <td>${badgeEstado(c.estado)}</td>
+        <td>
+          ${c.estado === 'activo'
+            ? `<button class="ca-btn ca-btn-danger" style="padding:0.3rem 0.7rem;font-size:0.78rem" onclick="iniciarRevocacion('${c.serialHex}','${c.nombre.replace(/'/g,"\\'")}')">Revocar</button>`
+            : '<span style="color:var(--ca-text-light);font-size:0.8rem">&mdash;</span>'
+          }
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function filtrarTabla() {
+    const estado  = document.getElementById('filtroEstado').value;
+    const buscar  = document.getElementById('filtroBuscar').value.toLowerCase();
+    const filtrados = todosLosCerts.filter(c => {
+      const matchEstado = !estado || c.estado === estado;
+      const matchBuscar = !buscar ||
+        c.nombre.toLowerCase().includes(buscar) ||
+        c.correo.toLowerCase().includes(buscar) ||
+        c.serialHex.toLowerCase().includes(buscar);
+      return matchEstado && matchBuscar;
+    });
+    renderTabla(filtrados);
+  }
+
+  function iniciarRevocacion(serial, nombre) {
+    serialARevocar = serial;
+    document.getElementById('modalNombre').textContent = nombre;
+    document.getElementById('modalRevocacion').style.display = 'flex';
+  }
+
+  function cerrarModal() {
+    document.getElementById('modalRevocacion').style.display = 'none';
+    serialARevocar = null;
+  }
+
+  async function confirmarRevocar() {
+    if (!serialARevocar) return;
+    const btn = document.getElementById('btnConfirmarRevocar');
+    btn.disabled = true; btn.innerHTML = '<span class="ca-spinner"></span>';
+    try {
+      const r = await fetch(`${API}/api/admin/certificados/${serialARevocar}/revocar`, {
+        method: 'PUT', credentials: 'include',
+      });
+      if (!r.ok) throw new Error((await r.json()).error);
+      cerrarModal();
+      await cargarCertificados();
+      await cargarCAInfo();
+    } catch (e) {
+      alert('Error al revocar: ' + e.message);
+      btn.disabled = false; btn.innerHTML = 'Revocar';
+    }
+  }
+
+  async function verificarPEM() {
+    const certPEM = document.getElementById('pemInput').value.trim();
+    if (!certPEM) return alerta('alertPEM', 'warn', 'Pega un certificado PEM.');
+    alerta('alertPEM', 'info', 'Analizando&hellip;');
+    try {
+      const r    = await fetch(`${API}/api/admin/verificar-pem`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ certPEM }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      document.getElementById('alertPEM').innerHTML = '';
+      document.getElementById('resultadoPEM').innerHTML = `
+        <div class="ca-alert ${data.firmaCAValida ? 'ca-alert-success' : 'ca-alert-error'}" style="margin-bottom:1rem">
+          <span>${data.firmaCAValida ? '&#10003;' : '&#10007;'}</span>
+          <span>Firma CA: <strong>${data.firmaCAValida ? 'V&aacute;lida' : 'Inv&aacute;lida'}</strong></span>
+        </div>
+        <div class="ca-data-grid">
+          <div class="ca-data-item"><div class="ca-data-label">Serial</div><div class="ca-data-value mono">${data.serialHex||'&mdash;'}</div></div>
+          <div class="ca-data-item"><div class="ca-data-label">Subject</div><div class="ca-data-value">${data.subject||'&mdash;'}</div></div>
+          <div class="ca-data-item"><div class="ca-data-label">Issuer</div><div class="ca-data-value">${data.issuer||'&mdash;'}</div></div>
+          <div class="ca-data-item"><div class="ca-data-label">Not Before</div><div class="ca-data-value">${data.notBefore||'&mdash;'}</div></div>
+          <div class="ca-data-item"><div class="ca-data-label">Not After</div><div class="ca-data-value">${data.notAfter||'&mdash;'}</div></div>
+        </div>
+      `;
+    } catch (e) {
+      alerta('alertPEM', 'error', e.message || 'PEM inválido o error al analizar.');
+    }
+  }
+</script>
+</body>
+</html>

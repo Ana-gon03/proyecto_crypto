@@ -36,18 +36,18 @@ const AdminInicioSesionPage = () => {
   return (
     <div className="login-page">
       <header className="admin-login-header">
-        <img src={burroLogo} alt="Blockhoom" className="admin-nav-logo" onError={e => { e.target.style.display = 'none' }} />
-        <span className="admin-nav-title">Blockhoom</span>
+        <img src={burroLogo} alt="Blockhome" className="admin-nav-logo" onError={e => { e.target.style.display = 'none' }} />
+        <span className="admin-nav-title">Blockhome</span>
       </header>
 
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
             <div className="login-icon">
-              <img src={burroLogo} alt="Blockhoom" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <img src={burroLogo} alt="Blockhome" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
             </div>
             <h2>Panel Administrador</h2>
-            <p>Inicia sesión para gestionar Blockhoom</p>
+            <p>Inicia sesión para gestionar Blockhome</p>
           </div>
 
           <div className="login-body">
@@ -124,7 +124,7 @@ const AdminInicioSesionPage = () => {
       </div>
 
       <footer className="admin-login-footer">
-        Blockhoom — Panel de Administración
+        Blockhome — Panel de Administración
       </footer>
     </div>
   )

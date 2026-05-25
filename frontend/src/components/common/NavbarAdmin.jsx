@@ -20,8 +20,8 @@ const NavbarAdmin = () => {
   return (
     <nav className="admin-nav">
       <Link to="/admin/arrendatarios" className="admin-nav-brand" onClick={cerrarMenu}>
-        <img src={burroLogo} alt="Blockhoom" className="admin-nav-logo" onError={e => { e.target.style.display = 'none' }} />
-        <span className="admin-nav-title">Blockhoom</span>
+        <img src={burroLogo} alt="Blockhome" className="admin-nav-logo" onError={e => { e.target.style.display = 'none' }} />
+        <span className="admin-nav-title">Blockhome</span>
       </Link>
 
       <div className="admin-nav-links">

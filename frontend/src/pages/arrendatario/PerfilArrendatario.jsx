@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
+import GestionLlaves from '../../components/common/GestionLlaves'
 import api from '../../services/api'
 import '../../styles/Arrendatario.css'
 
@@ -201,8 +202,9 @@ const PerfilArrendatario = () => {
     return (
       <div className="atr-page">
         <NavbarArrendatario />
-        <div className="atr-main">
-          <div className="atr-loading"><p>Cargando perfil...</p></div>
+        <div className="atr-loading-center">
+          <div className="atr-spinner" />
+          <p>Cargando perfil…</p>
         </div>
         <FooterInicio />
       </div>
@@ -238,76 +240,113 @@ const PerfilArrendatario = () => {
 
         {perfil && (
           <div className="atr-card">
-            <div className="atr-card-body">
 
-              {/* Avatar y nombre */}
-              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                <div className="atr-landlord-avatar" style={{ width: '72px', height: '72px', fontSize: '1.75rem', margin: '0 auto 1rem' }}>
-                  {usuario.usuarioNom?.charAt(0) || '?'}
-                </div>
-                <h2 style={{ margin: '0 0 4px', fontSize: '1.15rem', fontWeight: '800', color: '#111827' }}>
-                  {nombreCompleto || '—'}
-                </h2>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: '#6b7280' }}>@{perfil.arrendatarioUser}</p>
+            {/* ── Hero ── */}
+            <div className="atr-profile-hero">
+              <div className="atr-profile-hero-avatar">
+                {usuario.usuarioNom?.charAt(0)?.toUpperCase() || '?'}
               </div>
+              <h2 className="atr-profile-hero-name">{nombreCompleto || '—'}</h2>
+              <p className="atr-profile-hero-username">@{perfil.arrendatarioUser}</p>
+              <span className="atr-profile-hero-role">Estudiante IPN · UPALM</span>
+            </div>
 
-              <hr className="atr-divider" />
+            <div className="atr-card-body">
 
               {!editando ? (
                 <>
                   {/* Información Personal */}
                   <div style={{ marginBottom: '1.5rem' }}>
-                    <p className="atr-section-title">Información Personal</p>
-                    <div className="atr-contact-list">
-                      <InfoRow label="Nombre" value={usuario.usuarioNom} />
-                      <InfoRow label="Apellido Paterno" value={usuario.usuarioApePat} />
-                      <InfoRow label="Apellido Materno" value={usuario.usuarioApeMat || '—'} />
-                      <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                      <InfoRow label="Teléfono" value={usuario.usuarioTel || '—'} />
-                      <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                      <InfoRow
-                        label="Fecha de Nacimiento"
-                        value={usuario.usuarioFechaNac
-                          ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX')
-                          : '—'}
-                        bloqueado
-                      />
+                    <div className="atr-section-header">
+                      <div className="atr-section-dot" />
+                      <p className="atr-section-title" style={{ margin: 0 }}>Información Personal</p>
+                    </div>
+                    <div className="atr-info-grid">
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Nombre</div>
+                        <div className="atr-info-value">{usuario.usuarioNom || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Apellido Paterno</div>
+                        <div className="atr-info-value">{usuario.usuarioApePat || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Apellido Materno</div>
+                        <div className="atr-info-value">{usuario.usuarioApeMat || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Teléfono</div>
+                        <div className="atr-info-value">{usuario.usuarioTel || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell atr-info-cell-full">
+                        <div className="atr-info-label">Correo electrónico</div>
+                        <div className="atr-info-value">{usuario.usuarioCorreo || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">CURP</div>
+                        <div className="atr-info-value-muted" style={{ fontFamily: 'monospace', fontSize: '0.82rem' }}>{usuario.usuarioCurp || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Fecha de Nacimiento</div>
+                        <div className="atr-info-value">
+                          {usuario.usuarioFechaNac
+                            ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX')
+                            : '—'}
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <hr className="atr-divider" />
 
                   {/* Información Académica */}
                   <div style={{ marginBottom: '1.5rem' }}>
-                    <p className="atr-section-title">Información Académica</p>
-                    <div className="atr-contact-list">
-                      <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
-                      <InfoRow label="Username" value={`@${perfil.arrendatarioUser}`} />
-                      <InfoRow label="Carrera" value={carrera.carreraNombre || '—'} />
+                    <div className="atr-section-header">
+                      <div className="atr-section-dot" />
+                      <p className="atr-section-title" style={{ margin: 0 }}>Información Académica</p>
+                    </div>
+                    <div className="atr-info-grid">
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Número de Boleta</div>
+                        <div className="atr-info-value" style={{ fontFamily: 'monospace' }}>{perfil.arrendatarioBoleta || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell">
+                        <div className="atr-info-label">Username</div>
+                        <div className="atr-info-value">@{perfil.arrendatarioUser || '—'}</div>
+                      </div>
+                      <div className="atr-info-cell atr-info-cell-full">
+                        <div className="atr-info-label">Carrera</div>
+                        <div className="atr-info-value">{carrera.carreraNombre || '—'}</div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="atr-btn-group">
+                  <GestionLlaves
+                    nombreUsuario={`${perfil?.usuario?.usuarioNom || ''} ${perfil?.usuario?.usuarioApePat || ''}`}
+                  />
+
+                  <div className="atr-btn-group" style={{ marginTop: '1rem' }}>
                     <button className="atr-btn-primary" onClick={() => setEditando(true)}>
-                      ✏️ Editar Perfil
+                      Editar Perfil
                     </button>
-                    <hr className="atr-divider" style={{ margin: '0.5rem 0' }} />
+                    <hr className="atr-divider" style={{ margin: '0.25rem 0' }} />
                     <button className="atr-btn-danger" onClick={confirmarEliminarCuenta}>
-                      🗑️ Eliminar Cuenta
+                      Eliminar Cuenta
                     </button>
                   </div>
                 </>
               ) : (
                 <>
                   {/* Formulario de edición */}
+                  <div className="atr-section-header" style={{ marginBottom: '1rem' }}>
+                    <div className="atr-section-dot" />
+                    <p className="atr-section-title" style={{ margin: 0 }}>Editar Información</p>
+                  </div>
+
                   <div style={{ marginBottom: '1.5rem' }}>
-                    <p className="atr-section-title">Editar Información</p>
                     <FormField label="Nombre" value={nombres} onChange={(e) => setNombres(e.target.value)} />
                     <FormField label="Apellido Paterno" value={apellidoPaterno} onChange={(e) => setApellidoPaterno(e.target.value)} />
                     <FormField label="Apellido Materno" value={apellidoMaterno} onChange={(e) => setApellidoMaterno(e.target.value)} />
                     <FormField label="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} type="tel" />
 
-                    {/* Username con validación */}
                     <div style={{ marginBottom: '1rem' }}>
                       <label style={labelStyle}>Username</label>
                       <input
@@ -316,41 +355,39 @@ const PerfilArrendatario = () => {
                         onChange={handleUsernameChange}
                         style={{
                           ...inputStyle,
-                          borderColor: usernameError ? '#DC2626' : usernameDisponible ? '#059669' : '#e5e7eb'
+                          borderColor: usernameError ? '#DC2626' : (usernameDisponible && username !== perfil?.arrendatarioUser) ? '#059669' : '#e5e7eb'
                         }}
                       />
                       {usernameError && (
                         <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#DC2626' }}>{usernameError}</p>
                       )}
                       {!usernameError && username !== perfil?.arrendatarioUser && usernameDisponible && (
-                        <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#059669' }}>✓ Disponible</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#059669' }}>Disponible</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Campos no editables */}
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <p className="atr-section-title" style={{ color: '#9ca3af' }}>Información no editable</p>
-                    <div className="atr-contact-list">
-                      <InfoRow label="Correo" value={usuario.usuarioCorreo} bloqueado />
-                      <InfoRow label="CURP" value={usuario.usuarioCurp} bloqueado />
-                      <InfoRow label="Boleta" value={perfil.arrendatarioBoleta} bloqueado />
-                      <InfoRow
-                        label="Fecha de Nacimiento"
-                        value={usuario.usuarioFechaNac
-                          ? new Date(usuario.usuarioFechaNac).toLocaleDateString('es-MX')
-                          : '—'}
-                        bloqueado
-                      />
+                  <div className="atr-section-header" style={{ marginBottom: '0.75rem' }}>
+                    <div className="atr-section-dot" />
+                    <p className="atr-section-title" style={{ margin: 0, color: '#9ca3af' }}>Campos no editables</p>
+                  </div>
+                  <div className="atr-info-grid" style={{ marginBottom: '1.5rem' }}>
+                    <div className="atr-info-cell atr-info-cell-full">
+                      <div className="atr-info-label">Correo</div>
+                      <div className="atr-info-value-muted">{usuario.usuarioCorreo}</div>
+                    </div>
+                    <div className="atr-info-cell">
+                      <div className="atr-info-label">CURP</div>
+                      <div className="atr-info-value-muted">{usuario.usuarioCurp}</div>
+                    </div>
+                    <div className="atr-info-cell">
+                      <div className="atr-info-label">Boleta</div>
+                      <div className="atr-info-value-muted">{perfil.arrendatarioBoleta}</div>
                     </div>
                   </div>
 
                   <div className="atr-modal-actions" style={{ justifyContent: 'stretch' }}>
-                    <button
-                      className="atr-btn-ghost"
-                      style={{ flex: 1 }}
-                      onClick={handleCancelar}
-                    >
+                    <button className="atr-btn-ghost" style={{ flex: 1 }} onClick={handleCancelar}>
                       Cancelar
                     </button>
                     <button
@@ -359,7 +396,7 @@ const PerfilArrendatario = () => {
                       disabled={guardando || !usernameDisponible}
                       onClick={handleGuardar}
                     >
-                      {guardando ? 'Guardando...' : '💾 Guardar Cambios'}
+                      {guardando ? 'Guardando…' : 'Guardar Cambios'}
                     </button>
                   </div>
                 </>

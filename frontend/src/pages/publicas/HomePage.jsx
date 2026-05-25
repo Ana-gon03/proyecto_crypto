@@ -192,7 +192,7 @@ function Hero() {
           </h1>
 
           <p className="hero-subtitle">
-            Blockhoom conecta a estudiantes foráneos de la{" "}
+            Blockhome conecta a estudiantes foráneos de la{" "}
             <strong style={{ color: "rgba(255,255,255,0.95)" }}>
               UPALM
             </strong>{" "}
@@ -313,7 +313,7 @@ function Perfiles() {
           <div className="profile-body">
             <p className="profile-desc">
               Tienes un cuarto, departamento o casa cerca de la UPALM y no sabes cómo encontrar
-              inquilinos confiables. Blockhoom te conecta directamente con estudiantes verificados del IPN.
+              inquilinos confiables. Blockhome te conecta directamente con estudiantes verificados del IPN.
             </p>
             <div className="profile-checks">
               {ARRENDADOR_CHECKS.map((c) => (

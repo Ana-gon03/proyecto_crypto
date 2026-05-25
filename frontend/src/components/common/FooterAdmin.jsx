@@ -10,7 +10,7 @@ const FooterAdmin = () => {
     <>
       <footer className="admin-footer">
         <div className="admin-footer-content">
-          <div className="admin-footer-brand">Blockhoom — Panel de Administración</div>
+          <div className="admin-footer-brand">Blockhome — Panel de Administración</div>
           <div className="admin-footer-links">
             <Link to="/legal/aviso-privacidad" className="admin-footer-link">
               Aviso de Privacidad

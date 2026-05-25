@@ -31,7 +31,7 @@ const FooterInicio = () => {
         onMouseEnter={(e) => (e.currentTarget.style.color = "#6ee7b7")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "#ffffff")}
       >
-        Blockhoom
+        Blockhome
       </Link>
 
       {/* Links legales */}
@@ -49,7 +49,7 @@ const FooterInicio = () => {
           { label: "·", isSep: true },
           { to: "/legal/terminos-uso", label: "Términos y Condiciones", isLink: true },
           { label: "·", isSep: true },
-          { href: "mailto:contacto@blockhoom.mx", label: "Contacto", isEmail: true },
+          { href: "mailto:contacto@blockhome.mx", label: "Contacto", isEmail: true },
         ].map((item, i) => {
           if (item.isSep) {
             return (
@@ -89,7 +89,7 @@ const FooterInicio = () => {
 
       {/* Copyright */}
       <div style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>
-        © 2025 Blockhoom · Todos los derechos reservados
+        © 2025 Blockhome · Todos los derechos reservados
       </div>
     </footer>
   );

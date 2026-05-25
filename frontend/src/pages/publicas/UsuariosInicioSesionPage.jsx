@@ -134,7 +134,7 @@ const UsuariosInicioSesionPage = () => {
         {/* Marca */}
         <Link to="/" className="login-brand">
           <div className="login-brand-icon">🏠</div>
-          <span className="login-brand-name">Blockhoom</span>
+          <span className="login-brand-name">Blockhome</span>
         </Link>
 
         {/* Contenido central */}
@@ -164,7 +164,7 @@ const UsuariosInicioSesionPage = () => {
 
         {/* Footer */}
         <div className="login-left-footer">
-          © 2025 Blockhoom · UPALM IPN
+          © 2025 Blockhome · UPALM IPN
         </div>
       </div>
 

@@ -23,8 +23,8 @@ const NavbarArrendador = () => {
     <nav className="arr-nav">
       <div className="arr-nav-inner">
         <Link to="/" className="arr-nav-brand" onClick={cerrarMenu}>
-          <img src={logoImg} alt="Blockhoom" className="arr-nav-logo" />
-          <span className="arr-nav-brand-name">Blockhoom</span>
+          <img src={logoImg} alt="Blockhome" className="arr-nav-logo" />
+          <span className="arr-nav-brand-name">Blockhome</span>
         </Link>
 
         <div className="arr-nav-links">
@@ -32,13 +32,13 @@ const NavbarArrendador = () => {
             to="/arrendador/mis-viviendas"
             className={`arr-nav-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
           >
-            🏠 Mis Viviendas
+            Mis Viviendas
           </Link>
           <Link
             to="/arrendador/mis-arrendamientos"
             className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
           >
-            📋 Mis Arrendamientos
+            Mis Arrendamientos
           </Link>
         </div>
 
@@ -69,20 +69,20 @@ const NavbarArrendador = () => {
             className={`arr-nav-mobile-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
             onClick={cerrarMenu}
           >
-            🏠 Mis Viviendas
+            Mis Viviendas
           </Link>
           <Link
             to="/arrendador/mis-arrendamientos"
             className={`arr-nav-mobile-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
             onClick={cerrarMenu}
           >
-            📋 Mis Arrendamientos
+            Mis Arrendamientos
           </Link>
           <Link to="/arrendador/perfil" className="arr-nav-mobile-link" onClick={cerrarMenu}>
-            👤 Mi Perfil
+            Mi Perfil
           </Link>
           <button className="arr-nav-mobile-btn" onClick={() => { cerrarMenu(); handleCerrarSesion(); }}>
-            🚪 Cerrar Sesión
+            Cerrar Sesión
           </button>
         </div>
       )}
