@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import NavbarArrendatario from '../../components/common/NavbarArrendatario'
 import FooterInicio from '../../components/common/FooterInicio'
 import FirmarContrato from '../../components/common/FirmarContrato'
-import { getContrato, verificarContrato, getPdfUrl } from '../../services/contratoDigitalService'
+import { getContrato, verificarContrato, getPdfUrl, getComprobanteUrl } from '../../services/contratoDigitalService'
 import { getMiCertificado } from '../../services/caService'
 import '../../styles/Arrendatario.css'
 import '../../styles/Arrendador.css'
@@ -115,7 +115,7 @@ export default function ContratosArrendatario() {
                           <InfoRow label="Firma arrendatario" value={new Date(contrato.fechaFirmaArrendatario).toLocaleString('es-MX')} />
                         )}
                       </div>
-                      <div style={{ marginTop: '1rem' }}>
+                      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <a
                           href={getPdfUrl(idArrendamiento)}
                           target="_blank"
@@ -125,6 +125,16 @@ export default function ContratosArrendatario() {
                         >
                           👁 Ver / Descargar PDF
                         </a>
+                        {contrato.estadoFirma === 'completo' && (
+                          <a
+                            href={getComprobanteUrl(idArrendamiento)}
+                            download={`comprobante_firmas_${idArrendamiento}.pdf`}
+                            className="arr-btn-primary"
+                            style={{ display: 'inline-block' }}
+                          >
+                            📋 Descargar Comprobante de Firmas
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

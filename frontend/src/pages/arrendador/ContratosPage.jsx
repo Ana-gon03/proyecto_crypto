@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import NavbarArrendador from '../../components/common/NavbarArrendador'
 import FooterInicio from '../../components/common/FooterInicio'
 import FirmarContrato from '../../components/common/FirmarContrato'
-import { getContrato, iniciarContrato, verificarContrato, getPdfUrl } from '../../services/contratoDigitalService'
+import { getContrato, iniciarContrato, verificarContrato, getPdfUrl, getComprobanteUrl } from '../../services/contratoDigitalService'
 import { getMiCertificado } from '../../services/caService'
 
 export default function ContratosPage() {
@@ -140,7 +140,7 @@ export default function ContratosPage() {
                         )}
                       </div>
 
-                      <div style={{ marginTop: '1rem' }}>
+                      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <a
                           href={getPdfUrl(idArrendamiento)}
                           target="_blank"
@@ -150,6 +150,16 @@ export default function ContratosPage() {
                         >
                           👁 Ver / Descargar PDF
                         </a>
+                        {contrato.estadoFirma === 'completo' && (
+                          <a
+                            href={getComprobanteUrl(idArrendamiento)}
+                            download={`comprobante_firmas_${idArrendamiento}.pdf`}
+                            className="arr-btn-primary"
+                            style={{ display: 'inline-block' }}
+                          >
+                            📋 Descargar Comprobante de Firmas
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

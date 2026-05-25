@@ -19,6 +19,11 @@ export const getPdfUrl = (idArrendamiento) => {
   return `${base}/contratos-digitales/${idArrendamiento}/pdf`
 }
 
+export const getComprobanteUrl = (idArrendamiento) => {
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  return `${base}/contratos-digitales/${idArrendamiento}/comprobante`
+}
+
 export const getPdfBuffer = async (idArrendamiento) => {
   const url = getPdfUrl(idArrendamiento)
   const resp = await fetch(url)

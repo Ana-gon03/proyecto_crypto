@@ -177,6 +177,163 @@ router.get('/:idArrendamiento/pdf', async (req, res) => {
   }
 });
 
+// ── GET /:idArrendamiento/comprobante ─────────────────────────────────────
+// Genera un PDF comprobante de firmas cuando el contrato está completo.
+router.get('/:idArrendamiento/comprobante', async (req, res) => {
+  try {
+    const contrato = await ContratoDigital.findOne({
+      where: { arrendamiento_idArrendamiento: req.params.idArrendamiento }
+    });
+    if (!contrato) return res.status(404).json({ error: 'Contrato no encontrado' });
+    if (contrato.estadoFirma !== 'completo') {
+      return res.status(400).json({ error: 'El contrato aún no ha sido firmado por ambas partes' });
+    }
+
+    const arrendamiento = await Arrendamiento.findByPk(req.params.idArrendamiento, {
+      include: [
+        { model: Propiedad, as: 'propiedad' },
+        { model: Arrendatario, as: 'arrendatario', include: [{ model: Usuario, as: 'usuario' }] }
+      ]
+    });
+    const arrendador = await Arrendador.findByPk(arrendamiento.propiedad.arrendador_idArrendador, {
+      include: [{ model: Usuario, as: 'usuario' }]
+    });
+
+    const nomArrendador   = `${arrendador.usuario.usuarioNom} ${arrendador.usuario.usuarioApePat} ${arrendador.usuario.usuarioApeMat || ''}`.trim();
+    const nomArrendatario = `${arrendamiento.arrendatario.usuario.usuarioNom} ${arrendamiento.arrendatario.usuario.usuarioApePat} ${arrendamiento.arrendatario.usuario.usuarioApeMat || ''}`.trim();
+
+    const hashActual   = computarHashPDF(contrato.pdfBytes);
+    const integridadOk = hashActual === contrato.pdfHash;
+
+    const certArr    = await caClient.validarCertificado(contrato.certSerialArrendador);
+    const firmaArrOk = certArr.valido
+      ? verificarFirmaUsuario(contrato.pdfBytes, contrato.firmaArrendador, certArr.publicKeySpki)
+      : false;
+
+    const certAt     = await caClient.validarCertificado(contrato.certSerialArrendatario);
+    const firmaAtOk  = certAt.valido
+      ? verificarFirmaUsuario(contrato.pdfBytes, contrato.firmaArrendatario, certAt.publicKeySpki)
+      : false;
+
+    const todoValido = integridadOk && firmaArrOk && firmaAtOk;
+
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      const chunks = [];
+      const doc = new PDFDocument({ size: 'A4', margin: 65, bufferPages: true });
+      doc.on('data', c => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const ML = 65, MR = 530, ANCHO = MR - ML;
+      const NEGRO = '#000000', GRIS = '#555555', GRIS_CLARO = '#888888';
+      const VERDE = '#15803d', ROJO = '#dc2626';
+      const numContrato = `ARR-${String(req.params.idArrendamiento).padStart(4, '0')}`;
+      const ahora    = new Date();
+      const fechaStr = ahora.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+      const horaStr  = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const seccion = (titulo) => {
+        doc.moveDown(0.8);
+        doc.save().moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#cccccc').lineWidth(0.5).stroke().restore();
+        doc.moveDown(0.4);
+        doc.fontSize(8).font('Helvetica-Bold').fillColor('#444444')
+           .text(titulo.toUpperCase(), ML, doc.y, { width: ANCHO, characterSpacing: 0.8 });
+        doc.moveDown(0.5);
+      };
+
+      const fila = (label, value, colorValue) => {
+        const yPos = doc.y;
+        doc.fontSize(8).font('Helvetica').fillColor(GRIS_CLARO)
+           .text(label, ML, yPos, { width: 165, lineBreak: false });
+        doc.fontSize(8).font('Helvetica').fillColor(colorValue || NEGRO)
+           .text(String(value || '—'), ML + 170, yPos, { width: ANCHO - 170 });
+      };
+
+      const checkRow = (label, ok) => {
+        doc.fontSize(8).font('Helvetica').fillColor(ok ? VERDE : ROJO)
+           .text(`${ok ? '[✓]' : '[✗]'}  ${label}`, ML + 10, doc.y, { width: ANCHO - 10 });
+        doc.moveDown(0.35);
+      };
+
+      // Encabezado
+      doc.save().rect(ML, 48, ANCHO, 32).fill('#f8f9fa').restore();
+      doc.fontSize(7).font('Helvetica').fillColor(GRIS_CLARO)
+         .text('BLOCKHOME CA  —  Entidad Certificadora Digital  —  IPN ESCOM TT-A046', ML, 58, { align: 'center', width: ANCHO });
+      doc.save().moveTo(ML, 82).lineTo(MR, 82).strokeColor(NEGRO).lineWidth(1).stroke().restore();
+      doc.y = 94;
+
+      doc.fontSize(14).font('Helvetica-Bold').fillColor(NEGRO)
+         .text('COMPROBANTE DE FIRMAS DIGITALES', ML, doc.y, { align: 'center', width: ANCHO });
+      doc.moveDown(0.4);
+      doc.fontSize(8.5).font('Helvetica').fillColor(GRIS)
+         .text(`Contrato ${numContrato}  ·  Emitido el ${fechaStr} a las ${horaStr}`, ML, doc.y, { align: 'center', width: ANCHO });
+      doc.moveDown(0.6);
+
+      // Banner de estado general
+      const estadoColor = todoValido ? VERDE : ROJO;
+      const estadoLabel = todoValido ? '✓  CONTRATO ÍNTEGRO Y AUTÉNTICO' : '✗  VERIFICACIÓN FALLIDA';
+      doc.save().rect(ML, doc.y, ANCHO, 24).fill(todoValido ? '#f0fdf4' : '#fef2f2').restore();
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor(estadoColor)
+         .text(estadoLabel, ML, doc.y + 7, { align: 'center', width: ANCHO });
+      doc.y += 34;
+
+      // Documento original
+      seccion('Documento original');
+      fila('No. de contrato',       numContrato);
+      fila('Hash SHA-256',           contrato.pdfHash, '#1d4ed8');
+      fila('Algoritmo de hash',      'SHA-256');
+      fila('Integridad del documento', integridadOk
+        ? 'Correcto — el documento no ha sido alterado'
+        : 'ERROR — hash no coincide', integridadOk ? VERDE : ROJO);
+
+      // Firma del arrendador
+      seccion('Firma del arrendador');
+      fila('Titular',                nomArrendador);
+      fila('No. de serie del cert.', contrato.certSerialArrendador);
+      fila('Fecha y hora de firma',  new Date(contrato.fechaFirmaArrendador).toLocaleString('es-MX'));
+      fila('Algoritmo de firma',     'ECDSA P-256');
+      fila('Firma ECDSA',            firmaArrOk ? 'Válida' : 'INVÁLIDA', firmaArrOk ? VERDE : ROJO);
+      fila('Certificado en Blockhome CA', certArr.valido ? 'Válido y vigente' : 'Inválido o revocado', certArr.valido ? VERDE : ROJO);
+
+      // Firma del arrendatario
+      seccion('Firma del arrendatario');
+      fila('Titular',                nomArrendatario);
+      fila('No. de serie del cert.', contrato.certSerialArrendatario);
+      fila('Fecha y hora de firma',  new Date(contrato.fechaFirmaArrendatario).toLocaleString('es-MX'));
+      fila('Algoritmo de firma',     'ECDSA P-256');
+      fila('Firma ECDSA',            firmaAtOk ? 'Válida' : 'INVÁLIDA', firmaAtOk ? VERDE : ROJO);
+      fila('Certificado en Blockhome CA', certAt.valido ? 'Válido y vigente' : 'Inválido o revocado', certAt.valido ? VERDE : ROJO);
+
+      // Resultado detallado
+      seccion('Resultado de verificación');
+      checkRow('Integridad del documento (hash SHA-256 coincide)', integridadOk);
+      checkRow('Firma digital ECDSA P-256 del arrendador válida', firmaArrOk);
+      checkRow('Certificado del arrendador emitido y vigente en Blockhome CA', certArr.valido);
+      checkRow('Firma digital ECDSA P-256 del arrendatario válida', firmaAtOk);
+      checkRow('Certificado del arrendatario emitido y vigente en Blockhome CA', certAt.valido);
+
+      // Pie
+      doc.moveDown(1.2);
+      doc.save().moveTo(ML, doc.y).lineTo(MR, doc.y).strokeColor('#cccccc').lineWidth(0.5).stroke().restore();
+      doc.moveDown(0.4);
+      doc.fontSize(7).font('Helvetica').fillColor('#aaaaaa')
+         .text('Este comprobante fue generado automáticamente por la plataforma Blockhome. No requiere sello ni firma adicional.', ML, doc.y, { align: 'center', width: ANCHO });
+      doc.moveDown(0.3);
+      doc.fontSize(7).font('Helvetica').fillColor('#aaaaaa')
+         .text(`Blockhome © ${ahora.getFullYear()} — IPN ESCOM TT-A046 — Documento generado: ${fechaStr}`, ML, doc.y, { align: 'center', width: ANCHO });
+
+      doc.end();
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=comprobante_firmas_${req.params.idArrendamiento}.pdf`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[Contratos] Error al generar comprobante:', err);
+    res.status(500).json({ error: 'Error al generar el comprobante' });
+  }
+});
+
 // ── GET /:idArrendamiento ──────────────────────────────────────────────────
 router.get('/:idArrendamiento', async (req, res) => {
   try {
