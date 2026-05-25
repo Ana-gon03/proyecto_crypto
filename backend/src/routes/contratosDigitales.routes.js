@@ -258,7 +258,7 @@ router.get('/:idArrendamiento/comprobante', async (req, res) => {
       // Encabezado
       doc.save().rect(ML, 48, ANCHO, 32).fill('#f8f9fa').restore();
       doc.fontSize(7).font('Helvetica').fillColor(GRIS_CLARO)
-         .text('BLOCKHOME CA  —  Entidad Certificadora Digital  —  IPN ESCOM TT-A046', ML, 58, { align: 'center', width: ANCHO });
+         .text('BLOCKHOME CA  —  Entidad Certificadora Digital', ML, 58, { align: 'center', width: ANCHO });
       doc.save().moveTo(ML, 82).lineTo(MR, 82).strokeColor(NEGRO).lineWidth(1).stroke().restore();
       doc.y = 94;
 
@@ -320,7 +320,7 @@ router.get('/:idArrendamiento/comprobante', async (req, res) => {
          .text('Este comprobante fue generado automáticamente por la plataforma Blockhome. No requiere sello ni firma adicional.', ML, doc.y, { align: 'center', width: ANCHO });
       doc.moveDown(0.3);
       doc.fontSize(7).font('Helvetica').fillColor('#aaaaaa')
-         .text(`Blockhome © ${ahora.getFullYear()} — IPN ESCOM TT-A046 — Documento generado: ${fechaStr}`, ML, doc.y, { align: 'center', width: ANCHO });
+         .text(`Blockhome © ${ahora.getFullYear()} — Documento generado: ${fechaStr}`, ML, doc.y, { align: 'center', width: ANCHO });
 
       doc.end();
     });
