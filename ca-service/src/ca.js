@@ -8,7 +8,7 @@ const rs   = require('jsrsasign');
 const fs   = require('fs');
 const path = require('path');
 
-const KEYS_DIR  = path.join(__dirname, '..', 'keys');
+const KEYS_DIR  = process.env.KEYS_DIR || path.join(__dirname, '..', 'keys');
 const CA_PRV    = path.join(KEYS_DIR, 'ca-private.pem');
 const CA_PUB    = path.join(KEYS_DIR, 'ca-public.pem');
 const CA_CERT   = path.join(KEYS_DIR, 'ca-cert.pem');
