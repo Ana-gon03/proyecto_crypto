@@ -23,6 +23,7 @@ import CrearArrendamiento from './pages/arrendador/CrearArrendamiento'
 import ProtectedArrendadorRoute from './components/common/ProtectedArrendadorRoute'
 import PerfilArrendador from './pages/arrendador/PerfilArrendador'
 import ContratosPage from './pages/arrendador/ContratosPage'
+import FirmarContratoPage from './pages/arrendador/FirmarContratoPage'
 import MiCertificadoArrendadorPage from './pages/arrendador/MiCertificadoArrendadorPage'
 import ContratosArrendatario from './pages/arrendatario/ContratosArrendatario'
 import MiCertificadoPage from './pages/arrendatario/MiCertificadoPage'
@@ -78,6 +79,9 @@ function App() {
         } />
         <Route path="/arrendador/perfil" element={
           <ProtectedArrendadorRoute><PerfilArrendador /></ProtectedArrendadorRoute>
+        } />
+        <Route path="/arrendador/firmar-contrato" element={
+          <ProtectedArrendadorRoute><FirmarContratoPage /></ProtectedArrendadorRoute>
         } />
         <Route path="/arrendador/contratos/:idArrendamiento" element={
           <ProtectedArrendadorRoute><ContratosPage /></ProtectedArrendadorRoute>

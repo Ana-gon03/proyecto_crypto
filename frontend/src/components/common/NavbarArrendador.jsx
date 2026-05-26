@@ -10,6 +10,7 @@ const NavbarArrendador = () => {
 
   const isActive = (path) => location.pathname === path
   const esPaginaFirma = location.pathname.startsWith('/arrendador/contratos/')
+  const isFirmaActive = esPaginaFirma || location.pathname === '/arrendador/firmar-contrato'
 
   const handleCerrarSesion = () => {
     localStorage.clear()
@@ -52,8 +53,8 @@ const NavbarArrendador = () => {
             </>
           )}
           <Link
-            to="/arrendador/mis-arrendamientos"
-            className={`arr-nav-link${esPaginaFirma ? ' active' : ''}`}
+            to="/arrendador/firmar-contrato"
+            className={`arr-nav-link${isFirmaActive ? ' active' : ''}`}
             style={{ color: 'var(--purple-600)', fontWeight: 600 }}
           >
             ✍️ Firmar Contrato
@@ -108,7 +109,7 @@ const NavbarArrendador = () => {
             </>
           )}
           <Link
-            to="/arrendador/mis-arrendamientos"
+            to="/arrendador/firmar-contrato"
             className="arr-nav-mobile-link"
             onClick={cerrarMenu}
           >
