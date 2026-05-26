@@ -354,9 +354,31 @@ router.post('/:idArrendamiento/firmar-arrendador', async (req, res) => {
   try {
     const { idArrendamiento } = req.params;
     const { firmaBase64, certSerial } = req.body;
+    const userId = req.headers['x-user-id'];
 
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
     if (!firmaBase64 || !certSerial) {
       return res.status(400).json({ error: 'Se requieren firmaBase64 y certSerial' });
+    }
+
+    // Verificar que el certSerial corresponde al certificado registrado en la cuenta del arrendador
+    const arrendador = await Arrendador.findOne({
+      where: { usuario_idUsuario: userId },
+      include: [{ model: Usuario, as: 'usuario' }],
+    });
+    if (!arrendador) {
+      return res.status(403).json({ error: 'No tienes permisos para firmar como arrendador' });
+    }
+    if (!arrendador.usuario.certificadoSerial || arrendador.usuario.certificadoSerial !== certSerial) {
+      return res.status(403).json({ error: 'El certificado no pertenece a tu cuenta' });
+    }
+
+    // Verificar que el arrendamiento le pertenece a este arrendador
+    const arrCheck = await Arrendamiento.findByPk(idArrendamiento, {
+      include: [{ model: Propiedad, as: 'propiedad' }],
+    });
+    if (!arrCheck || arrCheck.propiedad.arrendador_idArrendador !== arrendador.idArrendador) {
+      return res.status(403).json({ error: 'Este arrendamiento no te pertenece' });
     }
 
     const contrato = await ContratoDigital.findOne({
@@ -400,9 +422,29 @@ router.post('/:idArrendamiento/firmar-arrendatario', async (req, res) => {
   try {
     const { idArrendamiento } = req.params;
     const { firmaBase64, certSerial } = req.body;
+    const userId = req.headers['x-user-id'];
 
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
     if (!firmaBase64 || !certSerial) {
       return res.status(400).json({ error: 'Se requieren firmaBase64 y certSerial' });
+    }
+
+    // Verificar que el certSerial corresponde al certificado registrado en la cuenta del arrendatario
+    const arrendatario = await Arrendatario.findOne({
+      where: { usuario_idUsuario: userId },
+      include: [{ model: Usuario, as: 'usuario' }],
+    });
+    if (!arrendatario) {
+      return res.status(403).json({ error: 'No tienes permisos para firmar como arrendatario' });
+    }
+    if (!arrendatario.usuario.certificadoSerial || arrendatario.usuario.certificadoSerial !== certSerial) {
+      return res.status(403).json({ error: 'El certificado no pertenece a tu cuenta' });
+    }
+
+    // Verificar que el arrendamiento le pertenece a este arrendatario
+    const arrCheck = await Arrendamiento.findByPk(idArrendamiento);
+    if (!arrCheck || arrCheck.arrendatario_idArrendatario !== arrendatario.idArrendatario) {
+      return res.status(403).json({ error: 'Este arrendamiento no te pertenece' });
     }
 
     const contrato = await ContratoDigital.findOne({

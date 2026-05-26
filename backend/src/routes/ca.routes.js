@@ -122,6 +122,10 @@ router.post('/registrar-certificado', async (req, res) => {
     const usuario = await Usuario.findByPk(userId);
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
+    if (validacion.correo && validacion.correo !== usuario.usuarioCorreo) {
+      return res.status(403).json({ error: 'El certificado no pertenece a tu cuenta. Verifica que estás subiendo tu propio archivo .cer.' });
+    }
+
     await usuario.update({
       ecdsaPublicKey:    validacion.publicKeySpki,
       clavesGeneradas:   1,

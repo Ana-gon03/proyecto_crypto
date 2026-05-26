@@ -9,6 +9,7 @@ const NavbarArrendador = () => {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   const isActive = (path) => location.pathname === path
+  const esPaginaFirma = location.pathname.startsWith('/arrendador/contratos/')
 
   const handleCerrarSesion = () => {
     localStorage.clear()
@@ -28,24 +29,28 @@ const NavbarArrendador = () => {
         </Link>
 
         <div className="arr-nav-links">
-          <Link
-            to="/arrendador/mis-viviendas"
-            className={`arr-nav-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
-          >
-            Mis Viviendas
-          </Link>
-          <Link
-            to="/arrendador/mis-arrendamientos"
-            className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
-          >
-            Mis Arrendamientos
-          </Link>
-          <Link
-            to="/arrendador/mi-certificado-digital"
-            className={`arr-nav-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
-          >
-            Mi Certificado
-          </Link>
+          {!esPaginaFirma && (
+            <>
+              <Link
+                to="/arrendador/mis-viviendas"
+                className={`arr-nav-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
+              >
+                Mis Viviendas
+              </Link>
+              <Link
+                to="/arrendador/mis-arrendamientos"
+                className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+              >
+                Mis Arrendamientos
+              </Link>
+              <Link
+                to="/arrendador/mi-certificado-digital"
+                className={`arr-nav-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
+              >
+                Mi Certificado
+              </Link>
+            </>
+          )}
           <Link
             to="/arrendador/mis-arrendamientos"
             className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
@@ -77,27 +82,31 @@ const NavbarArrendador = () => {
 
       {menuAbierto && (
         <div className="arr-nav-mobile-menu">
-          <Link
-            to="/arrendador/mis-viviendas"
-            className={`arr-nav-mobile-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
-            onClick={cerrarMenu}
-          >
-            Mis Viviendas
-          </Link>
-          <Link
-            to="/arrendador/mis-arrendamientos"
-            className={`arr-nav-mobile-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
-            onClick={cerrarMenu}
-          >
-            Mis Arrendamientos
-          </Link>
-          <Link
-            to="/arrendador/mi-certificado-digital"
-            className={`arr-nav-mobile-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
-            onClick={cerrarMenu}
-          >
-            Mi Certificado
-          </Link>
+          {!esPaginaFirma && (
+            <>
+              <Link
+                to="/arrendador/mis-viviendas"
+                className={`arr-nav-mobile-link${isActive('/arrendador/mis-viviendas') ? ' active' : ''}`}
+                onClick={cerrarMenu}
+              >
+                Mis Viviendas
+              </Link>
+              <Link
+                to="/arrendador/mis-arrendamientos"
+                className={`arr-nav-mobile-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+                onClick={cerrarMenu}
+              >
+                Mis Arrendamientos
+              </Link>
+              <Link
+                to="/arrendador/mi-certificado-digital"
+                className={`arr-nav-mobile-link${isActive('/arrendador/mi-certificado-digital') ? ' active' : ''}`}
+                onClick={cerrarMenu}
+              >
+                Mi Certificado
+              </Link>
+            </>
+          )}
           <Link
             to="/arrendador/mis-arrendamientos"
             className="arr-nav-mobile-link"
