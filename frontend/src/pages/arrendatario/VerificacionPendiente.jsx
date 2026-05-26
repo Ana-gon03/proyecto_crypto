@@ -24,6 +24,7 @@ const VerificacionPendiente = () => {
 
         if (data.expirado) {
           localStorage.clear()
+          sessionStorage.clear()
           navigate('/usuarios/verificar-expiracion', { state: { userId } })
           return
         }

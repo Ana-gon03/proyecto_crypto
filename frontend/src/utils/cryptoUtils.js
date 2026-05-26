@@ -6,7 +6,7 @@
  *  - Las firmas ECDSA de WebCrypto usan formato IEEE P1363 (r||s, 64 bytes).
  *  - Node.js verifica con { dsaEncoding: 'ieee-p1363' }.
  *  - La llave pública se exporta como SPKI (SubjectPublicKeyInfo) en base64.
- *  - La llave privada se exporta como JWK para descarga y almacenamiento.
+ *  - La llave privada NUNCA se almacena; se usa solo en memoria durante la firma.
  */
 
 const ALGORITMO = { name: 'ECDSA', namedCurve: 'P-256' };
@@ -76,40 +76,6 @@ export function descargarJSON(objeto, nombreArchivo) {
   URL.revokeObjectURL(url);
 }
 
-// ── Flujo completo: generar + guardar en localStorage + descargar ──────────
-
-/**
- * Genera par de llaves, las guarda en localStorage y las descarga como JSON.
- * Retorna { publicKeySpki, privateKeyJwk, publicKeyJwk }
- */
-export async function generarYDescargarLlaves(nombreUsuario) {
-  const keyPair         = await generarParLlaves();
-  const publicKeySpki   = await exportarLlavePublicaSpki(keyPair.publicKey);
-  const privateKeyJwk   = await exportarLlavePrivadaJwk(keyPair.privateKey);
-  const publicKeyJwk    = await exportarLlavePublicaJwk(keyPair.publicKey);
-
-  // Guardar en localStorage para firma inmediata (sin necesidad de importar)
-  localStorage.setItem('ecdsaPrivateKeyJwk', JSON.stringify(privateKeyJwk));
-  localStorage.setItem('ecdsaPublicKeyJwk',  JSON.stringify(publicKeyJwk));
-  localStorage.setItem('ecdsaPublicKeySpki', publicKeySpki);
-
-  const nombreSanitizado = (nombreUsuario || 'usuario').replace(/\s+/g, '_');
-  descargarJSON(privateKeyJwk, `llave-privada-${nombreSanitizado}.json`);
-  descargarJSON(publicKeyJwk,  `llave-publica-${nombreSanitizado}.json`);
-
-  return { publicKeySpki, privateKeyJwk, publicKeyJwk };
-}
-
-/**
- * Carga la llave privada desde localStorage o desde un objeto JWK.
- * @param {object|null} jwkManual  Si se pasa, lo usa en lugar de localStorage
- */
-export async function obtenerLlavePrivada(jwkManual = null) {
-  const jwk = jwkManual || JSON.parse(localStorage.getItem('ecdsaPrivateKeyJwk') || 'null');
-  if (!jwk) throw new Error('No se encontró la llave privada. Impórtala desde tu archivo descargado.');
-  return importarLlavePrivadaJwk(jwk);
-}
-
 /**
  * Lee un archivo JSON subido por el usuario y retorna su contenido como objeto.
  */
@@ -123,13 +89,6 @@ export function leerArchivoJSON(file) {
     reader.onerror = () => reject(new Error('Error al leer el archivo'));
     reader.readAsText(file);
   });
-}
-
-/**
- * Retorna true si hay llaves guardadas en localStorage.
- */
-export function tieneLlavesEnMemoria() {
-  return !!localStorage.getItem('ecdsaPrivateKeyJwk');
 }
 
 // ── Cifrado/descifrado de archivo .key (AES-256-GCM + PBKDF2-SHA256) ────────

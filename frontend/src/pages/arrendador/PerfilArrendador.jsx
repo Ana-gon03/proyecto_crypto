@@ -125,7 +125,7 @@ const PerfilArrendador = () => {
         headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-arrendador-id': arrendadorId }
       })
       const data = await response.json()
-      if (response.ok) { localStorage.clear(); navigate('/') }
+      if (response.ok) { localStorage.clear(); sessionStorage.clear(); navigate('/') }
       else setModalAlerta({ abierto: true, mensaje: data.error || 'Error al eliminar la cuenta' })
     } catch { setModalAlerta({ abierto: true, mensaje: 'Error al eliminar la cuenta' }) }
   }

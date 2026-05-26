@@ -14,6 +14,7 @@ const NavbarArrendatario = () => {
 
   const handleCerrarSesion = () => {
     localStorage.clear()
+    sessionStorage.clear()
     navigate('/')
   }
 

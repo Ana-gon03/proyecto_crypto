@@ -178,6 +178,7 @@ const PerfilArrendatario = () => {
         mostrarModal('success', 'Cuenta eliminada', data.message || 'Cuenta eliminada exitosamente')
         setTimeout(() => {
           localStorage.clear()
+          sessionStorage.clear()
           navigate('/')
         }, 2000)
       } else {

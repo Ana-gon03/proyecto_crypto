@@ -23,6 +23,7 @@ const VerificarExpiracion = () => {
         const data = await verificarExpiracion(userId)
         if (data.expirado) {
           localStorage.clear()
+          sessionStorage.clear()
           setEstado('eliminado')
         } else {
           setDiasRestantes(data.diasRestantes)
