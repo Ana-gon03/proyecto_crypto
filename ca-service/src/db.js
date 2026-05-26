@@ -59,6 +59,14 @@ const usuarios = {
     const u = leer().usuarios.find(u => u.correo === correo);
     return u?.rol === 'admin';
   },
+  actualizar(id, cambios) {
+    const data = leer();
+    const idx  = data.usuarios.findIndex(u => u.id === id);
+    if (idx === -1) return null;
+    Object.assign(data.usuarios[idx], cambios);
+    guardar(data);
+    return data.usuarios[idx];
+  },
 };
 
 module.exports = { certs, usuarios };

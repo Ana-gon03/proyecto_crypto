@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Perfil &mdash; Blockhome CA</title>
+  <link rel="stylesheet" href="/css/estilo.css" />
+</head>
+<body>
+
+<header class="ca-header">
+  <a class="ca-header-brand" href="/">
+    <div class="ca-header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div class="ca-header-title">
+      <span>Blockhome CA</span>
+      <span>Entidad Certificadora Digital</span>
+    </div>
+  </a>
+  <nav class="ca-header-nav">
+    <a class="ca-nav-link" href="/solicitar">Solicitar Certificado</a>
+    <a class="ca-nav-link" href="/mi-certificado">Mi Certificado</a>
+    <a class="ca-nav-link" href="/verificar">Verificar</a>
+    <span class="ca-nav-sep"></span>
+    <a class="ca-nav-link activo" id="navNombre" href="/perfil" style="font-weight:600"></a>
+    <button class="ca-nav-link" id="btnLogout" style="background:none;border:none;cursor:pointer">Salir</button>
+  </nav>
+</header>
+
+<main class="ca-main">
+
+  <section class="ca-hero">
+    <div class="ca-hero-escudo" id="heroAvatar" style="font-size:2.2rem;width:72px;height:72px;border-radius:50%;background:var(--ca-primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">?</div>
+    <h1 id="heroNombre">Mi Perfil</h1>
+    <p>Gestiona tu nombre y contrase&ntilde;a del portal Blockhome CA.</p>
+    <span class="ca-hero-badge" id="heroBadge">usuario</span>
+  </section>
+
+  <!-- Cargando -->
+  <div class="ca-card" id="panelCargando">
+    <div style="text-align:center;padding:2rem;color:var(--ca-text-light)">
+      <span class="ca-spinner ca-spinner-azul" style="width:32px;height:32px;border-width:4px"></span>
+      <p style="margin-top:1rem">Cargando perfil&hellip;</p>
+    </div>
+  </div>
+
+  <!-- Datos del perfil -->
+  <div class="ca-card" id="panelPerfil" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Datos personales</h2>
+        <p>Actualiza tu nombre en el portal CA</p>
+      </div>
+    </div>
+
+    <div id="alertDatos"></div>
+
+    <div class="ca-data-grid" style="margin-bottom:1.5rem">
+      <div class="ca-data-item">
+        <div class="ca-data-label">Correo electr&oacute;nico</div>
+        <div class="ca-data-value" id="infoCorreo" style="color:var(--ca-text-mid)"></div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Rol</div>
+        <div class="ca-data-value" id="infoRol"></div>
+      </div>
+      <div class="ca-data-item">
+        <div class="ca-data-label">Fecha de registro</div>
+        <div class="ca-data-value" id="infoFecha"></div>
+      </div>
+    </div>
+
+    <div class="ca-alert ca-alert-info" style="margin-bottom:1.25rem">
+      <span>&#9432;</span>
+      <span>El correo no es editable porque est&aacute; vinculado a tu certificado X.509 activo.</span>
+    </div>
+
+    <div class="ca-form-group">
+      <label class="ca-label" for="inputNombre">Nombre completo</label>
+      <input class="ca-input" type="text" id="inputNombre" placeholder="Tu nombre completo" />
+    </div>
+
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" id="btnGuardarNombre" onclick="guardarNombre()">
+        Guardar nombre
+      </button>
+    </div>
+  </div>
+
+  <!-- Cambiar contraseña -->
+  <div class="ca-card" id="panelPassword" style="display:none">
+    <div class="ca-card-header">
+      <div class="ca-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div>
+        <h2>Cambiar contrase&ntilde;a</h2>
+        <p>Actualiza la contrase&ntilde;a de acceso al portal CA</p>
+      </div>
+    </div>
+
+    <div id="alertPass"></div>
+
+    <div class="ca-form-group">
+      <label class="ca-label" for="passActual">Contrase&ntilde;a actual</label>
+      <input class="ca-input" type="password" id="passActual" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="passNueva">Nueva contrase&ntilde;a</label>
+      <input class="ca-input" type="password" id="passNueva" placeholder="M&iacute;nimo 8 caracteres" autocomplete="new-password" />
+    </div>
+    <div class="ca-form-group">
+      <label class="ca-label" for="passConfirm">Confirmar nueva contrase&ntilde;a</label>
+      <input class="ca-input" type="password" id="passConfirm" placeholder="Repite la nueva contrase&ntilde;a" autocomplete="new-password" />
+    </div>
+
+    <div class="ca-btn-group">
+      <button class="ca-btn ca-btn-primary" id="btnGuardarPass" onclick="guardarPassword()">
+        Cambiar contrase&ntilde;a
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<footer class="ca-footer">
+  &copy; 2026 Blockhome CA
+</footer>
+
+<script>
+  const API = '';
+
+  function alerta(id, tipo, msg) {
+    const iconos = { success: '&#10003;', error: '&#10007;', info: '&#9432;', warn: '&#9888;' };
+    document.getElementById(id).innerHTML =
+      `<div class="ca-alert ca-alert-${tipo}" style="margin-bottom:1rem"><span>${iconos[tipo] || '!'}</span><span>${msg}</span></div>`;
+  }
+
+  function fmtFecha(iso) {
+    return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await fetch(`${API}/api/portal/logout`, { method: 'POST', credentials: 'include' });
+    location.href = '/';
+  });
+
+  (async () => {
+    try {
+      const sesion = await fetch(`${API}/api/portal/sesion`, { credentials: 'include' });
+      const sd     = await sesion.json();
+      if (!sd.autenticado) { location.href = '/'; return; }
+
+      const nombre1 = sd.usuario.nombre.split(' ')[0];
+      document.getElementById('navNombre').textContent = nombre1;
+
+      const r    = await fetch(`${API}/api/portal/perfil`, { credentials: 'include' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al cargar perfil');
+
+      document.getElementById('heroAvatar').textContent  = data.nombre.charAt(0).toUpperCase();
+      document.getElementById('heroNombre').textContent  = data.nombre;
+      document.getElementById('heroBadge').textContent   = data.rol;
+      document.getElementById('infoCorreo').textContent  = data.correo;
+      document.getElementById('infoRol').textContent     = data.rol;
+      document.getElementById('infoFecha').textContent   = fmtFecha(data.fechaRegistro);
+      document.getElementById('inputNombre').value       = data.nombre;
+
+      document.getElementById('panelCargando').style.display  = 'none';
+      document.getElementById('panelPerfil').style.display    = '';
+      document.getElementById('panelPassword').style.display  = '';
+    } catch (e) {
+      document.getElementById('panelCargando').innerHTML =
+        `<div class="ca-alert ca-alert-error"><span>&#10007;</span><span>${e.message}</span></div>`;
+    }
+  })();
+
+  async function guardarNombre() {
+    const nombre = document.getElementById('inputNombre').value.trim();
+    if (!nombre) return alerta('alertDatos', 'warn', 'El nombre no puede estar vacío.');
+
+    const btn = document.getElementById('btnGuardarNombre');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ca-spinner"></span> Guardando&hellip;';
+
+    try {
+      const r = await fetch(`${API}/api/portal/perfil`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al guardar');
+
+      document.getElementById('heroNombre').textContent         = nombre;
+      document.getElementById('heroAvatar').textContent         = nombre.charAt(0).toUpperCase();
+      document.getElementById('navNombre').textContent          = nombre.split(' ')[0];
+      alerta('alertDatos', 'success', 'Nombre actualizado correctamente.');
+    } catch (e) {
+      alerta('alertDatos', 'error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Guardar nombre';
+    }
+  }
+
+  async function guardarPassword() {
+    const contrasenaActual  = document.getElementById('passActual').value;
+    const nuevaContrasena   = document.getElementById('passNueva').value;
+    const confirmar         = document.getElementById('passConfirm').value;
+
+    if (!contrasenaActual || !nuevaContrasena || !confirmar) {
+      return alerta('alertPass', 'warn', 'Completa todos los campos.');
+    }
+    if (nuevaContrasena.length < 8) {
+      return alerta('alertPass', 'warn', 'La nueva contrase&ntilde;a debe tener al menos 8 caracteres.');
+    }
+    if (nuevaContrasena !== confirmar) {
+      return alerta('alertPass', 'error', 'Las contrase&ntilde;as nuevas no coinciden.');
+    }
+
+    const btn = document.getElementById('btnGuardarPass');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ca-spinner"></span> Actualizando&hellip;';
+
+    try {
+      const r = await fetch(`${API}/api/portal/perfil`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contrasenaActual, nuevaContrasena }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al actualizar');
+
+      document.getElementById('passActual').value  = '';
+      document.getElementById('passNueva').value   = '';
+      document.getElementById('passConfirm').value = '';
+      alerta('alertPass', 'success', 'Contrase&ntilde;a actualizada correctamente.');
+    } catch (e) {
+      alerta('alertPass', 'error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Cambiar contrase&ntilde;a';
+    }
+  }
+</script>
+</body>
+</html>

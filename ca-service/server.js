@@ -61,10 +61,11 @@ app.use('/api/ca',     require('./src/routes/certificados.routes'));
 app.use('/api/admin',  require('./src/routes/admin.routes'));
 
 // ── SPA fallback para rutas del portal ────────────────────────────────────
-app.get('/solicitar',     (_, res) => res.sendFile(path.join(__dirname, 'public', 'solicitar.html')));
-app.get('/mi-certificado',(_, res) => res.sendFile(path.join(__dirname, 'public', 'mi-certificado.html')));
-app.get('/verificar',     (_, res) => res.sendFile(path.join(__dirname, 'public', 'verificar.html')));
-app.get('/admin',         (_, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/solicitar',      (_, res) => res.sendFile(path.join(__dirname, 'public', 'solicitar.html')));
+app.get('/mi-certificado', (_, res) => res.sendFile(path.join(__dirname, 'public', 'mi-certificado.html')));
+app.get('/verificar',      (_, res) => res.sendFile(path.join(__dirname, 'public', 'verificar.html')));
+app.get('/admin',          (_, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/perfil',         (_, res) => res.sendFile(path.join(__dirname, 'public', 'perfil.html')));
 
 app.listen(PORT, () => {
   console.log(`[CA Service] Portal: http://localhost:${PORT}`);

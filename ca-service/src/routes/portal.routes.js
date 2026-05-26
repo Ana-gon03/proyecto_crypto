@@ -5,6 +5,7 @@
 
 const express  = require('express');
 const router   = express.Router();
+const bcrypt   = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { registrar, iniciarSesion, requireAuth } = require('../auth');
 const { usuarios, certs }  = require('../db');
@@ -100,6 +101,58 @@ router.post('/solicitar-certificado', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[CA Portal] Error emitir cert:', err.message);
     res.status(500).json({ error: 'Error al emitir el certificado' });
+  }
+});
+
+// ── GET /api/portal/perfil ─────────────────────────────────────────────────
+router.get('/perfil', requireAuth, (req, res) => {
+  const u = usuarios.buscarPorId(req.session.usuario.id);
+  if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+  res.json({
+    id:            u.id,
+    nombre:        u.nombre,
+    correo:        u.correo,
+    rol:           u.rol,
+    fechaRegistro: u.fechaRegistro,
+  });
+});
+
+// ── PUT /api/portal/perfil ─────────────────────────────────────────────────
+router.put('/perfil', requireAuth, async (req, res) => {
+  try {
+    const { nombre, contrasenaActual, nuevaContrasena } = req.body;
+    const u = usuarios.buscarPorId(req.session.usuario.id);
+    if (!u) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const cambios = {};
+
+    if (nombre !== undefined) {
+      if (!nombre.trim()) return res.status(400).json({ error: 'El nombre no puede estar vacío' });
+      cambios.nombre = nombre.trim();
+    }
+
+    if (nuevaContrasena !== undefined) {
+      if (!contrasenaActual) return res.status(400).json({ error: 'Ingresa tu contraseña actual' });
+      const ok = await bcrypt.compare(contrasenaActual, u.hashContra);
+      if (!ok) return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+      if (nuevaContrasena.length < 8) return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+      cambios.hashContra = await bcrypt.hash(nuevaContrasena, 12);
+    }
+
+    if (Object.keys(cambios).length === 0) {
+      return res.status(400).json({ error: 'Sin cambios para guardar' });
+    }
+
+    usuarios.actualizar(u.id, cambios);
+
+    if (cambios.nombre) {
+      req.session.usuario = { ...req.session.usuario, nombre: cambios.nombre };
+    }
+
+    res.json({ ok: true, message: 'Perfil actualizado exitosamente' });
+  } catch (err) {
+    console.error('[CA Portal] Error al actualizar perfil:', err.message);
+    res.status(500).json({ error: 'Error al actualizar el perfil' });
   }
 });
 
