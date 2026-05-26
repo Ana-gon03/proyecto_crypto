@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavbarArrendador from '../../components/common/NavbarArrendador'
 import FooterInicio from '../../components/common/FooterInicio'
-import ModalDetalleArrendamiento from '../../components/arrendador/ModalDetalleArrendamiento'
-import ModalConfirmacion from '../../components/common/ModalConfirmacion'
-import { getArrendamientosArrendador, finalizarArrendamiento, descargarContratoPDF } from '../../services/arrendamientoService'
+import { getArrendamientosArrendador } from '../../services/arrendamientoService'
 import '../../styles/Arrendador.css'
 
 const MisArrendamientosArrendador = () => {
@@ -12,9 +10,6 @@ const MisArrendamientosArrendador = () => {
   const [arrendamientos, setArrendamientos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [modalAbierto, setModalAbierto] = useState(false)
-  const [arrendamientoSeleccionado, setArrendamientoSeleccionado] = useState(null)
-  const [modalConfirmacion, setModalConfirmacion] = useState({ abierto: false, id: null })
 
   useEffect(() => { cargarArrendamientos() }, [])
 
@@ -26,14 +21,6 @@ const MisArrendamientosArrendador = () => {
       setArrendamientos(data)
     } catch { setError('Error al cargar arrendamientos') }
     finally { setCargando(false) }
-  }
-
-  const handleConfirmarFinalizar = async () => {
-    try {
-      await finalizarArrendamiento(modalConfirmacion.id)
-      setModalConfirmacion({ abierto: false, id: null })
-      cargarArrendamientos()
-    } catch { alert('Error al finalizar arrendamiento') }
   }
 
   if (cargando) return (
@@ -115,34 +102,11 @@ const MisArrendamientosArrendador = () => {
 
                   <div className="arr-card-actions">
                     <button
-                      className="arr-btn-primary arr-btn-sm"
-                      onClick={() => { setArrendamientoSeleccionado(a); setModalAbierto(true) }}
-                    >
-                      👁 Ver Detalle
-                    </button>
-
-                    <button
-                      className="arr-btn-ghost arr-btn-sm"
-                      onClick={() => descargarContratoPDF(a.idArrendamiento)}
-                    >
-                      📄 Ver PDF
-                    </button>
-
-                    <button
                       className="arr-btn-ghost arr-btn-sm"
                       onClick={() => navigate(`/arrendador/contratos/${a.idArrendamiento}`)}
                     >
                       ✍️ Firmar Contrato Digital
                     </button>
-
-                    {a.arrendamientoValArrendador === 0 && (
-                      <button
-                        className="arr-btn-danger arr-btn-sm"
-                        onClick={() => setModalConfirmacion({ abierto: true, id: a.idArrendamiento })}
-                      >
-                        Finalizar
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -150,25 +114,6 @@ const MisArrendamientosArrendador = () => {
           </div>
         )}
       </main>
-
-      {modalAbierto && arrendamientoSeleccionado && (
-        <ModalDetalleArrendamiento
-          arrendamiento={arrendamientoSeleccionado}
-          onClose={() => { setModalAbierto(false); setArrendamientoSeleccionado(null) }}
-        />
-      )}
-
-      {modalConfirmacion.abierto && (
-        <ModalConfirmacion
-          titulo="Finalizar Arrendamiento"
-          mensaje="¿Estás seguro de finalizar este arrendamiento? Quedará pendiente de confirmación por el estudiante."
-          onConfirmar={handleConfirmarFinalizar}
-          onCancelar={() => setModalConfirmacion({ abierto: false, id: null })}
-          textoConfirmar="Finalizar"
-          textoCancelar="Cancelar"
-          peligro={true}
-        />
-      )}
 
       <FooterInicio />
     </div>
