@@ -129,10 +129,10 @@ const MisArrendamientosArrendador = () => {
                     </button>
 
                     <button
-                      className="arr-btn-ghost arr-btn-sm"
+                      className="arr-btn-firma arr-btn-sm"
                       onClick={() => navigate(`/arrendador/contratos/${a.idArrendamiento}`)}
                     >
-                      ✍️ Firmar Contrato Digital
+                      🔏 Firmar Contrato Digital
                     </button>
 
                     {a.arrendamientoValArrendador === 0 && (
