@@ -53,7 +53,7 @@ const NavbarArrendador = () => {
           )}
           <Link
             to="/arrendador/mis-arrendamientos"
-            className={`arr-nav-link${isActive('/arrendador/mis-arrendamientos') ? ' active' : ''}`}
+            className={`arr-nav-link${esPaginaFirma ? ' active' : ''}`}
             style={{ color: 'var(--purple-600)', fontWeight: 600 }}
           >
             ✍️ Firmar Contrato
