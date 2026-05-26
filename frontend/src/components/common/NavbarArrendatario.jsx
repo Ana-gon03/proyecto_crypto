@@ -9,6 +9,8 @@ const NavbarArrendatario = () => {
   const [menuAbierto, setMenuAbierto] = useState(false)
 
   const isActive = (path) => location.pathname === path
+  const esPaginaFirma = location.pathname.startsWith('/arrendatario/contratos/')
+  const isFirmaActive = esPaginaFirma || location.pathname === '/arrendatario/firmar-contrato'
 
   const handleCerrarSesion = () => {
     localStorage.clear()
@@ -47,8 +49,8 @@ const NavbarArrendatario = () => {
             Mi Certificado
           </Link>
           <Link
-            to="/arrendatario/mi-arrendamiento"
-            className={`atr-nav-link${isActive('/arrendatario/mi-arrendamiento') ? ' active' : ''}`}
+            to="/arrendatario/firmar-contrato"
+            className={`atr-nav-link${isFirmaActive ? ' active' : ''}`}
             style={{ color: 'var(--green-600)', fontWeight: 600 }}
           >
             ✍️ Firmar Contrato
@@ -99,7 +101,7 @@ const NavbarArrendatario = () => {
             Mi Certificado
           </Link>
           <Link
-            to="/arrendatario/mi-arrendamiento"
+            to="/arrendatario/firmar-contrato"
             className="atr-nav-mobile-link"
             onClick={cerrarMenu}
           >

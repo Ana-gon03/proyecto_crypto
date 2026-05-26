@@ -26,6 +26,7 @@ import ContratosPage from './pages/arrendador/ContratosPage'
 import FirmarContratoPage from './pages/arrendador/FirmarContratoPage'
 import MiCertificadoArrendadorPage from './pages/arrendador/MiCertificadoArrendadorPage'
 import ContratosArrendatario from './pages/arrendatario/ContratosArrendatario'
+import FirmarContratoArrendatarioPage from './pages/arrendatario/FirmarContratoArrendatarioPage'
 import MiCertificadoPage from './pages/arrendatario/MiCertificadoPage'
 
 // Páginas de admin
@@ -123,6 +124,9 @@ function App() {
 
         <Route path="/arrendatario/renovar-identidad" element={
           <ProtectedArrendatarioRoute><RenovarIdentidad /></ProtectedArrendatarioRoute>
+        } />
+        <Route path="/arrendatario/firmar-contrato" element={
+          <ProtectedArrendatarioRoute><FirmarContratoArrendatarioPage /></ProtectedArrendatarioRoute>
         } />
         <Route path="/arrendatario/contratos/:idArrendamiento" element={
           <ProtectedArrendatarioRoute><ContratosArrendatario /></ProtectedArrendatarioRoute>

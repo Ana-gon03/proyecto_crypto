@@ -255,13 +255,6 @@ const MiArrendamiento = () => {
                   <button className="atr-btn-primary" onClick={handleDescargarContrato}>
                     Ver Contrato
                   </button>
-                  <button
-                    className="atr-btn-ghost"
-                    style={{ marginTop: '0.6rem' }}
-                    onClick={() => navigate(`/arrendatario/contratos/${arrendamiento.idArrendamiento}`)}
-                  >
-                    ✍️ Firmar Contrato Digital
-                  </button>
                 </div>
               </div>
             </div>
